@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+     - "8000:8000"
+    environment:
+      #Make sure the databse url maches the AWS credentials
+      - DATABASE_URL=mysql+pymysql://admin:parola123$%^@drawzy.c70mg0gs4cdn.eu-central-1.rds.amazonaws.com:3306/drawzy
