@@ -14,4 +14,4 @@ class UserResponse(BaseModel):
     created_at: str
     
     class Config:
-        orm_mode = True
+        from_attributes = True
