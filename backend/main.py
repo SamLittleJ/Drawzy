@@ -30,7 +30,7 @@ def get_db():
 #Basic root endpoint to verify that the API is running
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to Drawzy! This is changing as i write! Look it changed!"}
+    return {"message": "Welcome to Drawzy! This is changing as i write! Look it changed! And again! Whatever"}
 
 #User registration endpoint
 @app.post("/users/", response_model=schemas.UserResponse)
