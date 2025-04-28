@@ -51,6 +51,13 @@ jobs:
               with:
                terraform_wrapper: false
             
+            - name: Configure AWS Credentials
+              uses: aws-actions/configure-aws-credentials@v1
+              with:
+                aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                aws-region: ${{ env.AWS_REGION }}
+
             - name: Terraform fmt (auto-format)
               working-directory: terraform/environments/dev
               run: terraform fmt -recursive
