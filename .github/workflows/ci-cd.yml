@@ -1,0 +1,65 @@
+name: CI/CD Pipeline
+
+on:
+    push:
+        branches:
+            - main
+
+env:
+    AWS_REGION: eu-central-1
+    ECR_ACCOUNT_URL: 980921758434.dkr.ecr.eu-central-1.amazonaws.com
+
+jobs:
+    build_and_push:
+        name: Build & Push Docker Images
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v3
+            - name: Configure AWS Credentials
+              uses: aws-actions/configure-aws-credentials@v1
+              with:
+                aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                aws-region: ${{ env.AWS_REGION }}
+            - name: Login to ECR
+              id: login-ecr
+              uses: aws-actions/amazon-ecr-login@v1
+            - name: Build and Docker backend image
+              run: |
+                docker build \
+                -t $ECR_ACCOUNT_URL/drawzy-backend:latest \
+                -f backend/Dockerfile \
+                .
+                docker push $ECR_ACCOUNT_URL/drawzy-backend:latest
+            - name: Build and Docker frontend image
+              run: |
+                docker build \
+                -t $ECR_ACCOUNT_URL/drawzy-frontend:latest \
+                -f frontend/Dockerfile \
+                .
+                docker push $ECR_ACCOUNT_URL/drawzy-frontend:latest
+    terraform:
+        name: Terraform deploying
+        needs: build_and_push
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+             working-directory: dev
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v3
+            - name: Setup Terraform
+              uses: hashicorp/setup-terraform@v2
+              with:
+               terraform_wrapper: false
+            - name: Terraform fmt
+              run: terraform fmt -check
+            - name: Terraform init
+              run: terraform init
+            - name: Terraform validate
+              run: terraform validate
+            - name: Terraform plan
+              run: terraform plan
+            - name: Terraform apply
+              run: terraform apply -auto-approve

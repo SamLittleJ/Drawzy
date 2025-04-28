@@ -13,10 +13,10 @@ COPY requirements.txt .
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
 # Copy the entire backend folder into the container
-COPY backend/ .
+COPY . .
 
 #Expose the port 8000 (the port uvicorn runs on)
-EXPOSE 8000
+EXPOSE 8080
 
 #Run the FastAPI application with uvicorn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]

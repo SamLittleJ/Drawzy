@@ -6,9 +6,17 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     ports:
-     - "8000:8000"
+     - "8080:80"
     environment:
       #Make sure the databse url maches the AWS credentials
-      - DATABASE_URL=mysql+pymysql://admin:parola123$%^@drawzy.c70mg0gs4cdn.eu-central-1.rds.amazonaws.com:3306/drawzy
+     - /Users/sam_little_j/Drawzy/backend/.env
     volumes:
       - ./backend:/app
+
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+       - "8081:80"
+      
