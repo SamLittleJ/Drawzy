@@ -6,6 +6,7 @@
 .terraform-version
 .env
 .aws/
+/Users/sam_little_j/Drawzy/.aws
 
 # Python virtual environments
 .venv/
