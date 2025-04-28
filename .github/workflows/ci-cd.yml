@@ -52,16 +52,16 @@ jobs:
                terraform_wrapper: false
             - name: Terraform fmt
               run: terraform fmt -check
-              working-directory: dev
+              working-directory: terraform/environments/dev
             - name: Terraform init
               run: terraform init
-              working-directory: dev
+              working-directory: terraform/environments/dev
             - name: Terraform validate
               run: terraform validate
-              working-directory: dev
+              working-directory: terraform/environments/dev
             - name: Terraform plan
               run: terraform plan
-              working-directory: dev
+              working-directory: terraform/environments/dev
             - name: Terraform apply
               run: terraform apply -auto-approve
-              working-directory: dev
+              working-directory: terraform/environments/dev
