@@ -30,14 +30,14 @@ jobs:
                 docker build \
                 -t $ECR_ACCOUNT_URL/drawzy-backend:latest \
                 -f backend/Dockerfile \
-                .
+                backend
                 docker push $ECR_ACCOUNT_URL/drawzy-backend:latest
             - name: Build and Docker frontend image
               run: |
                 docker build \
                 -t $ECR_ACCOUNT_URL/drawzy-frontend:latest \
                 -f frontend/Dockerfile \
-                .
+                frontend
                 docker push $ECR_ACCOUNT_URL/drawzy-frontend:latest
     terraform:
         name: Terraform deploying
