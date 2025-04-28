@@ -1,6 +1,5 @@
 from fastapi import FastAPI, HTTPException, Depends, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.websockets import WebSocketDisconnect
 from sqlalchemy.orm import Session
 from backend.database import SessionLocal, engine, get_db
 from backend import models, schemas
@@ -54,58 +53,44 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     
     return new_user
 
-# class ConnectionManager:
-#     def __init__(self):
-#         self.activate_connections: Dict[str, WebSocket] = {}
-        
-#     async def connect(self, websocket: WebSocket, room_id: str):
-#         await websocket.accept()
-#         self.activate_connections.setdefault(room_id, []).append(websocket)
-
-#     def disconnect(self, websocket: WebSocket, room_id: str):
-#         connections = self.activate_connections.get(room_id, [])
-#         if websocket in connections:
-#             connections.remove(websocket)
-    
-#     async def broadcast(self, message: str, room_id: str):
-#         for connection in self.activate_connections.get(room_id, []):
-#             await connection.send_text(message)
-# manager = ConnectionManager()
-
-# rooms: dict[str, List[WebSocket]] = {}
-
-# @app.websocket("/ws/{room_id}")
-# async def websocket_endpoint(websocket: WebSocket, room_id: str):
-#     await websocket.accept()
-#     rooms.setdefault(room_id, []).append(websocket)
-#     print(f"Connection accepted in room {room_id}")
-    
-#     while True:
-#         msg = await websocket.receive()
-#         print("RAW ASGI MSG:", msg)
-#         if msg["type"] == "websocket.disconnect":
-#             print(f"Disconnect in room {room_id} (code={msg.get('code')})")
-#             rooms[room_id].remove(websocket)
-#             break
-        
-#         text = msg.get("test")
-#         if text is None:
-#             text = msg.get("bytes", b"").decode("utf-8", errors="ignore")
-        
-#         print(f"Echoing back {text!r}")
-#         for conn in rooms[room_id]:
-#             await conn.send_text(text)
-
-# @app.websocket("/ws/echo")
-# async def echo_websocket(websocket: WebSocket):
-#     await websocket.accept()
-#     print("Echo socket connected")
-#     try:
-#         while True:
-#                         # Receive text frames only
-#             data = await websocket.receive_text()
-#             print(f"📨 Received: {data!r}")
-#             # Echo back
-#             await websocket.send_text(data)
-#     except WebSocketDisconnect as e:
-#         print(f"⚠️ Echo socket disconnected (code={e.code})")
+@app.websocket("/ws/echo")
+async def echo_websocket(websocket: WebSocket):
+    await websocket.accept()
+    print("WebSocket connection established")
+    await websocket.send_text("Hello from the server!")
+    try:
+        while True:
+            # #await websocket.send_text("Hello from the server!")
+            # message = await websocket.receive()
+            # print("Hello")
+            # msg_type = message.get("type")
+            # print("Raw event", message)
+            
+            # if msg_type == "websocket.receive":
+            #     print("Hello3")
+            #     if "text" in message and message["text"] is not None:
+            #         print("Hello4")
+            #         data = message["text"]
+            #         print(f"Received message: {data!r}")
+            #         await websocket.send_text(data)
+            #     elif "bytes" in message and message["bytes"] is not None:
+            #         data = message["bytes"]
+            #         print(f"Received bytes: {data!r}")
+            #         await websocket.send_bytes(data)
+            
+            # elif msg_type == "websocket.disconnect":
+            #     code = message.get('code')
+            #     print(f"WebSocket disconnected with code: {code}")
+            #     break
+            
+            data = await websocket.receive_text()
+            print(f"Received message: {data!r}")
+            await websocket.send_text(data)
+    except WebSocketDisconnect as e:
+        print(f"WebSocket disconnected: {e.code}")        
+            
+    except Exception as e:
+        print("WebSocket handler error:", e)
+    finally:
+        print("WebSocket connection closed")
+            

@@ -2,16 +2,18 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from dotenv import load_dotenv
+from pathlib import Path
 
 #Load environment variables from a .env file
-load_dotenv()
+env_path = Path(__file__).parent / '.env'
+load_dotenv(env_path)
 
 
-DB_HOST = os.getenv("DB_HOST")
-DB_USER = os.getenv("DB_USER")
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_USER = os.getenv("DB_USER", "root")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_NAME")
-DB_PORT = os.getenv("DB_PORT")
+DB_PORT = os.getenv("DB_PORT", "3306")
 print("DB_PORT: ", DB_PORT)
 
 #Get the database URL from the .env file
