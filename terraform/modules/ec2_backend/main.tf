@@ -334,6 +334,14 @@ resource "aws_autoscaling_group" "backend_asg" {
     value = "drawzy-backend-instance"
     propagate_at_launch = true
   }
+
+  instance_refresh {
+    triggers = ["launch_template"]
+    strategy = "Rolling"
+    preferences {
+      min_healthy_percentage = 90
+    }
+  }
 }
 
 #ASG for the frontend
@@ -354,5 +362,13 @@ resource "aws_autoscaling_group" "frontend_asg" {
     key = "Name"
     value = "drawzy-frontend-instance"
     propagate_at_launch = true
+  }
+
+  instance_refresh {
+    triggers = ["launch_template"]
+    strategy = "Rolling"
+    preferences {
+      min_healthy_percentage = 90
+    }
   }
 }
