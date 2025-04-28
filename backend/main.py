@@ -53,6 +53,13 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     
     return new_user
 
+@app.post("/users/login", response_model=schemas.UserResponse)
+def login_user(credentials: schemas.UserLogin, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == credentials.email).first()
+    if not user or user.hashed_password != credentials.password:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    return user
+
 @app.websocket("/ws/echo")
 async def echo_websocket(websocket: WebSocket):
     await websocket.accept()
