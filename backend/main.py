@@ -5,7 +5,7 @@ from backend.database import SessionLocal, engine, get_db
 from backend import models, schemas
 from typing import Dict, List
 
-#HOURS SPEND ON THIS SHIT = 16
+#HOURS SPEND ON THIS SHIT = 24
 
 #Create the database tables (if they don't exist)
 models.Base.metadata.create_all(bind=engine)
