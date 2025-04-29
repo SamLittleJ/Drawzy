@@ -1,6 +1,7 @@
 .terraform/
 .terraform-version
 .env
+*.env
 
 .terraform/
 .terraform-version
@@ -29,6 +30,7 @@ dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+/backend/.env
 
 # Docker and environment files
 docker-compose.override.yml
