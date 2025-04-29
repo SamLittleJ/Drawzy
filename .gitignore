@@ -8,6 +8,13 @@
 .env
 .aws/
 /Users/sam_little_j/Drawzy/.aws
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+build-push.sh
+create-dev.sh
+destroy-dev.sh
+
 
 # Python virtual environments
 .venv/
