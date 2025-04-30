@@ -4,8 +4,8 @@ module "rds_mysql" {
   db_name = var.db_name
   db_username = var.db_username
   db_password = var.db_password
-  vpc_security_group_ids = [ "sg-0af475469589a9f2b" ]
-  db_subnet_group_name = "default-vpc-0e996db6d45a33188"
+  vpc_security_group_ids = var.security_group_ids
+  db_subnet_group_name = var.subnet_ids
 }
 
 output "db_instance_endpoint" {
