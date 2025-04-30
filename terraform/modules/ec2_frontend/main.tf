@@ -1,6 +1,6 @@
-#Launch template for EC2 instances
-resource "aws_launch_template" "backend_lt" {
-  name_prefix = "drawzy-backend-"
+#Load balancer for the frontend
+resource "aws_launch_template" "frontend_lt" {
+  name_prefix = "drawzy-frontend-"
   image_id = data.aws_ami.amazon_linux.id   #AMI that includes your backend or docker runtime
   instance_type = var.instance_type
   depends_on = [ aws_iam_instance_profile.ec2_instance_profile ]
@@ -17,7 +17,7 @@ resource "aws_launch_template" "backend_lt" {
   user_data = base64encode(<<-EOF
   #!/bin/bash
 
-  exec > /var/log/drawzy-backend-init.log 2>&1
+  exec > /var/log/drawzy-frontend-init.log 2>&1
   set -x
 
   #Install docker
@@ -35,14 +35,14 @@ resource "aws_launch_template" "backend_lt" {
 
     #Authenticate to ECR
     aws ecr get-login-password --region eu-central-1 | \
-     docker login --username AWS --password-stdin ${var.backend_ecr_url}
-    if [ $? -ne 0 ]; then
+     docker login --username AWS --password-stdin ${var.frontend_ecr_url}
+     if [ $? -ne 0 ]; then
       echo "Docker login failed"
       exit 1
     fi
 
-    #Pull and run your backend docker image
-      docker run -d --name drawzy-backend -p 8080:8080 ${var.backend_ecr_url}:latest
+    #Pull and run your frontend docker image
+      docker run -d --name drawzy-frontend -p 80:80 ${var.frontend_ecr_url}:latest
   EOF
   )
 
@@ -51,24 +51,23 @@ resource "aws_launch_template" "backend_lt" {
   }
 }
 
-# Autoscaling group for the backend
-resource "aws_autoscaling_group" "backend_asg" {
-  name_prefix = "drawzy-backend-asg-"
+#ASG for the frontend
+resource "aws_autoscaling_group" "frontend_asg" {
+  name_prefix = "drawzy-frontend-asg-"
   desired_capacity = var.desired_capacity
   min_size = var.min_size
   max_size = var.max_size
   vpc_zone_identifier = var.subnet_ids
 
   launch_template {
-    id = aws_launch_template.backend_lt.id
+    id = aws_launch_template.frontend_lt.id
     version = "$Latest"
   }
-
-  target_group_arns = [aws_lb_target_group.backend_tg.arn]
+  target_group_arns = [aws_lb_target_group.frontend_tg.arn]
 
   tag {
     key = "Name"
-    value = "drawzy-backend-instance"
+    value = "drawzy-frontend-instance"
     propagate_at_launch = true
   }
 
@@ -81,24 +80,24 @@ resource "aws_autoscaling_group" "backend_asg" {
   }
 }
 
-#Load balancer for the backend
-resource "aws_lb" "backend_alb" {
-  name = "drawzy-backend-alb"
+#Load balancer for the frontend
+resource "aws_lb" "frontend_alb" {
+  name = "drawzy-frontend-alb"
   internal = false
   load_balancer_type = "application"
-  security_groups = [aws_security_group.alb_sg.id]
+  security_groups = [aws_security_group.alb_sg_frontend.id]
   subnets = var.subnet_ids
 }
 
-#Target group for the backend
-resource "aws_lb_target_group" "backend_tg" {
-  name = "drawzy-backend-tg"
-  port = 8080
+# Target group for the frontend
+resource "aws_lb_target_group" "frontend_tg" {
+  name = "drawzy-frontend-tg"
+  port = 80
   protocol = "HTTP"
   vpc_id = var.vpc_id
   
   health_check {
-    path = "/health"
+    path = "/"
     protocol = "HTTP"
     port = "traffic-port"
     interval = 30
@@ -109,55 +108,33 @@ resource "aws_lb_target_group" "backend_tg" {
   }
 }
 
-# Alb listener for the backend
-resource "aws_lb_listener" "backend_listener" {
-  load_balancer_arn = aws_lb.backend_alb.arn
-  port = 8080
+# Alb listener for the frontend
+resource "aws_lb_listener" "frontend_listener" {
+  load_balancer_arn = aws_lb.frontend_alb.arn
+  port = 80
   protocol = "HTTP"
 
   default_action {
     type = "forward"
-    target_group_arn = aws_lb_target_group.backend_tg.arn
+    target_group_arn = aws_lb_target_group.frontend_tg.arn
   }
 }
 
-# Security group for the backend ALB:
-# Allows inbound HTTP traffic on port 8080 from any IPv4 address (0.0.0.0/0)
+# Security group for the frontend ALB:
+# Allows inbound HTTP traffic on port 80 from any IPv4 address (0.0.0.0/0),
+# allows SSH access on port 22 from the specified admin IP,
 # and allows all outbound traffic.
-resource "aws_security_group" "alb_sg" {
-  name_prefix = "drawzy-backend-alb-sg"
+resource "aws_security_group" "alb_sg_frontend" {
+  name = "drawzy-frontend-alb-sg"
   description = "Allow HTTP and HTTPS inbound traffic"
   vpc_id = var.vpc_id
 
   ingress {
     description = "Allow HTTP from anyone"
-    from_port = 8080
-    to_port = 8080
+    from_port = 80
+    to_port = 80
     protocol = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-  }
-  egress {
-    description = "Allow all outbound traffic"
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-# Security group for the EC2 instance:
-# Allows inbound HTTP traffic on port 8080 for the ALB SG and SSH from your admin CIDR
-resource "aws_security_group" "ec2_sg" {
-  name_prefix = "drawzy-backend-ec2-sg"
-  description = "Allow HTTP and SSH inbound traffic"
-  vpc_id = var.vpc_id
-
-  ingress {
-    description = "Allow HTTP from ALB"
-    from_port = 8080
-    to_port = 8080
-    protocol = "tcp"
-    security_groups = [aws_security_group.alb_sg.id]
   }
 
   ingress {
@@ -177,6 +154,36 @@ resource "aws_security_group" "ec2_sg" {
   }
 }
 
+# Security group for the EC2 instance:
+resource "aws_security_group" "ec2_sg" {
+  name = "drawzy-frontend-ec2-sg"
+  description = "Allow HTTP and SSH inbound traffic"
+  vpc_id = var.vpc_id
+
+  ingress {
+    description = "Allow HTTP from ALB"
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    security_groups = [aws_security_group.alb_sg_frontend.id]
+  }
+
+  ingress {
+    description = "Allow SSH"
+    from_port = 22
+    to_port = 22
+    protocol = "tcp"
+    cidr_blocks = ["82.77.109.35/32"]
+  }
+
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
 data "aws_ami" "amazon_linux" {
     most_recent = true
     owners = ["amazon"]
@@ -189,7 +196,7 @@ data "aws_ami" "amazon_linux" {
 
 #New IAM role and instance profile for EC2 with ECR permissions
 resource "aws_iam_role" "ec2_role" {
-  name_prefix = "drawzy-ec2-instance-role-backend"
+  name = "drawzy-ec2-instance-role-frontend"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -210,6 +217,6 @@ resource "aws_iam_role_policy_attachment" "ec2_ecr" {
 }
 
 resource "aws_iam_instance_profile" "ec2_instance_profile" {
-  name = "drawzy-ec2-instance-profile-backend"
+  name = "drawzy-ec2-instance-profile-frontend"
   role = aws_iam_role.ec2_role.name
 }
