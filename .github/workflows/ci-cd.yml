@@ -50,6 +50,7 @@ jobs:
 
     build_and_push:
         name: Build & Push Docker Images
+        needs: infra-base
         runs-on: ubuntu-latest
         steps:
             - name: Checkout code
@@ -79,7 +80,7 @@ jobs:
                 docker push $ECR_ACCOUNT_URL/drawzy-frontend:latest
     terraform:
         name: Terraform deploying
-        needs: build_and_push
+        needs: [infra-base, build_and_push]
         runs-on: ubuntu-latest
         steps:
             - name: Checkout code
