@@ -24,6 +24,7 @@ export default function LobbyPage(){
                 onCreatePrivate={createPrivate}
                 onJoinPrivate={joinPrivate}
             />
+            <button onClick={logout}>Logout</button>
         </div>
     )
 }

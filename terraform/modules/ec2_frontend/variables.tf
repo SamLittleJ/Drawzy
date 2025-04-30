@@ -37,8 +37,7 @@ variable "max_size" {
   default = 2
 }
 
-
-variable "backend_ecr_url" {
-  description = "ECR URL for the backend image"
+variable "frontend_ecr_url" {
+  description = "ECR URL for the frontend image"
   type = string
 }
