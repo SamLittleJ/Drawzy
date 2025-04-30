@@ -10,6 +10,40 @@ env:
     ECR_ACCOUNT_URL: 980921758343.dkr.ecr.eu-central-1.amazonaws.com
 
 jobs:
+    infra-base:
+        name: Terraform "base" infrastructure
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout repo
+            uses: actions/checkout@v3
+          
+          - name: Configure AWS Credentials
+            uses: aws-actions/configure-aws-credentials@v2
+            with:
+              aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+              aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+              aws-region: ${{ env.AWS_REGION }}
+          - name: Terraform init
+            working-directory: terraform/environments/dev
+            run: terraform init
+          
+          - name: Terraform Apply (network, rds, ecr)
+            working-directory: terraform/environments/dev
+            run: |
+             terraform apply -auto-approve \
+             -target=module.network \
+             -target=module.rds_mysql \
+             -target=module.ecr 
+          - name: Get RDS endpoint
+            id: endpoint
+            run: |
+              echo "DB_URL=$(terraform output -raw database_url)" >> $GITHUB_ENV
+            working-directory: terraform/environments/dev
+          - name: Write .env 
+            run: |
+              echo "DATABASE_URL=${{ env.DB_URL }}" > backend/.env
+
+
     build_and_push:
         name: Build & Push Docker Images
         runs-on: ubuntu-latest
@@ -17,27 +51,27 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v3
             - name: Configure AWS Credentials
-              uses: aws-actions/configure-aws-credentials@v1
+              uses: aws-actions/configure-aws-credentials@v2
               with:
                 aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
                 aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
                 aws-region: ${{ env.AWS_REGION }}
             - name: Login to ECR
               id: login-ecr
-              uses: aws-actions/amazon-ecr-login@v1
+              uses: aws-actions/amazon-ecr-login@v2
             - name: Build and Docker backend image
               run: |
                 docker build \
                 -t $ECR_ACCOUNT_URL/drawzy-backend:latest \
-                -f backend/Dockerfile \
-                backend
+                -f ./backend/Dockerfile \
+                ./backend
                 docker push $ECR_ACCOUNT_URL/drawzy-backend:latest
             - name: Build and Docker frontend image
               run: |
                 docker build \
                 -t $ECR_ACCOUNT_URL/drawzy-frontend:latest \
-                -f frontend/Dockerfile \
-                frontend
+                -f ./frontend/Dockerfile \
+                ./frontend
                 docker push $ECR_ACCOUNT_URL/drawzy-frontend:latest
     terraform:
         name: Terraform deploying
@@ -77,3 +111,4 @@ jobs:
             - name: Terraform apply
               run: terraform apply -auto-approve
               working-directory: terraform/environments/dev
+            
