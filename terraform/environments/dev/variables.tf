@@ -43,7 +43,5 @@ variable "db_password" {
 }
 
 variable "security_group_ids" {
-  description = "List of security group IDs to associate with the RDS instance"
-  type        = list(string)
-  default     = ["sg-0af475469589a9f2b"]
+  default = ["sg-0af475469589a9f2b"]
 }

@@ -11,7 +11,9 @@ resource "aws_launch_template" "frontend_lt" {
   key_name = var.key_name
 
   #Use the EC2 security group created above
-  vpc_security_group_ids = [aws_security_group.ec2_sg.id] 
+  vpc_security_group_ids = [
+    aws_security_group.ec2_sg_frontend.id
+  ] 
 
   #User data script to run your backend container
   user_data = base64encode(<<-EOF
@@ -120,70 +122,6 @@ resource "aws_lb_listener" "frontend_listener" {
   }
 }
 
-# Security group for the frontend ALB:
-# Allows inbound HTTP traffic on port 80 from any IPv4 address (0.0.0.0/0),
-# allows SSH access on port 22 from the specified admin IP,
-# and allows all outbound traffic.
-resource "aws_security_group" "alb_sg_frontend" {
-  name = "drawzy-frontend-alb-sg"
-  description = "Allow HTTP and HTTPS inbound traffic"
-  vpc_id = var.vpc_id
-
-  ingress {
-    description = "Allow HTTP from anyone"
-    from_port = 80
-    to_port = 80
-    protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "Allow SSH"
-    from_port = 22
-    to_port = 22
-    protocol = "tcp"
-    cidr_blocks = ["82.77.109.35/32"]
-  }
-
-  egress {
-    description = "Allow all outbound traffic"
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-# Security group for the EC2 instance:
-resource "aws_security_group" "ec2_sg" {
-  name = "drawzy-frontend-ec2-sg"
-  description = "Allow HTTP and SSH inbound traffic"
-  vpc_id = var.vpc_id
-
-  ingress {
-    description = "Allow HTTP from ALB"
-    from_port = 80
-    to_port = 80
-    protocol = "tcp"
-    security_groups = [aws_security_group.alb_sg_frontend.id]
-  }
-
-  ingress {
-    description = "Allow SSH"
-    from_port = 22
-    to_port = 22
-    protocol = "tcp"
-    cidr_blocks = ["82.77.109.35/32"]
-  }
-
-  egress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
 data "aws_ami" "amazon_linux" {
     most_recent = true
     owners = ["amazon"]
@@ -219,4 +157,75 @@ resource "aws_iam_role_policy_attachment" "ec2_ecr" {
 resource "aws_iam_instance_profile" "ec2_instance_profile" {
   name = "drawzy-ec2-instance-profile-frontend"
   role = aws_iam_role.ec2_role.name
+}
+
+# Security group for the frontend ALB:
+# Allows inbound HTTP traffic on port 80 from any IPv4 address (0.0.0.0/0),
+# allows SSH access on port 22 from the specified admin IP,
+# and allows all outbound traffic.
+resource "aws_security_group" "alb_sg_frontend" {
+  name = "drawzy-frontend-alb-sg"
+  description = "Allow HTTP and HTTPS inbound traffic"
+  vpc_id = var.vpc_id
+
+  ingress {
+    description = "Allow HTTP from anyone"
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Allow SSH"
+    from_port = 22
+    to_port = 22
+    protocol = "tcp"
+    cidr_blocks = ["82.77.109.35/32"]
+  }
+
+  egress {
+    description = "Allow all outbound traffic"
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# Security group for the EC2 instance:
+resource "aws_security_group" "ec2_sg_frontend" {
+  name = "drawzy-frontend-ec2-sg"
+  description = "Allow HTTP and SSH inbound traffic"
+  vpc_id = var.vpc_id
+  ingress {
+    description = "Allow HTTP from ALB"
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    security_groups = [aws_security_group.alb_sg_frontend.id]
+  }
+
+  ingress {
+    description = "Allow SSH"
+    from_port = 22
+    to_port = 22
+    protocol = "tcp"
+    cidr_blocks = ["82.77.109.35/32"]
+  }
+
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+output "frontend_alb_sg_id" {
+  value = aws_security_group.alb_sg_frontend.id
+}
+
+output "frontend_ec2_sg_id" {
+  value = aws_security_group.ec2_sg_frontend.id
 }

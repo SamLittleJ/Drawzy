@@ -42,3 +42,8 @@ variable "backend_ecr_url" {
   description = "ECR URL for the backend image"
   type = string
 }
+
+variable "vpc_security_group_ids" {
+  description = "Security group IDs for the EC2 instance"
+  type = list(string)
+}

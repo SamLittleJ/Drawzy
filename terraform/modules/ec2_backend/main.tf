@@ -1,3 +1,13 @@
+data "aws_ami" "amazon_linux" {
+    most_recent = true
+    owners = ["amazon"]
+
+    filter {
+        name = "name"
+        values = ["amzn2-ami-hvm-*x86_64-ebs"]
+    }
+}
+
 #Launch template for EC2 instances
 resource "aws_launch_template" "backend_lt" {
   name_prefix = "drawzy-backend-"
@@ -11,7 +21,9 @@ resource "aws_launch_template" "backend_lt" {
   key_name = var.key_name
 
   #Use the EC2 security group created above
-  vpc_security_group_ids = [aws_security_group.ec2_sg.id] 
+  vpc_security_group_ids = [
+    aws_security_group.ec2_sg_backend.id
+  ] 
 
   #User data script to run your backend container
   user_data = base64encode(<<-EOF
@@ -86,7 +98,7 @@ resource "aws_lb" "backend_alb" {
   name = "drawzy-backend-alb"
   internal = false
   load_balancer_type = "application"
-  security_groups = [aws_security_group.alb_sg.id]
+  security_groups = [aws_security_group.alb_sg_backend.id]
   subnets = var.subnet_ids
 }
 
@@ -121,72 +133,6 @@ resource "aws_lb_listener" "backend_listener" {
   }
 }
 
-# Security group for the backend ALB:
-# Allows inbound HTTP traffic on port 8080 from any IPv4 address (0.0.0.0/0)
-# and allows all outbound traffic.
-resource "aws_security_group" "alb_sg" {
-  name_prefix = "drawzy-backend-alb-sg"
-  description = "Allow HTTP and HTTPS inbound traffic"
-  vpc_id = var.vpc_id
-
-  ingress {
-    description = "Allow HTTP from anyone"
-    from_port = 8080
-    to_port = 8080
-    protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  egress {
-    description = "Allow all outbound traffic"
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-# Security group for the EC2 instance:
-# Allows inbound HTTP traffic on port 8080 for the ALB SG and SSH from your admin CIDR
-resource "aws_security_group" "ec2_sg" {
-  name_prefix = "drawzy-backend-ec2-sg"
-  description = "Allow HTTP and SSH inbound traffic"
-  vpc_id = var.vpc_id
-
-  ingress {
-    description = "Allow HTTP from ALB"
-    from_port = 8080
-    to_port = 8080
-    protocol = "tcp"
-    security_groups = [aws_security_group.alb_sg.id]
-  }
-
-  ingress {
-    description = "Allow SSH"
-    from_port = 22
-    to_port = 22
-    protocol = "tcp"
-    cidr_blocks = ["82.77.109.35/32"]
-  }
-
-  egress {
-    description = "Allow all outbound traffic"
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-data "aws_ami" "amazon_linux" {
-    most_recent = true
-    owners = ["amazon"]
-
-    filter {
-        name = "name"
-        values = ["amzn2-ami-hvm-*x86_64-ebs"]
-    }
-}
-
 #New IAM role and instance profile for EC2 with ECR permissions
 resource "aws_iam_role" "ec2_role" {
   name_prefix = "drawzy-ec2-instance-role-backend"
@@ -212,4 +158,72 @@ resource "aws_iam_role_policy_attachment" "ec2_ecr" {
 resource "aws_iam_instance_profile" "ec2_instance_profile" {
   name = "drawzy-ec2-instance-profile-backend"
   role = aws_iam_role.ec2_role.name
+}
+
+# Security group for the backend ALB:
+# Allows inbound HTTP traffic on port 8080 from any IPv4 address (0.0.0.0/0)
+# and allows all outbound traffic.
+resource "aws_security_group" "alb_sg_backend" {
+  name_prefix = "drawzy-backend-alb-sg"
+  description = "Allow HTTP and HTTPS inbound traffic"
+  vpc_id = var.vpc_id
+
+  ingress {
+    description = "Allow HTTP from anyone"
+    from_port = 8080
+    to_port = 8080
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  egress {
+    description = "Allow all outbound traffic"
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# Security group for the EC2 instance:
+# Allows inbound HTTP traffic on port 8080 for the ALB SG and SSH from your admin CIDR
+resource "aws_security_group" "ec2_sg_backend" {
+  name_prefix = "drawzy-backend-ec2-sg"
+  description = "Allow HTTP and SSH inbound traffic"
+  vpc_id = var.vpc_id
+
+  ingress {
+    description = "Allow HTTP from ALB"
+    from_port = 8080
+    to_port = 8080
+    protocol = "tcp"
+    security_groups = [aws_security_group.alb_sg_backend.id]
+  }
+
+  ingress {
+    description = "Allow SSH"
+    from_port = 22
+    to_port = 22
+    protocol = "tcp"
+    cidr_blocks = ["82.77.109.35/32"]
+  }
+
+  egress {
+    description = "Allow all outbound traffic"
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+output "backend_alb_sg_id" {
+  value = aws_security_group.alb_sg_backend.id
+}
+
+output "backend_ec2_sg_id" {
+  value = aws_security_group.ec2_sg_backend.id
+}
+
+output "subnet_ids" {
+  value = var.subnet_ids
 }

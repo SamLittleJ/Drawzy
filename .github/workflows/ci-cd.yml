@@ -35,7 +35,6 @@ jobs:
             working-directory: terraform/environments/dev
             run: |
              terraform apply -auto-approve \
-             -target=module.network \
              -target=module.rds_mysql \
              -target=module.ecr 
           - name: Get RDS endpoint

@@ -21,7 +21,8 @@ module "ec2_backend" {
   desired_capacity = var.desired_capacity
   min_size = var.min_size
   max_size = var.max_size
-  backend_ecr_url = aws_ecr_repository.backend.repository_url
+  backend_ecr_url = module.ecr.backend.repository_url
+  vpc_security_group_ids = [ var.security_group_ids]
 }
 
 module "ec2_frontend" {
@@ -33,15 +34,9 @@ module "ec2_frontend" {
   desired_capacity = var.desired_capacity
   min_size = var.min_size
   max_size = var.max_size
-  frontend_ecr_url = aws_ecr_repository.frontend.repository_url
+  frontend_ecr_url = module.ecr_frontend.repository_url
 }
 
-output "backend_load_balancer_dns" {
-  description = "DNS of the load balancer"
-  value = module.ec2_backend.backend_alb_dns
-}
-
-output "frontend_load_balancer_dns" {
-  description = "DNS of the load balancer"
-  value = module.ec2_frontend.frontend_alb_dns
+module "ecr" {
+  source = "../../modules/ecr"
 }
