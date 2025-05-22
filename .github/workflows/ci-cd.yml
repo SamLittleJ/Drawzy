@@ -25,8 +25,11 @@ jobs:
               aws-region: ${{ env.AWS_REGION }}
           - name: Ensure S3 backend bucket exists
             run: |
-              aws s3api head-bucket --bucket drawzy-terraform-state-dev || \
-              aws s3api create-bucket --bucket drawzy-terraform-state-dev --region ${{ env.AWS_REGION }} --create-bucket-configuration LocationConstraint=${{ env.AWS_REGION }}
+              aws s3api head-bucket --bucket drawzy-terraform-state-dev -- region ${ env.AWS_REGION } \
+              || aws s3api create-bucket \
+                --bucket drawzy-terraform-state-dev \
+                --region ${ env.AWS_REGION } \
+                --create-bucket-configuration LocationConstraint=${ env.AWS_REGION }
           - name: Setup Terraform
             uses: hashicorp/setup-terraform@v2
             with:
