@@ -11,7 +11,7 @@ resource "aws_s3_bucket" "terraform_state_dev" {
 terraform {
   backend "s3" {
     bucket         = "drawzy-terraform-state-dev"
-    key            = "terraform.tfstate"
+    key            = "dev/terraform.tfstate"
     region         = "eu-central-1"
     dynamodb_table = "drawzy-terraform-state-locks"
   }

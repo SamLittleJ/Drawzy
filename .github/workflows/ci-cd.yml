@@ -47,7 +47,7 @@ jobs:
           - name: Get RDS endpoint
             id: endpoint
             run: |
-              echo "DB_URL=$(terraform output -raw database_url)" >> $GITHUB_ENV
+              echo "DB_URL=$(terraform output -raw DATABASE_URL)" >> $GITHUB_ENV
             working-directory: terraform/environments/dev
           - name: Write .env 
             run: |
