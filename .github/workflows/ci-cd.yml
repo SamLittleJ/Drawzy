@@ -29,11 +29,12 @@ jobs:
               terraform_wrapper: false
           - name: Terraform init
             working-directory: terraform/environments/dev
-            run: terraform init \
-              -backend-config="bucket=drawzy-terraform-state-dev" \
-              -backend-config="key=dev/terraform.tfstate" \
-              -backend-config="region=${{ env.AWS_REGION }}" \
-              -backend-config="dynamodb_table=drawzy-terraform-locks" 
+            run: |
+              terraform init \
+               -backend-config="bucket=drawzy-terraform-state-dev" \
+               -backend-config="key=dev/terraform.tfstate" \
+               -backend-config="region=${{ env.AWS_REGION }}" \
+               -backend-config="dynamodb_table=drawzy-terraform-locks" 
           - name: Select Terraform workspace
             working-directory: terraform/environments/dev
             run: terraform workspace select dev || terraform workspace new dev
@@ -111,11 +112,12 @@ jobs:
               
             - name: Terraform init
               working-directory: terraform/environments/dev
-              run: terraform init -reconfigure \
-                -backend-config="bucket=drawzy-terraform-state-dev" \
-                -backend-config="key=dev/terraform.tfstate" \
-                -backend-config="region=${{ env.AWS_REGION }}" \
-                -backend-config="dynamodb_table=drawzy-terraform-locks" \
+              run: |
+                terraform init -reconfigure \
+                 -backend-config="bucket=drawzy-terraform-state-dev" \
+                 -backend-config="key=dev/terraform.tfstate" \
+                 -backend-config="region=${{ env.AWS_REGION }}" \
+                 -backend-config="dynamodb_table=drawzy-terraform-locks" \
             - name: Select Terraform workspace
               working-directory: terraform/environments/dev
               run: terraform workspace select dev || terraform workspace new dev
