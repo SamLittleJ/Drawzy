@@ -1,7 +1,7 @@
 #Load balancer for the frontend
 resource "aws_launch_template" "frontend_lt" {
   name_prefix = "drawzy-frontend-"
-  image_id = data.aws_ami.amazon_linux.id   #AMI that includes your backend or docker runtime
+  image_id = data.aws_ami.frontend.id   #AMI that includes your backend or docker runtime
   instance_type = var.instance_type
   depends_on = [ aws_iam_instance_profile.ec2_instance_profile ]
   iam_instance_profile {
@@ -122,7 +122,7 @@ resource "aws_lb_listener" "frontend_listener" {
   }
 }
 
-data "aws_ami" "amazon_linux" {
+data "aws_ami" "frontend" {
     most_recent = true
     owners = ["amazon"]
 

@@ -51,3 +51,5 @@ docker-compose.override.yml
 
 # macOS system files
 .DS_Store
+
+terraform/environments/prod/
