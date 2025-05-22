@@ -29,9 +29,15 @@ jobs:
               terraform_wrapper: false
           - name: Terraform init
             working-directory: terraform/environments/dev
-            run: terraform init
-          
-          - name: Terraform Apply (network, rds, ecr)
+            run: terraform init \
+              -backend-config="bucket=drawzy-terraform-state-dev" \
+              -backend-config="key=dev/terraform.tfstate" \
+              -backend-config="region=${{ env.AWS_REGION }}" \
+              -backend-config="dynamodb_table=drawzy-terraform-locks" \
+          - name: Select Terraform workspace
+            working-directory: terraform/environments/dev
+            run: terraform workspace select dev || terraform workspace new dev
+          - name: Terraform Apply (rds, ecr)
             working-directory: terraform/environments/dev
             run: |
              terraform apply -auto-approve \
@@ -90,7 +96,7 @@ jobs:
                terraform_wrapper: false
             
             - name: Configure AWS Credentials
-              uses: aws-actions/configure-aws-credentials@v1
+              uses: aws-actions/configure-aws-credentials@v2
               with:
                 aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
                 aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -104,11 +110,18 @@ jobs:
               run: terraform fmt -check -recursive
               
             - name: Terraform init
-              run: terraform init
               working-directory: terraform/environments/dev
-            - name: Terraform validate
+              run: terraform init -reconfigure \
+                -backend-config="bucket=drawzy-terraform-state-dev" \
+                -backend-config="key=dev/terraform.tfstate" \
+                -backend-config="region=${{ env.AWS_REGION }}" \
+                -backend-config="dynamodb_table=drawzy-terraform-locks" \
+            - name: Select Terraform workspace
+              working-directory: terraform/environments/dev
+              run: terraform workspace select dev || terraform workspace new dev
+            - name: Terraform Validate
+              working-directory: terraform/environments/dev
               run: terraform validate
-              working-directory: terraform/environments/dev
             - name: Terraform plan
               run: terraform plan
               working-directory: terraform/environments/dev
