@@ -33,7 +33,7 @@ jobs:
               -backend-config="bucket=drawzy-terraform-state-dev" \
               -backend-config="key=dev/terraform.tfstate" \
               -backend-config="region=${{ env.AWS_REGION }}" \
-              -backend-config="dynamodb_table=drawzy-terraform-locks" \
+              -backend-config="dynamodb_table=drawzy-terraform-locks" 
           - name: Select Terraform workspace
             working-directory: terraform/environments/dev
             run: terraform workspace select dev || terraform workspace new dev
