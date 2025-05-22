@@ -37,7 +37,7 @@ jobs:
                -backend-config="dynamodb_table=drawzy-terraform-locks" 
           - name: Select Terraform workspace
             working-directory: terraform/environments/dev
-            run: terraform workspace select dev || terraform workspace new dev
+            run: terraform workspace select dev -or-create
           - name: Terraform Apply (rds, ecr)
             working-directory: terraform/environments/dev
             run: |
@@ -120,7 +120,7 @@ jobs:
                  -backend-config="dynamodb_table=drawzy-terraform-locks" \
             - name: Select Terraform workspace
               working-directory: terraform/environments/dev
-              run: terraform workspace select dev || terraform workspace new dev
+              run: terraform workspace select dev -or-create
             - name: Terraform Validate
               working-directory: terraform/environments/dev
               run: terraform validate
