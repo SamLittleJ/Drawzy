@@ -32,7 +32,7 @@ jobs:
             run: |
               terraform init \
                -backend-config="bucket=drawzy-terraform-state-dev" \
-               -backend-config="key=dev/terraform.tfstate" \
+               -backend-config="key=terraform.tfstate" \
                -backend-config="region=${{ env.AWS_REGION }}" \
                -backend-config="dynamodb_table=drawzy-terraform-state-locks" 
           - name: Select Terraform workspace
@@ -47,7 +47,7 @@ jobs:
           - name: Get RDS endpoint
             id: endpoint
             run: |
-              echo "DB_URL=$(terraform output -raw database_url)" >> $GITHUB_ENV
+              echo "DB_URL=$(terraform output -raw DATABASE_URL)" >> $GITHUB_ENV
             working-directory: terraform/environments/dev
           - name: Write .env 
             run: |
@@ -115,7 +115,7 @@ jobs:
               run: |
                 terraform init -reconfigure \
                  -backend-config="bucket=drawzy-terraform-state-dev" \
-                 -backend-config="key=dev/terraform.tfstate" \
+                 -backend-config="key=terraform.tfstate" \
                  -backend-config="region=${{ env.AWS_REGION }}" \
                  -backend-config="dynamodb_table=drawzy-terraform-state-locks" \
             - name: Select Terraform workspace
