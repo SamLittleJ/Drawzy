@@ -8,8 +8,8 @@ module "rds_mysql" {
   db_subnet_group_name = var.db_subnet_group_name
 }
 
-output "db_instance_endpoint" {
-  value = module.rds_mysql.db_instance_endpoint
+output "DATABASE_URL" {
+  value = module.rds_mysql.DATABASE_URL
 }
 
 module "ecr" {
