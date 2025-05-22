@@ -32,7 +32,7 @@ jobs:
             run: |
               terraform init \
                -backend-config="bucket=drawzy-terraform-state-dev" \
-               -backend-config="key=dev/terraform.tfstate" \
+               -backend-config="key=terraform.tfstate" \
                -backend-config="region=${{ env.AWS_REGION }}" \
                -backend-config="dynamodb_table=drawzy-terraform-state-locks" 
           - name: Select Terraform workspace
@@ -115,7 +115,7 @@ jobs:
               run: |
                 terraform init -reconfigure \
                  -backend-config="bucket=drawzy-terraform-state-dev" \
-                 -backend-config="key=dev/terraform.tfstate" \
+                 -backend-config="key=terraform.tfstate" \
                  -backend-config="region=${{ env.AWS_REGION }}" \
                  -backend-config="dynamodb_table=drawzy-terraform-state-locks" \
             - name: Select Terraform workspace
