@@ -25,3 +25,18 @@ resource "aws_dynamodb_table" "terraform_state_locks" {
         name        = "drawzy-terraform-state-locks"
     }
 }
+
+resource "aws_dynamodb_table" "drawzy_sessions" {
+  name = "drawzy-sessions"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key = "SessionID"
+
+  attribute {
+    name = "SessionID"
+    type = "S"
+  }
+
+  tags = {
+    name = "drawzy-sessions"
+  }
+}
