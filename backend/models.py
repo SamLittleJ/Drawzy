@@ -15,7 +15,7 @@ class User(Base):
     rooms = relationship("Room", back_populates="creator")
     room_players = relationship("RoomPlayer", back_populates="user")
     drawings = relationship("Drawing", back_populates="user")
-    votes = relationship("Vote", back_populates="voter")
+    votes = relationship("DrawingVote", back_populates="voter")
     chat_messages = relationship("ChatMessage", back_populates="user")
     
 class Room(Base):
