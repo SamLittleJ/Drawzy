@@ -33,7 +33,7 @@ resource "aws_launch_template" "backend_lt" {
   set -x
 
   # Write the DATABASE_URL into an .env file for Docker
-  echo "DATABASE_URL=${var.database_url}" > /home/ec2-user/backend/.env
+  echo "DATABASE_URL=${var.database_url}" > /home/ec2-user/.env
 
   #Install docker
     if ! command -v docker &> /dev/null; then
@@ -59,7 +59,7 @@ resource "aws_launch_template" "backend_lt" {
     #Pull and run your backend docker image with restart policy and env-file
     docker run -d --name drawzy-backend \
       --restart unless-stopped \
-      --env-file /home/ec2-user/backend/.env \
+      --env-file /home/ec2-user/.env \
       -p 8080:8080 \
       ${var.backend_ecr_url}:latest
   EOF
