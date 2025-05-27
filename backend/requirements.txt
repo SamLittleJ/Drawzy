@@ -24,3 +24,4 @@ typing_extensions==4.13.0
 urllib3==2.3.0
 uvicorn==0.34.0
 cryptography==39.0.1
+alembic==1.11.0
