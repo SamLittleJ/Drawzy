@@ -22,6 +22,7 @@ venv/
 
 # Python cache
 __pycache__/
+backend/__pycache__/
 *.py[cod]
 
 # IDE settings
