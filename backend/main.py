@@ -30,7 +30,7 @@ app.add_middleware(
 def read_root(db = Depends(get_db)):
     return {"message": "Welcome to Drawzy! This is changing as i write! Look it changed! And again! Whatever"}
 
-@app.get("/health")
+@app.get("/ws/health")
 def health_check():
     return {"status": "ok"}
 
