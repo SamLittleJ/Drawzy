@@ -6,7 +6,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 #Set the working directory in the container
-WORKDIR /app
+WORKDIR /app/backend
 
 # Copy the requirements file and install dependencies
 COPY requirements.txt .
@@ -19,4 +19,4 @@ COPY . .
 EXPOSE 8080
 
 #Run the FastAPI application with uvicorn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "main:app", "--app-dir", "/app/backend", "--host", "0.0.0.0", "--port", "8080"]
