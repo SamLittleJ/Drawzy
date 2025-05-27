@@ -99,14 +99,12 @@ resource "aws_lb_target_group" "frontend_tg" {
   vpc_id = var.vpc_id
   
   health_check {
-    path = "/"
+    path = "/ws/health"
     protocol = "HTTP"
-    port = "traffic-port"
     interval = 30
-    timeout = 10
-    healthy_threshold = 2
-    unhealthy_threshold = 5
-    matcher = "200-299"
+    timeout = 5
+    healthy_threshold = 3
+    unhealthy_threshold = 3
   }
 }
 
