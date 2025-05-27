@@ -32,6 +32,9 @@ resource "aws_launch_template" "backend_lt" {
   exec > /var/log/drawzy-backend-init.log 2>&1
   set -x
 
+  # Write the DATABASE_URL into an .env file for Docker
+  echo "DATABASE_URL=${DATABASE_URL}" > /home/ec2-user/backend/.env
+
   #Install docker
     if ! command -v docker &> /dev/null; then
       sudo yum update -y
@@ -53,8 +56,12 @@ resource "aws_launch_template" "backend_lt" {
       exit 1
     fi
 
-    #Pull and run your backend docker image
-      docker run -d --name drawzy-backend -p 8080:8080 ${var.backend_ecr_url}:latest
+    #Pull and run your backend docker image with restart policy and env-file
+    docker run -d --name drawzy-backend \
+      --restart unless-stopped \
+      --env-file /home/ec2-user/backend/.env \
+      -p 8080:8080 \
+      ${var.backend_ecr_url}:latest
   EOF
   )
 
