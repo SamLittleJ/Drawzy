@@ -33,7 +33,7 @@ resource "aws_launch_template" "backend_lt" {
   set -x
 
   # Write the DATABASE_URL into an .env file for Docker
-  echo "DATABASE_URL=${DATABASE_URL}" > /home/ec2-user/backend/.env
+  echo "DATABASE_URL=${var.database_url}" > /home/ec2-user/backend/.env
 
   #Install docker
     if ! command -v docker &> /dev/null; then

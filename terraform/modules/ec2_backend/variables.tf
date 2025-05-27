@@ -47,3 +47,8 @@ variable "vpc_security_group_ids" {
   description = "Security group IDs for the EC2 instance"
   type = list(string)
 }
+
+variable "database_url" {
+  description = "Database URL for the backend application"
+  type = string
+}
