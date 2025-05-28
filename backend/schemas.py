@@ -94,7 +94,6 @@ class DrawingResponse(BaseModel):
         from_attributes = True
         
 class VoteCreate(BaseModel):
-    voter_id: int
     drawing_id: int
 
 class VoteResponse(BaseModel):
