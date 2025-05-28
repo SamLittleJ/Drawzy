@@ -30,6 +30,7 @@ class Room(Base):
     creator = relationship("User", back_populates="rooms")
     room_players = relationship("RoomPlayer", back_populates="room")
     rounds = relationship("Round", back_populates="room")
+    is_public = Column(String(5), default="false")  # e.g., "true", "false"
     
 class RoomPlayer(Base):
     __tablename__ = "room_players"
