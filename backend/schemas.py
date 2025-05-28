@@ -80,7 +80,6 @@ class RoomPlayerResponse(BaseModel):
         
 class DrawingCreate(BaseModel):
     round_id: int
-    user_id: int
     url: HttpUrl
     
 class DrawingResponse(BaseModel):
