@@ -7,7 +7,7 @@ resource "aws_ecr_repository" "backend" {
 #   }
  }
 
-resource "aws_ecr_repository_policy" "backend_policy" {
+resource "aws_ecr_lifecycle_policy" "backend_policy" {
   repository = aws_ecr_repository.backend.name
 
   policy = <<EOF
@@ -37,7 +37,7 @@ resource "aws_ecr_repository" "frontend" {
   # }
 }
 
-resource "aws_ecr_repository_policy" "frontend_policy" {
+resource "aws_ecr_lifecycle_policy" "frontend_policy" {
   repository = aws_ecr_repository.frontend.name
 
   policy = <<EOF
