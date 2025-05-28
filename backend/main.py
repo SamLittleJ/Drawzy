@@ -8,6 +8,7 @@ from passlib.context import CryptContext
 from backend.routers.users import router as users_router
 from backend.routers.rooms import router as rooms_router
 from backend.routers.rounds import router as rounds_router
+from backend.routers.drawings import router as drawings_router
 
 #HOURS SPEND ON THIS SHIT = 24
 #No point to this IG
@@ -29,6 +30,7 @@ app.add_middleware(
 app.include_router(users_router)
 app.include_router(rooms_router)
 app.include_router(rounds_router)
+app.include_router(drawings_router)
 #Dependency to get the database session for the current request
 
         
