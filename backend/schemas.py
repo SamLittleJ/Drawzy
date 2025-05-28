@@ -106,8 +106,10 @@ class VoteResponse(BaseModel):
         
 class ChatMessageCreate(BaseModel):
     room_id: int
-    user_id: int
     message: str
+    
+    class Config:
+        from_attributes = True
     
 class ChatMessageResponse(BaseModel):
     id: int
@@ -115,6 +117,7 @@ class ChatMessageResponse(BaseModel):
     user_id: int
     message: str
     created_at: datetime
+    room_code: str
     
     class Config:
         from_attributes = True
