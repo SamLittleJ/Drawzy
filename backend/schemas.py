@@ -37,6 +37,7 @@ class UserResponse(BaseModel):
 class RoomCreate(BaseModel):
     max_players: int
     round_time: int
+    is_public: Optional[bool] = False
 
 class RoomResponse(BaseModel):
     id: int
@@ -46,6 +47,7 @@ class RoomResponse(BaseModel):
     status: str
     creator_id: int
     created_at: datetime
+    is_public: bool
     
     class Config:
         from_attributes = True
