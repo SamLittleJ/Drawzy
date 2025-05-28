@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Text, func
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Text, func, Boolean
 from backend.database import Base
 from sqlalchemy.orm import relationship
 
@@ -30,7 +30,8 @@ class Room(Base):
     creator = relationship("User", back_populates="rooms")
     room_players = relationship("RoomPlayer", back_populates="room")
     rounds = relationship("Round", back_populates="room")
-    is_public = Column(String(5), default="false")  # e.g., "true", "false"
+    is_public = Column(Boolean, nullable=False, server_default=func.false())  # e.g., "true", "false"
+    chat_messages = relationship("ChatMessage", back_populates="room")
     
 class RoomPlayer(Base):
     __tablename__ = "room_players"
@@ -79,7 +80,7 @@ class ChatMessage(Base):
     id = Column(Integer, primary_key=True, index=True)
     room_id = Column(Integer, ForeignKey("rooms.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    meesage = Column(Text, nullable=False)
+    message = Column(Text, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     user = relationship("User", back_populates="chat_messages")
-    room = relationship("Room")
+    room = relationship("Room", back_populates="chat_messages")
