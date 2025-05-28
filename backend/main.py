@@ -5,6 +5,8 @@ from backend.database import SessionLocal, engine, get_db
 from backend import models, schemas
 from typing import Dict, List
 from passlib.context import CryptContext
+from backend.routers.users import router as users_router
+from backend.routers.rooms import router as rooms_router
 
 #HOURS SPEND ON THIS SHIT = 24
 #No point to this IG
@@ -23,6 +25,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(users_router)
+app.include_router(rooms_router)
 #Dependency to get the database session for the current request
 
         
@@ -36,69 +40,7 @@ def health_check():
     return {"status": "ok"}
 
 #User registration endpoint
-@app.post("/users/", response_model=schemas.UserResponse)
-def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    #Check if the user already exists
-    existing_user = db.query(models.User).filter(models.User.email == user.email).first()
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    
-    #create a new user instance (In production has the password)
-    new_user = models.User(
-        username=user.username,
-        email=user.email,
-        hashed_password=pwd_ctx.hash(user.password),  # Hash the password    
-    )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    
-    return new_user
 
-@app.post("/users/login", response_model=schemas.UserResponse)
-def login_user(credentials: schemas.UserLogin, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.email == credentials.email).first()
-    if not user or user.hashed_password != credentials.password:
-        raise HTTPException(status_code=401, detail="Invalid email or password")
-    return user
-
-
-@app.get("/users/", response_model=List[schemas.UserResponse])
-def list_users(db: Session = Depends(get_db)):
-    users = db.query(models.User).all()
-    return users
-
-@app.get("/users/{user_id}", response_model=schemas.UserResponse)
-def get_user(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
-
-@app.put("/users/{user_id}", response_model=schemas.UserResponse)
-def update_user(user_id: int, user_in: schemas.UserCreate, db: Session = Depends(get_db)):
-    user = db.query(models.User).get(user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    # Update user fields
-    user.username = user_in.username
-    user.email = user_in.email
-    if user_in.password:
-        user.hashed_password = pwd_ctx.hash(user_in.password)
-    user.avatar = user_in.avatar
-    user.role = user_in.role
-    db.commit()
-    db.refresh(user)
-    return user
-
-@app.delete("/users/{user_id}", status_code=204)
-def delete_user(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(models.User).get(user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    db.delete(user)
-    db.commit()
-    return {"detail": "User deleted successfully"}
 
 # @app.websocket("/ws/echo")
 # async def echo_websocket(websocket: WebSocket):
