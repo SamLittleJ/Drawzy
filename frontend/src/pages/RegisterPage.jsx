@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {useNavigate} from 'react-router-dom';
+import {useNavigate, Link} from 'react-router-dom';
 import api from '../api'; // Assuming you have an api.js file for API calls
 import styles from './RegisterPage.module.css'; // Optional: import styles if needed
 
@@ -8,7 +8,7 @@ const [password, setPassword] = useState('');
 const [error, setError] = useState(null);
 const nav = useNavigate();
 
-const handleSubmit - async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
     try {
         setError(null);
