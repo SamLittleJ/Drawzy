@@ -22,7 +22,7 @@ const handleSubmit = async (e) => {
     }
 };
 
-return {
+return (
     <div className={styles.formContainer}>
         <h2 className={styles.title}>Register</h2>
         {error && <div className={styles.error}>{error}</div>}
@@ -56,5 +56,5 @@ return {
             </Link>
         </p>
     </div>
-    );}
+    );
 }
