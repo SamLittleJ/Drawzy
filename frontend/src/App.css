@@ -1,0 +1,48 @@
+/* App.css */
+
+/* Reset simplu */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  /* Font şi background global */
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
+  }
+  
+  /* Container centrat pentru toate paginile */
+  #root, .App {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  
+  /* Poţi adăuga un container intern */
+  .container {
+    flex: 1;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 1rem;
+  }
+  
+  /* Stiluri pentru link-uri la nivel global */
+  a {
+    color: #0066cc;
+    text-decoration: none;
+  }
+  
+  a:hover {
+    text-decoration: underline;
+  }
+  
+  /* Butoane globale (pe lângă cele specifice modulului CSS) */
+  button {
+    font-family: inherit;
+    font-size: 1rem;
+    cursor: pointer;
+  }

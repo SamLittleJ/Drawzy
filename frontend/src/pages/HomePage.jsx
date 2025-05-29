@@ -1,14 +1,15 @@
 import React from 'react';
 import { Link } from "react-router-dom";
+import styles from './HomePage.module.css';
 
 export default function HomePage() {
     return (
-        <div style={{ textAlign: 'center', marginTop: '50px' }}>
-            <h1>Welcome to Drawzy</h1>
-            <p>Login into your account or create a new one to start drawing and guessing!</p>
-            <div style={{margin: '20px'}}>
-                <Link to="/login" style={{ marginRight: '10px', textDecoration: 'none', color: 'blue' }}>Login</Link>
-                <Link to="/register" style={{ textDecoration: 'none', color: 'blue' }}>Register</Link>
+        <div className={styles.container}>
+            <h1 className={styles.title}>Welcome to Drawzy</h1>
+            <p classNAme={styles.subtitle}>Login into your account or create a new one to start drawing and guessing!</p>
+            <div className={styles.buttons}>
+                <Link to="/login"><button className={styles.button}>Login</button></Link>
+                <Link to="/register"><button className={styles.button}>Register</button></Link>
             </div>
         </div>
     );
