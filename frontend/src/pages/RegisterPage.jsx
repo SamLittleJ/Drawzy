@@ -1,32 +1,57 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import AuthForm from '../components/AuthForm';
 import api from '../api'; // Assuming you have an api.js file for API calls
+import styles from './RegisterPage.module.css'; // Optional: import styles if needed
 
-export default function RegisterPage() {
-    const nav = useNavigate();
+const [email, setEmail] = useState('');
+const [password, setPassword] = useState('');
+const [error, setError] = useState(null);
+const nav = useNavigate();
 
-    const handleRegister = async ({username, email, password}) => {
-        try {
-            await api.registerUser({username, email, password});
-            //Optionally store a token if returned
-            //localstorage.setItem('token', resp.data.token);
-            nav('/lobby');
-        } catch (err) {
-            console.error('Registration failed', err)
-            alert(err.response?.data?.detail || 'Registration failed');
-        }
-    };
+const handleSubmit - async (e) => {
+    e.preventDefault();
+    try {
+        setError(null);
+        await api.registerUser({email, password});
+        nav('/login'); // Redirect to login page after successful registration
+    } catch (err) {
+        console
+        setError(err.response?.data?.detail || 'Registration failed');
+    }
+};
 
-    return (
-        <AuthForm
-            title="Register"
-            fields={[
-                {name: 'username', label: "Username"},
-                {name: 'email', label: "Email", type: 'email'},
-                {name: 'password', label: "Password", type: 'password'}
-            ]}
-            onSubmit={handleRegister}
-        />
-    )
+return {
+    <div className={styles.formContainer}>
+        <h2 className={styles.title}>Register</h2>
+        {error && <div className={styles.error}>{error}</div>}
+        <form onSubmit={handleSubmit}>
+            <div className={styles.formGroup}>
+                <label className={styles.label}>Email</label>
+                <input
+                    type="email"
+                    className={styles.input}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                />
+            </div>
+            <div className={styles.formGroup}>
+                <label className={styles.label}>Password</label>
+                <input
+                    type="password"
+                    className={styles.input}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                />
+            </div>
+            <button type="submit" className={styles.submitButton}>Submit</button>
+        </form>
+        <p className={styles.footerText}>
+            Already have an account?{' '}
+            <Link className={styles.footerLink} to="/login">
+                Login here.
+            </Link>
+        </p>
+    </div>
 }
