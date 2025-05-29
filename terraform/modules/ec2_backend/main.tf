@@ -112,7 +112,7 @@ resource "aws_lb" "backend_alb" {
 #Target group for the backend
 resource "aws_lb_target_group" "backend_tg" {
   name = "drawzy-backend-tg"
-  port = 8080
+  port = 80
   protocol = "HTTP"
   vpc_id = var.vpc_id
   
@@ -129,7 +129,7 @@ resource "aws_lb_target_group" "backend_tg" {
 # Alb listener for the backend
 resource "aws_lb_listener" "backend_listener" {
   load_balancer_arn = aws_lb.backend_alb.arn
-  port = 8080
+  port = 80
   protocol = "HTTP"
 
   default_action {
@@ -175,8 +175,8 @@ resource "aws_security_group" "alb_sg_backend" {
 
   ingress {
     description = "Allow HTTP from anyone"
-    from_port = 8080
-    to_port = 8080
+    from_port = 80
+    to_port = 80
     protocol = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -198,8 +198,8 @@ resource "aws_security_group" "ec2_sg_backend" {
 
   ingress {
     description = "Allow HTTP from ALB"
-    from_port = 8080
-    to_port = 8080
+    from_port = 80
+    to_port = 80
     protocol = "tcp"
     security_groups = [aws_security_group.alb_sg_backend.id]
   }
