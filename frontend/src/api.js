@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://drawzy-backend-alb-416878160.eu-central-1.elb.amazonaws.com';
+const API_BASE = process.env.REACT_APP_API_URL || 'http://drawzy-backend-alb-409373296.eu-central-1.elb.amazonaws.com';
 
 const api = axios.create({ 
     baseURL: API_BASE,
