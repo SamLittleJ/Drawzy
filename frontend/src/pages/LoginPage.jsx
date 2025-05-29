@@ -10,7 +10,7 @@ export default function LoginPage() {
         try {
             const resp = await api.loginUser({email, password});
             // Store the token in localStorage
-            localStorage.setItem('token', resp.data.token);
+            localStorage.setItem('access_token', resp.data.access_token);
             nav('/lobby');
         } catch (err) {
             console.error('Login failed', err)

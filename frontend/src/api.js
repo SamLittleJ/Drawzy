@@ -8,7 +8,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use(config => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('access_token');
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
@@ -27,8 +27,8 @@ const createRound = data => api.post('/rounds/', data);
 const fetchDrawings = round_id => api.get('/drawings/', { params: { round_id } });
 const createDrawing = data => api.post('/drawings/', data);
 
-const fetchMessages = room_id => api.get('/messages/', { params: { room_id } });
-const postMessage = data => api.post('/messages/', data);
+const fetchMessages = room_id => api.get('/chat/', { params: { room_id } });
+const postMessage = data => api.post('/chat/', data);
 
 const fetchVotes = drawing_id => api.get('/votes/', { params: { drawing_id } });
 const postVote = data => api.post('/votes/', data);
