@@ -8,9 +8,9 @@ export default function LoginPage() {
     
     const handleLogin = async ({email, password}) => {
         try {
-            await api.post('users/login', {email, password});
-            //TODO: store token if your backend returns one
-            //localstorage.setItem('token', resp.data.token);
+            const resp = await api.loginUser({email, password});
+            // Store the token in localStorage
+            localStorage.setItem('token', resp.data.token);
             nav('/lobby');
         } catch (err) {
             console.error('Login failed', err)

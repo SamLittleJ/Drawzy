@@ -8,7 +8,7 @@ export default function RegisterPage() {
 
     const handleRegister = async ({username, email, password}) => {
         try {
-            await api.post('users/', {username, email, password});
+            await api.registerUser({username, email, password});
             //Optionally store a token if returned
             //localstorage.setItem('token', resp.data.token);
             nav('/lobby');
