@@ -17,7 +17,7 @@ const handleSubmit = async (e) => {
         await api.registerUser({email, password});
         nav('/login'); // Redirect to login page after successful registration
     } catch (err) {
-        console
+        console.error(err);
         setError(err.response?.data?.detail || 'Registration failed');
     }
 };
