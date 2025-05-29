@@ -12,12 +12,3 @@ export default function HomePage() {
         </div>
     );
 }
-
-import HomePage from './pages/HomePage';
-
-<Routes>
-    <Route path="/" element={<HomePage />} />
-    <Route path="/lobby" element={<PrivateRoute><LobbyPage /></PrivateRoute>} />
-    <Route path="/login" element={<LoginPage />} />
-    <Route path="/register" element={<RegisterPage />} />
-</Routes>
