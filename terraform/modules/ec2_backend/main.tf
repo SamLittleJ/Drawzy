@@ -60,7 +60,7 @@ resource "aws_launch_template" "backend_lt" {
     docker run -d --name drawzy-backend \
       --restart unless-stopped \
       --env-file /home/ec2-user/.env \
-      -p 8000:8080 \
+      -p 80:8080 \
       ${var.backend_ecr_url}:latest
   EOF
   )
