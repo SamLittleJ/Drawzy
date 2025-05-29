@@ -3,6 +3,8 @@ import {useNavigate, Link} from 'react-router-dom';
 import api from '../api'; // Assuming you have an api.js file for API calls
 import styles from './RegisterPage.module.css'; // Optional: import styles if needed
 
+export default function RegisterPage() {
+
 const [email, setEmail] = useState('');
 const [password, setPassword] = useState('');
 const [error, setError] = useState(null);
@@ -54,4 +56,5 @@ return {
             </Link>
         </p>
     </div>
+    );}
 }
