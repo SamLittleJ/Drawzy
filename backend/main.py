@@ -43,7 +43,7 @@ app.include_router(votes_router)
 def read_root(db = Depends(get_db)):
     return {"message": "Welcome to Drawzy! This is changing as i write! Look it changed! And again! Whatever"}
 
-@app.get("/ws/health")
+@app.get("/health")
 def health_check():
     return {"status": "ok"}
 
