@@ -1,11 +1,18 @@
 import axios from 'axios';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
 const api = axios.create({ 
     baseURL: API_BASE,
-    headers: { 'Content-Type': 'application/json' },
-    withCredentials: true // Include credentials with requests
+    headers: { 'Content-Type': 'application/json' }
 });
 
-export default api;
+api.interceptors.request.use(config => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
+export { api };
