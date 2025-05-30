@@ -7,7 +7,7 @@ import RegisterPage from './pages/RegisterPage';
 import LobbyPage from './pages/LobbyPage';
 
 export function isLoggedIn() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('access_token');
     return Boolean(token);
 }
 

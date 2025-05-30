@@ -3,7 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import api from '../api';
 import styles from './LoginPage.module.css';
 
-const LoginPage = () => {
+
+export default function LoginPage () {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -58,5 +59,4 @@ return (
 );
 }
 
-export default LoginPage;
 
