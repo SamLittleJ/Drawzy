@@ -28,6 +28,16 @@ return (
         {error && <div className={styles.error}>{error}</div>}
         <form onSubmit={handleSubmit}>
             <div className={styles.formGroup}>
+                <label className={styles.label}>Username</label>
+                <input
+                    type="text"
+                    className={styles.input}
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                />
+            </div>
+            <div className={styles.formGroup}>
                 <label className={styles.label}>Email</label>
                 <input
                     type="email"
