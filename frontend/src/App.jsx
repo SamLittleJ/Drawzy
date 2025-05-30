@@ -5,6 +5,7 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import LobbyPage from './pages/LobbyPage';
+import RoomPage from './pages/RoomPage';
 
 export function isLoggedIn() {
     const token = localStorage.getItem('access_token');
@@ -21,6 +22,10 @@ export default function App() {
             <Route 
             path="/lobby" 
             element={ isLoggedIn() ? <LobbyPage /> : <Navigate to="/login" replace />} />
+            <Route 
+            path="/rooms/:code"
+            element={ isLoggedIn() ? <RoomPage /> : <Navigate to="/login" replace />}
+            />
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         </BrowserRouter>

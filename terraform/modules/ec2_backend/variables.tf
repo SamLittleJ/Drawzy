@@ -52,3 +52,8 @@ variable "database_url" {
   description = "Database URL for the backend application"
   type = string
 }
+
+variable "certificate_arn" {
+  description = "ARN of the SSL certificate for the backend application"
+  type = string
+}

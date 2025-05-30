@@ -138,6 +138,21 @@ resource "aws_lb_listener" "backend_listener" {
   }
 }
 
+resource "aws_lb_listener" "backend_https_listener" {
+  load_balancer_arn = aws_lb.backend_alb.arn
+  port = 443
+  protocol = "HTTPS"
+
+  ssl_policy = "ELBSecurityPolicy-2016-08"
+  certificate_arn = var.certificate_arn
+
+  default_action {
+    type = "forward"
+    target_group_arn = aws_lb_target_group.backend_tg.arn
+  }
+}
+
+
 #New IAM role and instance profile for EC2 with ECR permissions
 resource "aws_iam_role" "ec2_role" {
   name_prefix = "drawzy-ec2-instance-role-backend"
@@ -180,6 +195,15 @@ resource "aws_security_group" "alb_sg_backend" {
     protocol = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  ingress {
+    description = "Allow HTTPS from anyone"
+    from_port = 443
+    to_port = 443
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     description = "Allow all outbound traffic"
     from_port = 0
@@ -210,6 +234,14 @@ resource "aws_security_group" "ec2_sg_backend" {
     to_port = 22
     protocol = "tcp"
     cidr_blocks = ["82.77.109.158/32"]
+  }
+
+  ingress {
+    description = "Allow HTTPS from ALB"
+    from_port = 443
+    to_port = 443
+    protocol = "tcp"
+    security_groups = [aws_security_group.alb_sg_backend.id]
   }
 
   egress {
