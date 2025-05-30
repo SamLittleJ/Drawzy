@@ -1,11 +1,12 @@
 import axios from 'axios';
+const meta = document.querySelector('meta[name="api-base-url"]');
+const API_BASE = meta?.content || '/';
 
-const API_BASE = 'http://drawzy-backend-alb-409373296.eu-central-1.elb.amazonaws.com';
-console.log("API_BASE:", API_BASE);
-const api = axios.create({ 
+const api = axios.create({
     baseURL: API_BASE,
-    headers: { 'Content-Type': 'application/json' }
-});
+    headers: {
+        'Content-Type': 'application/json'
+    }});
 
 api.interceptors.request.use(config => {
     const token = localStorage.getItem('access_token');
