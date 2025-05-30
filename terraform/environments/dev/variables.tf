@@ -45,3 +45,7 @@ variable "db_password" {
 variable "security_group_ids" {
   default = ["sg-0af475469589a9f2b"]
 }
+
+variable "certificate_arn" {
+  default = "arn:aws:acm:eu-central-1:980921758343:certificate/b7315d04-fb22-489c-9e2b-a5a34ffc3ef3"
+}
