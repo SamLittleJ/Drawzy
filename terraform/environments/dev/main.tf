@@ -28,6 +28,7 @@ module "ec2_backend" {
   backend_ecr_url = module.ecr.backend_ecr_url
   vpc_security_group_ids = var.security_group_ids
   database_url = module.rds_mysql.DATABASE_URL
+  certificate_arn = module.var.certificate_arn
 }
 
 module "ec2_frontend" {
