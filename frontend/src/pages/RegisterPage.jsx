@@ -5,6 +5,7 @@ import styles from './RegisterPage.module.css'; // Optional: import styles if ne
 
 export default function RegisterPage() {
 
+const [username, setUsername] = useState('');
 const [email, setEmail] = useState('');
 const [password, setPassword] = useState('');
 const [error, setError] = useState(null);
@@ -14,7 +15,7 @@ const handleSubmit = async (e) => {
     e.preventDefault();
     try {
         setError(null);
-        await api.registerUser({email, password});
+        await api.registerUser({username, email, password});
         nav('/login'); // Redirect to login page after successful registration
     } catch (err) {
         console.error(err);
