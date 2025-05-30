@@ -6,7 +6,7 @@ export default function HomePage() {
     return (
         <div className={styles.container}>
             <h1 className={styles.title}>Welcome to Drawzy</h1>
-            <p classNAme={styles.subtitle}>Login into your account or create a new one to start drawing and guessing!</p>
+            <p className={styles.subtitle}>Login into your account or create a new one to start drawing and guessing!</p>
             <div className={styles.buttons}>
                 <Link to="/login"><button className={styles.button}>Login</button></Link>
                 <Link to="/register"><button className={styles.button}>Register</button></Link>

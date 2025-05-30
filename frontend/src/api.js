@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://drawzy-backend-alb-409373296.eu-central-1.elb.amazonaws.com';
-
+const API_BASE = 'http://drawzy-backend-alb-409373296.eu-central-1.elb.amazonaws.com';
+console.log("API_BASE:", API_BASE);
 const api = axios.create({ 
     baseURL: API_BASE,
     headers: { 'Content-Type': 'application/json' }
@@ -16,7 +16,7 @@ api.interceptors.request.use(config => {
 });
 
 const registerUser = data => api.post('/users/', data);
-const loginUser = data => api.post('/users/login/', data);
+const loginUser = data => api.post('/users/login', data);
 
 const fetchRooms = () => api.get('/rooms/');
 const createRoom = data => api.post('/rooms/', data);
