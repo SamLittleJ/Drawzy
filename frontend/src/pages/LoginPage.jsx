@@ -1,64 +1,62 @@
-import React from 'react';
-import {useNavigate, Link} from 'react-router-dom';
-import api from '../api'; // Assuming you have an api.js file for API calls
-import styles from './LoginPage.module.css'; // Optional: import styles if needed
+import React, {useState} from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import api from '../api';
+import styles from './LoginPage.module.css';
 
-export default function LoginPage() {
-    const nav = useNavigate();
-    
-    const handleLogin = async ({email, password}) => {
-        try {
+const LoginPage = () => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const navigate = useNavigate();
+
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        try{
             const resp = await api.loginUser({email, password});
-            // Store the token in localStorage
             localStorage.setItem('access_token', resp.data.access_token);
             localStorage.removeItem('token'); // Remove old token if exists
-            nav('/lobby');
+            navigate('/lobby'); // Redirect to lobby after successful login
         } catch (err) {
-            console.error('Login failed', err)
-            alert(err.response?.data?.detail ||
-            (err.response?.data ? JSON.stringify(err.response.data): err.message)    ||
-                 'Login failed');
+            console.error(err);
+            setError(err.response?.data?.detail || 'Login failed');
         }
     }
-
-    return (
-        <div className={styles.formContainer}>
-            <h2 className={styles.title}>Log In</h2>
-            <form onSubmit={(e) => {
-                e.preventDefault();
-                const form = e.target;
-                const email = form.email.value;
-                const password = form.password.value;
-                handleLogin({email, password});
-            }}>
-                <div className={styles.formGroup}>
-                    <label className={styles.label} htmlFor="email">Email</label>
-                    <input
-                        id="email"
-                        type="email"
-                        name="email"
-                        className={styles.input}
-                        required
-                    />
-                </div>
-                <div className={styles.formGroup}>
-                    <label className={styles.label} htmlFor="password">Password</label>
-                    <input
-                        id="password"
-                        type="password"
-                        name="password"
-                        className={styles.input}
-                        required
-                    />
-                </div>
-                <button type="submit" className={styles.submitButton}>Log In</button>
-            </form>
-            <p className={styles.footerText}>
-                Don't have an account?{' '}
-                <Link className={styles.footerLink} to="/register">
-                    Register here.
-                </Link>
-            </p>
-        </div>
-    );
+return (
+    <div className={styles.formContainer}>
+        <h2 className={styles.title}>Login</h2>
+        {error && <div className={styles.error}>{error}</div>}
+        <form onSubmit={handleLogin}>
+            <div className={styles.formGroup}>
+                <label className={styles.label}>Email</label>
+                <input
+                    type="email"
+                    className={styles.input}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                />
+            </div>
+            <div className={styles.formGroup}>
+                <label className={styles.label}>Password</label>
+                <input
+                    type="password"
+                    className={styles.input}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                />
+            </div>
+            <button type="submit" className={styles.submitButton}>Login</button>
+        </form>
+        <p className={styles.footerText}>
+            Don't have an account?{' '}
+            <Link className={styles.footerLink} to="/register">
+                Register here.
+            </Link>
+        </p>
+    </div>
+);
 }
+
+export default LoginPage;
+
