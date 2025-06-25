@@ -24,11 +24,11 @@ manager = ConnectionManager()
 
 @router.websocket("/ws/{room_code}")
 async def websocket_chat(
-    room_code:str,
+    room_code: str,
     websocket: WebSocket,
     db: Session = Depends(get_db)
 ):
-    await websocket.accept()
+    print(f"WS connect attemp: room={room_code}, client={websocket.client}")
     token = websocket.query_params.get("token")
     user = await get_current_user(token, db)
     

@@ -179,7 +179,7 @@ resource "aws_security_group" "alb_sg_frontend" {
     from_port = 22
     to_port = 22
     protocol = "tcp"
-    cidr_blocks = ["82.77.109.158/32"]
+    cidr_blocks = ["82.77.109.177/32"]
   }
 
   egress {
