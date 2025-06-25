@@ -31,12 +31,12 @@ app.add_middleware(
 )
 
 app.include_router(ws_router)
-app.include_router(users_router, prefix="/users", tags=["users"])
-app.include_router(rooms_router, prefix="/rooms", tags=["rooms"])
-app.include_router(rounds_router, prefix="/rounds", tags=["rounds"])
-app.include_router(drawings_router, prefix="/drawings", tags=["drawings"])
-app.include_router(chat_router, prefix="/chat", tags=["chat"])
-app.include_router(votes_router, prefix="/votes", tags=["votes"])
+app.include_router(users_router)
+app.include_router(rooms_router)
+app.include_router(rounds_router)
+app.include_router(drawings_router)
+app.include_router(chat_router)
+app.include_router(votes_router)
 
 #Dependency to get the database session for the current request
 
