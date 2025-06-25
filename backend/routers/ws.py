@@ -36,7 +36,7 @@ async def websocket_chat(
     
     await websocket.accept()
     
-    user = await get_current_user(token, db)
+    user = get_current_user(token, db)
     
     await manager.connect(room_code, websocket)
     
