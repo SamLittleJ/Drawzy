@@ -3,6 +3,7 @@ from backend.dependencies import get_current_user
 from backend.database import get_db
 from sqlalchemy.orm import Session
 import logging
+import json
 
 logger = logging.getLogger("ws")
 logging.basicConfig(level=logging.INFO)
@@ -44,8 +45,14 @@ async def websocket_chat(
         print(f"WS handler loop start for room={room_code}")
         while True:
             print("Awaiting message from client")
-            data = await websocket.receive_json()
-            print(f"Received message: {data}")
+            raw = await websocket.receive_text()
+            print(f"Received message: {raw!r}")
+            try:
+                data = json.loads(raw)
+            except Exception:
+                logger.exception("Failed to parse JSON from client")
+                await websocket.close(code=1003, reason="Invalid JSON format")
+                return
             msg_type = data.get("type")
             payload = data.get("payload", {})
             
