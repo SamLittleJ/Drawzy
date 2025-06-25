@@ -26,29 +26,29 @@ class ConnectionManager:
             
 manager = ConnectionManager()
 
-@router.websocket("/ws/{room_code}")
+@router.websocket("/ws/{code}")
 async def websocket_chat(
     websocket: WebSocket,
-    room_code: str,
+    code: str,
     db: Session = Depends(get_db)
 ):
-    print(f"WS connect attemp: room={room_code}, client={websocket.client}")
+    print(f"WS connect attemp: room={code}, client={websocket.client}")
     token = websocket.query_params.get("token")
     
     await websocket.accept()
     
     user = get_current_user(token, db)
     
-    await manager.connect(room_code, websocket)
+    await manager.connect(code, websocket)
     
     try:
-        print(f"WS handler loop start for room={room_code}")
+        print(f"WS handler loop start for room={code}")
         while True:
             print("Awaiting message from client")
             event = await websocket.receive()
             if event.get("type") == "websocket.disconnect":
                 print(f"Client disconnected: {event}")
-                manager.disconnect(room_code, websocket)
+                manager.disconnect(code, websocket)
                 return
             if event.get("type") == "websocket.receive" and "text" in event:
                 raw = event["text"]
@@ -72,14 +72,14 @@ async def websocket_chat(
                         "message": payload.get("message", "")
                     }
                 }
-                await manager.broadcast(room_code, broadcast_msg)
+                await manager.broadcast(code, broadcast_msg)
                 
             elif msg_type == "DRAW":
                 broadcast_msg = {"type": "DRAW", "payload": payload}
-                await manager.broadcast(room_code, broadcast_msg)
+                await manager.broadcast(code, broadcast_msg)
     except WebSocketDisconnect:
-        manager.disconnect(room_code, websocket)    
+        manager.disconnect(code, websocket)    
     except Exception as e:
-        logger.exception(f"Unexpected error in room={room_code}")
+        logger.exception(f"Unexpected error in room={code}")
         await websocket.close(code=1011)
         
