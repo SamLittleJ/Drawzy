@@ -10,7 +10,9 @@ WORKDIR /app
 
 # Copy the requirements file and install dependencies
 COPY requirements.txt .
-RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN pip install --upgrade pip && \
+pip install "uvicorn[standard]" websockets wsproto && \
+pip install -r requirements.txt
 
 # Copy the entire backend folder into the container
 COPY .  /app/backend
