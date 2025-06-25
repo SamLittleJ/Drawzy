@@ -1,7 +1,7 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from backend.dependencies import get_current_user
 from backend.database import get_db
-from backend.models import User
+from sqlalchemy.orm import Session
 
 router = APIRouter(tags=["WebSocket"])
 
@@ -14,7 +14,7 @@ class ConnectionManager:
         self.active_connections.setdefault(room_code, []).append(websocket)
         
     def disconnect(self, room_code: str, websocket: WebSocket):
-        self.active_connections[room_code].remove(websocket)
+        self.active_connections.get(room_code, []).remove(websocket)
         
     async def broadcast(self, room_code: str, message: dict):
         for ws in self.active_connections.get(room_code, []):
@@ -26,22 +26,32 @@ manager = ConnectionManager()
 async def websocket_chat(
     room_code:str,
     websocket: WebSocket,
-    token: str,
-    db= Depends(get_db)
+    db: Session = Depends(get_db)
 ):
+    await websocket.accept()
+    token = websocket.query_params.get("token")
     user = await get_current_user(token, db)
+    
     await manager.connect(room_code, websocket)
+    
     try:
         while True:
             data = await websocket.receive_json()
-            if data["type"] == "CHAT":
-                msg = {
+            msg_type = data.get("type")
+            payload = data.get("payload", {})
+            
+            if msg_type =="CHAT":
+                broadcast_msg = {
                     "type": "CHAT",
                     "payload": {
                         "user": user.username,
-                        "message": data["payload"]["message"]
+                        "message": payload.get("message", "")
                     }
                 }
-                await manager.broadcast(room_code, msg)
+                await manager.broadcast(room_code, broadcast_msg)
+                
+            elif msg_type == "DRAW":
+                broadcast_msg = {"type": "DRAW", "payload": payload}
+                await manager.broadcast(room_code, broadcast_msg)
     except WebSocketDisconnect:
-        manager.disconnect(room_code, websocket)
+        manager.disconnect(room_code, websocket)    
