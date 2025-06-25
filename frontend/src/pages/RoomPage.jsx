@@ -58,7 +58,9 @@ export default function RoomPage() {
             }
         };
         ws.onerror = (error) => console.error("WebSocket error:", error);
-        ws.onclose = () => console.log("WebSocket connection closed");
+        ws.onclose = (event) => {
+            console.log('Websocket connection closed', 'code=', event.code, 'reason=', event.reason);
+        }
 
         return () => {
             ws.close();
