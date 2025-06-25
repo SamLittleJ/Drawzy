@@ -2,6 +2,10 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from backend.dependencies import get_current_user
 from backend.database import get_db
 from sqlalchemy.orm import Session
+import logging
+
+logger = logging.getLogger("ws")
+logging.basicConfig(level=logging.INFO)
 
 router = APIRouter(tags=["WebSocket"])
 
@@ -32,13 +36,16 @@ async def websocket_chat(
     
     await websocket.accept()
     
-    user = get_current_user(token, db)
+    user = await get_current_user(token, db)
     
     await manager.connect(room_code, websocket)
     
     try:
+        print(f"WS handler loop start for room={room_code}")
         while True:
+            print("Awaiting message from client")
             data = await websocket.receive_json()
+            print(f"Received message: {data}")
             msg_type = data.get("type")
             payload = data.get("payload", {})
             
@@ -57,3 +64,7 @@ async def websocket_chat(
                 await manager.broadcast(room_code, broadcast_msg)
     except WebSocketDisconnect:
         manager.disconnect(room_code, websocket)    
+    except Exception as e:
+        logger.exception(f"Unexpected error in room={room_code}")
+        await websocket.close(code=1011)
+        
