@@ -10,7 +10,6 @@ class ConnectionManager:
         self.active_connections: dict[str, list[WebSocket]] = {}
         
     async def connect(self, room_code: str, websocket: WebSocket):
-        await websocket.accept()
         self.active_connections.setdefault(room_code, []).append(websocket)
         
     def disconnect(self, room_code: str, websocket: WebSocket):
@@ -30,7 +29,10 @@ async def websocket_chat(
 ):
     print(f"WS connect attemp: room={room_code}, client={websocket.client}")
     token = websocket.query_params.get("token")
-    user = get_current_user(token, db)
+    
+    await websocket.accept()
+    
+    user = await get_current_user(token, db)
     
     await manager.connect(room_code, websocket)
     
