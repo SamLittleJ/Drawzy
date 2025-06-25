@@ -45,16 +45,24 @@ async def websocket_chat(
         print(f"WS handler loop start for room={room_code}")
         while True:
             print("Awaiting message from client")
-            raw = await websocket.receive_text()
-            print(f"Received message: {raw!r}")
-            try:
-                data = json.loads(raw)
-            except Exception:
-                logger.exception("Failed to parse JSON from client")
-                await websocket.close(code=1003, reason="Invalid JSON format")
+            event = await websocket.receive()
+            if event.get("type") == "websocket.disconnect":
+                print(f"Client disconnected: {event}")
+                manager.disconnect(room_code, websocket)
                 return
-            msg_type = data.get("type")
-            payload = data.get("payload", {})
+            if event.get("type") == "websocket.receive" and "text" in event:
+                raw = event["text"]
+                print(f"Received message: {raw!r}")
+                try:
+                    data = json.loads(raw)
+                except Exception:
+                    logger.exception("Failed to parse JSON from client")
+                    await websocket.close(code=1003, reason="Invalid JSON format")
+                    return
+                msg_type=data.get("type")
+                payload = data.get("payload", {})
+            else:
+                continue  
             
             if msg_type =="CHAT":
                 broadcast_msg = {
