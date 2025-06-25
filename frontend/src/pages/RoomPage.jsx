@@ -1,10 +1,10 @@
-import React, {useEffect, useRef, useState} from 'react';  
+import React, { useEffect, useRef, useState } from 'react';  
 import { useParams, useNavigate } from 'react-router-dom';
 import styles from './RoomPage.module.css';
 
 
 export default function RoomPage() {
-    const {code} = useParams();
+    const { code } = useParams();
     const navigate = useNavigate();
     const canvasRef = useRef(null);
     const [ctx, setCtx] = useState(null);
@@ -15,7 +15,7 @@ export default function RoomPage() {
     const [messages, setMessages] = useState([]);
     const wsRef = useRef(null);
 
-    useEffect (() => {
+    useEffect(() => {
         const canvas = canvasRef.current;
         if (canvas) {
             const context = canvas.getContext('2d');
@@ -24,7 +24,7 @@ export default function RoomPage() {
         }
     }, []);
 
-    useEffect(() =>{
+    useEffect(() => {
         const token = localStorage.getItem('access_token');
         const isSecure = window.location.protocol === 'https:';
         const wsProtocol = isSecure ? 'wss' : 'ws';
@@ -36,10 +36,10 @@ export default function RoomPage() {
         ws.onopen = () => {
             console.log('WebSocket connection established', wsUrl);
         };
-        ws.onmessage = event => {
+        ws.onmessage = (event) => {
             const msg = JSON.parse(event.data);
             switch (msg.type) {
-                case 'DRAW':
+                case 'DRAW':{
                     const { x0, y0, x1, y1, color, size } = msg.payload;
                     ctx.strokeStyle = color;
                     ctx.lineWidth = size;
@@ -48,14 +48,16 @@ export default function RoomPage() {
                     ctx.lineTo(x1, y1);
                     ctx.stroke();
                     break;
-                case 'CHAT':
+                }
+                case 'CHAT':{
                     setMessages(prev => [...prev, msg.payload]);
                     break;
+                }
                 default:
                     break;
             }
         };
-        ws.onerror = (error) => console.log("WebSocket error:", error);
+        ws.onerror = (error) => console.error("WebSocket error:", error);
         ws.onclose = () => console.log("WebSocket connection closed");
 
         return () => {
@@ -68,50 +70,52 @@ export default function RoomPage() {
         const rect = canvasRef.current.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-        setCtx(ctx => {
-            ctx.beginPath();
-            ctx.moveTo(x, y);
-            return ctx;
+        setCtx((context) =>{
+            context.beginPath();
+            context.moveTo(x, y);
+            context.prevX = x;
+            context.prevY = y;
+            return context;
         });
     };
 
     const handleMouseMove = (e) => {
-        if (!drawing) return;
+        if (!drawing || !ctx) return;
         const rect = canvasRef.current.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-        if(ctx) {
-            ctx.lineTo(x, y);
-            ctx.strokeStyle = color;
-            ctx.lineWidth = size;
-            ctx.stroke();
-            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-                wsRef.current.send(JSON.stringify({
-                    type: 'DRAW',
-                    payload: {
-                        x0: ctx.prevX || x,
-                        y0: ctx.prevY || y,
-                        x1: x,
-                        y1: y,
-                        color,
-                        size
-                    }
-                }))
-            }
-            ctx.prevX = x;
-            ctx.prevY = y;
-        }
-    };
+        ctx.lineTo(x, y);  
+        ctx.strokeStyle = color;
+        ctx.lineWidth = size;
+        ctx.stroke();
 
-    const handleMouseUp = () => setDrawing(false);
+        if(wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+            wsRef.current.send(JSON.stringify({
+                type: 'DRAW',
+                payload: {
+                    x0: ctx.prevX,
+                    y0: ctx.prevY,
+                    x1: x,
+                    y1: y,
+                    color,
+                    size
+                }
+            }))
+        }
+        ctx.prevX = x;
+        ctx.prevY = y;
+        }
+
+    const handleMouseUp = () => {setDrawing(false)};
 
     const sendMessage = () => {
-        if(chatInput.trim() === '') return;
+        const messageText = chatInput.trim();
+        if(messageText === '') return;
         if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
             wsRef.current.send(JSON.stringify({
                 type: 'CHAT',
-                payload: {user: 'Me', message: chatInput.trim()}
-            }))
+                payload: {user: 'Me', message: messageText}
+            }));
         } else {
             console.warn('WebSocket is not open. Cannot send message.');
         }
@@ -120,12 +124,14 @@ export default function RoomPage() {
 
     const leaveRoom = () => {
         navigate('/lobby');
-    }
+    };
 
     return (
         <div className={styles.container}>
             <h1>Room: {code}</h1>
-            <button className={styles.leaveButton} onClick={leaveRoom}>Leave Room</button>
+            <button className={styles.leaveButton} onClick={leaveRoom}>
+                Leave Room
+                </button>
             <div className={styles.canvasContainer}>
                 <canvas
                     ref={canvasRef}
@@ -163,7 +169,8 @@ export default function RoomPage() {
                 <div className={styles.messages}>
                     {messages.map((m,i) =>(
                         <div key={i} className={styles.message}>
-                            <strong>{m.user}: </strong>{m.message}
+                            <strong>{m.user}: </strong>
+                            {m.message}
                     </div>
                     ))}
                 </div>
@@ -172,10 +179,12 @@ export default function RoomPage() {
                         type="text"
                         className={styles.input}
                         value={chatInput}
-                        onChange={e => setChatInput(e.target.value)}
+                        onChange={(e) => setChatInput(e.target.value)}
                         placeholder="Type your message here"
                     />
-                    <button className={styles.button} onClick={sendMessage}>Send</button>
+                    <button className={styles.button} onClick={sendMessage}>
+                        Send
+                        </button>
                 </div>
             </div>
         </div>
