@@ -29,7 +29,7 @@ export default function LobbyPage(){
    
     const createRoom = async () => {
         try {
-            const resp = await api.createRoom ({max_players: maxPlayers, round_time: roundTime});
+            const resp = await api.createRoom ({max_players: maxPlayers, round_time: roundTime, max_rounds: maxRounds, target_score: targetScore, is_public: isPublic});
             nav(`/rooms/${resp.data.code}`);
         } catch (err) {
             console.error("Failed to create room", err);
