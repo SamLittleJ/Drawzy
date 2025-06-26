@@ -6,21 +6,21 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     command:
-     - uvicorn
-     - backend.main:app
-     - --app-dir
-     - /app
-     - --host
-     - 0.0.0.0
-     - --port
-     - "8080"
-     - --ws-per-message-deflate
-     - "false"
+      - uvicorn
+      - backend.main:app
+      - --app-dir
+      - /app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8080"
+      - --ws-per-message-deflate
+      - "false"
     ports:
-     - "8080:80"
+      - "8080:80"
     environment:
       #Make sure the databse url maches the AWS credentials
-     - /Users/sam_little_j/Drawzy/backend/.env
+      - /Users/sam_little_j/Drawzy/backend/.env
     volumes:
       - ./backend:/app
 
