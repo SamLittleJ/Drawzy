@@ -108,14 +108,15 @@ export default function RoomPage() {
         if (!messageText) return;
         const ws = wsRef.current;
         console.log("sendMessage called, WS readyState:", ws?.readyState);
+        const payload = {
+            type: 'CHAT',
+            payload: { message: messageText },
+        };
+        const text = JSON.stringify(payload);
+        console.log("Sending WS test frame:", text)
         
         if (ws?.readyState === WebSocket.OPEN) {
-            const payload = {
-                type: 'CHAT',
-                payload: { message: messageText},
-            };
-            console.log("Sending WS payload:", payload);
-            ws.send(JSON.stringify(payload));
+            ws.send(text);
             setChatInput('');
         } else {
             console.warn("WebSocket is not open. Cannot send message.");
