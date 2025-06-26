@@ -24,6 +24,8 @@ class Room(Base):
     code = Column(String(6), unique=True, nullable=False)
     max_players = Column(Integer, nullable=False)
     round_time = Column(Integer, nullable=False)
+    max_rounds = Column(Integer, nullable=False)
+    target_score = Column(Integer, nullable=False)
     status = Column(String(20), default="open")
     creator_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -72,6 +74,7 @@ class DrawingVote(Base):
     voter_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
     drawing_id = Column(Integer, ForeignKey("drawings.id"), primary_key=True)
     voted_at = Column(DateTime(timezone=True), server_default=func.now())
+    score = Column(Integer, nullable=False)
     voter = relationship("User", back_populates="votes")
     drawing = relationship("Drawing", back_populates="votes")
     
