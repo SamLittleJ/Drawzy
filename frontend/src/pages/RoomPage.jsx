@@ -62,7 +62,7 @@ export default function RoomPage() {
         return () => {
             ws.close();
         };
-    }, [code]);
+    }, []);
 
     const handleMouseDown = (e) => {
         setDrawing(true);
