@@ -29,41 +29,36 @@ export default function RoomPage() {
         const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
         const host = 'drawzy-backend-alb-409373296.eu-central-1.elb.amazonaws.com';
         const wsUrl = `${protocol}://${host}/ws/${code}?token=${token}`;
-        const ws = new WebSocket(wsUrl);
-        wsRef.current = ws;
+        wsRef.current = new WebSocket(wsUrl);
+        wsRef.current.onopen = () => {
+            console.log("Websocket connection established:", wsUrl);
+        }
 
-        ws.onopen = () => {
-            console.log('WebSocket connection established', wsUrl);
-        };
-        ws.onmessage = (event) => {
-            console.log("Websocket onmessage event:", event);
+        wsRef.current.onmessage = (event) => {
+            console.log("WebSocket message received:", event);
             const msg = JSON.parse(event.data);
-            switch (msg.type) {
-                case 'DRAW':{
-                    const { x0, y0, x1, y1, color, size } = msg.payload;
-                    ctx.strokeStyle = color;
-                    ctx.lineWidth = size;
-                    ctx.beginPath();
-                    ctx.moveTo(x0, y0);
-                    ctx.lineTo(x1, y1);
-                    ctx.stroke();
-                    break;
-                }
-                case 'CHAT':{
-                    setMessages(prev => [...prev, msg.payload]);
-                    break;
-                }
-                default:
-                    break;
-            }
+
+            if (msg.type === 'CHAT') {
+                setMessages(prev => [...prev, { user: msg.payload.user, message: msg.payload.message }]);
+            } else if (messages.type === 'DRAW' && ctx) {
+                const { x0, y0, x1, y1, color, size } = msg.payload;
+                ctx.strokeStyle = color;
+                ctx.lineWidth = size;
+                ctx.beginPath();
+                ctx.moveTo(x0, y0);
+                ctx.lineTo(x1, y1);
+                ctx.stroke();
+            } 
         };
-        ws.onerror = (error) => console.error("WebSocket error:", error);
-        ws.onclose = (event) => console.log('WebSocket connection closed:', event);
+
+        wsRef.current.onerror = (error) => console.error("Websocket erorr:", error);
+        wsRef.current.onclose = (event) => console.log("Websocket closed:", event);
+        
 
         return () => {
-            ws.close();
+            if (wsRef.current) wsRef.current.close();
         };
-    }, []);
+    }, [code]);
 
     const handleMouseDown = (e) => {
         setDrawing(true);
@@ -110,21 +105,21 @@ export default function RoomPage() {
 
     const sendMessage = () => {
         const messageText = chatInput.trim();
-        if (messageText == "") return;
+        if (!messageText) return;
         const ws = wsRef.current;
         console.log("sendMessage called, WS readyState:", ws?.readyState);
-        if(!ws || ws.readyState !== WebSocket.OPEN) {
-            console.warn("WebSocket is not open. Cannot send message.");
-            return;
-        }
-        const payload = { type: 'CHAT', payload: { message: messageText } };
-        console.log("Sending WS playload:", payload);
-        try {
+        
+        if (ws?.readyState === WebSocket.OPEN) {
+            const payload = {
+                type: 'CHAT',
+                payload: { message: messageText},
+            };
+            console.log("Sending WS payload:", payload);
             ws.send(JSON.stringify(payload));
-        } catch (err) {
-            console.error("Failed to send WS message:", err);
+            setChatInput('');
+        } else {
+            console.warn("WebSocket is not open. Cannot send message.");
         }
-        setChatInput('');
     };
 
     const leaveRoom = () => {
