@@ -9,6 +9,8 @@ export default function LobbyPage(){
     const [roundTime, setRoundTime] = useState(60);
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [isPublic, setIsPublic] = useState(false);
+    const [maxRounds, setMaxRounds] = useState(5);
+    const [targetScore, setTargetScore] = useState(100);
     const nav = useNavigate();
     const [rooms, setRooms] = useState([]);
 
