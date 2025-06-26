@@ -12,6 +12,7 @@ from backend.routers.drawings import router as drawings_router
 from backend.routers.chat import router as chat_router
 from backend.routers.votes import router as votes_router
 from backend.routers.ws import router as ws_router
+from backend.routers.game import router as game_router
 
 #HOURS SPEND ON THIS SHIT = 24
 #No point to this IG
@@ -31,6 +32,7 @@ app.add_middleware(
 )
 
 app.include_router(ws_router)
+app.include_router(game_router)
 app.include_router(users_router)
 app.include_router(rooms_router)
 app.include_router(rounds_router)

@@ -37,6 +37,8 @@ class UserResponse(BaseModel):
 class RoomCreate(BaseModel):
     max_players: int
     round_time: int
+    max_rounds: int
+    target_score: int
     is_public: Optional[bool] = False
 
 class RoomResponse(BaseModel):
@@ -44,6 +46,8 @@ class RoomResponse(BaseModel):
     code: str
     max_players: int
     round_time: int
+    max_rounds: int
+    target_score: int
     status: str
     creator_id: int
     created_at: datetime
@@ -95,10 +99,12 @@ class DrawingResponse(BaseModel):
         
 class VoteCreate(BaseModel):
     drawing_id: int
+    score: int
 
 class VoteResponse(BaseModel):
     voter_id: int
     drawing_id: int
+    score: int
     
     class Config:
         from_attributes = True
