@@ -35,6 +35,7 @@ export default function RoomPage() {
             console.log('WebSocket connection established', wsUrl);
         };
         ws.onmessage = (event) => {
+            console.log("Websocket onmessage event:", event);
             const msg = JSON.parse(event.data);
             switch (msg.type) {
                 case 'DRAW':{
@@ -56,9 +57,7 @@ export default function RoomPage() {
             }
         };
         ws.onerror = (error) => console.error("WebSocket error:", error);
-        ws.onclose = (event) => {
-            console.log('Websocket connection closed', 'code=', event.code, 'reason=', event.reason);
-        }
+        ws.onclose = (event) => console.log('WebSocket connection closed:', event);
 
         return () => {
             ws.close();
@@ -110,18 +109,19 @@ export default function RoomPage() {
 
     const sendMessage = () => {
         const messageText = chatInput.trim();
-        if(messageText === '') return;
-        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-            console.log(wsRef.current);
-            try{
-            wsRef.current.send(JSON.stringify({
-                type: 'CHAT',
-                payload: {user: 'Me', message: messageText}
-            }));} catch(err) {
-                console.error("Failde to send WS message:", err)
-            }
-        } else {
-            console.warn('WebSocket is not open. Cannot send message.');
+        if (messageText == "") return;
+        const ws = wsRef.current;
+        console.log("sendMessage called, WS readyState:", ws?.readyState);
+        if(!ws || ws.readyState !== WebSocket.OPEN) {
+            console.warn("WebSocket is not open. Cannot send message.");
+            return;
+        }
+        const payload = { type: 'CHAT', payload: { user: 'Me', message: messageText } };
+        console.log("Sending WS playload:", payload);
+        try {
+            ws.send(JSON.stringify(payload));
+        } catch (err) {
+            console.error("Failed to send WS message:", err);
         }
         setChatInput('');
     };

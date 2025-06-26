@@ -1,5 +1,5 @@
 #Using a slim image of python
-FROM python:3.13-slim
+FROM python:3.13.slim
 
 #Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
