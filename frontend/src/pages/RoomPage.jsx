@@ -26,8 +26,9 @@ export default function RoomPage() {
 
     useEffect(() => {
         const token = localStorage.getItem('access_token');
+        const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
         const host = 'drawzy-backend-alb-409373296.eu-central-1.elb.amazonaws.com';
-        const wsUrl = `ws://${host}/ws/${code}?token=${token}`;
+        const wsUrl = `${protocol}://${host}/ws/${code}?token=${token}`;
         const ws = new WebSocket(wsUrl);
         wsRef.current = ws;
 
@@ -116,7 +117,7 @@ export default function RoomPage() {
             console.warn("WebSocket is not open. Cannot send message.");
             return;
         }
-        const payload = { type: 'CHAT', payload: { user: 'Me', message: messageText } };
+        const payload = { type: 'CHAT', payload: { message: messageText } };
         console.log("Sending WS playload:", payload);
         try {
             ws.send(JSON.stringify(payload));
