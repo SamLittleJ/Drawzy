@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from './WaitingRoom.module.css';
 
-export default function WaitingRoom({roomId, players, onStart}) {
+export default function WaitingRoom({roomId, players = [], onStart}) {
     return (
         <div className={styles.container}>
             <h2>Waiting Room</h2>
