@@ -97,13 +97,14 @@ export default function GameRoom({roomId, messages, onSendMessage, wsRef}) {
 
             <div className={styles.chatSection}>
                 <div className={styles.messages}>
-                    {messages.map((msg,i) =>{
+                    {messages.map((msg,i) =>(
                         <div key={i} className={styles.message}>
                             <strong>{msg.user}: </strong>
                             {msg.message}
                         </div>
-                    })}
+                    ))}
                 </div>
+
 
                 <div className={styles.inputArea}>
                     <input
