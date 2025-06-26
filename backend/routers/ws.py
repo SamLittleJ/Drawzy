@@ -46,6 +46,7 @@ async def websocket_chat(
         while True:
             print("Awaiting message from client")
             event = await websocket.receive()
+            print(f"Debug ws event: {event!r}")
             if event.get("type") == "websocket.disconnect":
                 print(f"Client disconnected: {event}")
                 manager.disconnect(code, websocket)
