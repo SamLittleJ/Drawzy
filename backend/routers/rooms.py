@@ -17,6 +17,8 @@ def create_room(room_in: schemas.RoomCreate, current_user: models.User = Depends
         code=code,
         max_players=room_in.max_players,
         round_time=room_in.round_time,
+        max_rounds=room_in.max_rounds,
+        target_score=room_in.target_score,
         creator_id=current_user.id,
         is_public= room_in.is_public
     )
@@ -45,6 +47,8 @@ def update_room(code: str, room_in: schemas.RoomCreate, current_user: models.Use
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to update this room")
     room.max_players = room_in.max_players
     room.round_time = room_in.round_time
+    room.max_rounds = room_in.max_rounds
+    room.target_score = room_in.target_score
     db.commit()
     db.refresh(room)
     return room

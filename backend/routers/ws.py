@@ -3,6 +3,7 @@ from backend.dependencies import get_current_user
 from backend.database import get_db
 from sqlalchemy.orm import Session
 import logging
+from backend.models import Room
 
 logger = logging.getLogger("ws")
 logging.basicConfig(level=logging.INFO)
@@ -47,6 +48,9 @@ async def websocket_chat(
                 data = await websocket.receive_json()
             except WebSocketDisconnect:
                 manager.disconnect(code, websocket)
+                if not manager.active_connections.get(code):
+                    db.query(Room).filter(Room.code == code).delete()
+                    db.commit()
                 break
             except Exception:
                 logger.exception("Failed to parse JSON from client")
@@ -70,7 +74,10 @@ async def websocket_chat(
                 broadcast_msg = {"type": "DRAW", "payload": payload}
                 await manager.broadcast(code, broadcast_msg)
     except WebSocketDisconnect:
-        manager.disconnect(code, websocket)    
+        manager.disconnect(code, websocket)  
+        if not manager.active_connections.get(code):
+            db.query(Room).filter(Room.code == code).delete()
+            db.commit()  
     except Exception as e:
         logger.exception(f"Unexpected error in room={code}")
         await websocket.close(code=1011)
