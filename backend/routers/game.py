@@ -125,7 +125,7 @@ async def game_ws(websocket:WebSocket, room_code:str, db: Session = Depends(get_
             "avatarUrl": getattr(user, "avatar_url", None),
         }
     })
-    manager.connect(room_code, websocket)
+    await manager.connect(room_code, websocket)
     print(f"connected socket for {room_code}: {len(manager.active_connections.get(room_code, []))}")
     try:
         while True:
@@ -136,4 +136,5 @@ async def game_ws(websocket:WebSocket, room_code:str, db: Session = Depends(get_
                 print("START GAME received")
                 await run_game_loop(room_code, db, websocket)
     except WebSocketDisconnect:
-        manager.disconnect(room_code, websocket)
+        if websocket in manager.active_connections.get(room_code, []):
+            manager.disconnect(room_code, websocket)
