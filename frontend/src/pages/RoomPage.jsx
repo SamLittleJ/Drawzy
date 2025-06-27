@@ -9,6 +9,8 @@ export default function RoomPage() {
     const [gameStarted, setGameStarted] = useState(false);
     const [players, setPlayers] = useState([{id:1, username: 'You', avatarUrl: null}]);
     const [messages, setMessages] = useState([]);
+    const [currentTheme, setCurrentTheme] = useState('null');
+    const [drawingPhase, setDrawingPhase] = useState(false);
 
     useEffect(() =>{
         const token = localStorage.getItem('access_token');
@@ -16,7 +18,11 @@ export default function RoomPage() {
         const host = "drawzy-backend-alb-409373296.eu-central-1.elb.amazonaws.com"
         wsRef.current = new WebSocket(`${protocol}://${host}/ws/${code}?token=${token}`);
 
-        wsRef.current.onopen = (event) => {
+        wsRef.current.onopen = () => {
+            console.log('WebSocket connection established');
+        }
+
+        wsRef.current.onmessage = (event) => {
             const msg = JSON.parse(event.data);
 
             if(msg.type === 'PLAYER_JOIN') {
@@ -24,11 +30,24 @@ export default function RoomPage() {
                 return;
             }
             if(msg.type === 'SHOW_THEME'){
+                setCurrentTheme(msg.payload.theme);
                 setGameStarted(true);
                 return;
             }
+
+            if(msg.type === 'ROUND_START') {
+                setDrawingPhase(true);
+                return;
+            }
+
+            if(msg.type === 'ROUND_END') {
+                setCurrentTheme('');
+                setDrawingPhase(false);
+                return;
+            }
+
             if(msg.type === 'CHAT') {
-                setMessages(prev => [...prev, {username: msg.payload.username, text: msg.payload.text}]);
+                setMessages(prev => [...prev, {user: msg.payload.username, message: msg.payload.text}]);
             }
             if(msg.type === 'DRAW') {
 
@@ -54,12 +73,21 @@ export default function RoomPage() {
         return (
             <WaitingRoom
                 roomId={code}
-                messages={messages}
-                onSendMessage={sendMessage}
-                wsRef={wsRef}
+                players={players}
+                onStart={() => wsRef.current.send(JSON.stringify({type: 'START_GAME'}))}
             />
         )
     }
+    return (
+        <GameRoom
+            roomId={code}
+            messages={messages}
+            onSendMessage={sendMessage}
+            wsRef={wsRef}
+            theme={currentTheme}
+            drawingPhase={drawingPhase}
+        />
+    )
 
 
 }

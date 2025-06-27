@@ -5,10 +5,11 @@ from typing import Any, Dict
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from backend.database import get_db
 from backend.routers.ws import manager
-from backend.models import Room, Round, Drawing, DrawingVote, RoomPlayer
+from backend.models import Room, Round, Drawing, DrawingVote, RoomPlayer, Theme
 from backend.dependencies import get_current_user
 
 router = APIRouter(prefix="/game", tags=["Game"])
@@ -43,7 +44,8 @@ async def run_game_loop(room_code: str, db: Session, websocket: WebSocket):
     scoreboard = []
     
     for round_number in range(1, max_rounds + 1):
-        theme = f"Draw theme for round {round_number}"
+        theme_obj = db.query(Theme).order_by(func.random()).first()
+        theme = theme_obj.text if theme_obj else f"Draw theme for round {round_number}"
         await manager.broadcast(room_code, {
             "type": EventType.SHOW_THEME.value,
             "payload": {"theme": theme}
