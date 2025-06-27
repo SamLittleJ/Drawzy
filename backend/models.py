@@ -91,4 +91,4 @@ class ChatMessage(Base):
 class Theme(Base):
     __tablename__ = "themes"
     id = Column(Integer, primary_key=True, index=True)
-    test = Column(String(100), unique=True, nullable=False)
+    text = Column(String(100), unique=True, nullable=False)
