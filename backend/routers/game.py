@@ -12,7 +12,7 @@ from backend.routers.ws import manager
 from backend.models import Room, Round, Drawing, DrawingVote, RoomPlayer, Theme
 from backend.dependencies import get_current_user
 
-router = APIRouter(prefix="/game", tags=["Game"])
+router = APIRouter(tags=["Game"])
 
 class EventType(str, Enum):
     PLAYER_JOIN = "PLAYER_JOIN"
@@ -111,7 +111,7 @@ async def run_game_loop(room_code: str, db: Session, websocket: WebSocket):
       "payload": {"final_scores": scoreboard}  
     })
     
-@router.websocket("/ws/{room_code}")
+@router.websocket("/game/ws/{room_code}")
 async def game_ws(websocket:WebSocket, room_code:str, db: Session = Depends(get_db)):
     await websocket.accept()
     token = websocket.query_params.get("token")
