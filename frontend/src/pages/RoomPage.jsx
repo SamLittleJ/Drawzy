@@ -60,6 +60,15 @@ export default function RoomPage() {
         }
 }, [code]);
 
+    function startGame() {
+        if (wsRef.current?.readyState === WebSocket.OPEN) {
+            wsRef.current.send(JSON.stringify({type: 'START_GAME'}));
+            console.log("Sent START_GAME event")
+        } else {
+            console.warn("WebSocket is not open. Cannot send START_GAME event.");
+        }
+    }
+
     function sendMessage(message) {
         if (wsRef.current?.readyState === WebSocket.OPEN) {
             wsRef.current.send(JSON.stringify({
@@ -74,7 +83,7 @@ export default function RoomPage() {
             <WaitingRoom
                 roomId={code}
                 players={players}
-                onStart={() => wsRef.current.send(JSON.stringify({type: 'START_GAME'}))}
+                onStart={startGame}
             />
         )
     }
