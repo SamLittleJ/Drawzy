@@ -16,7 +16,7 @@ export default function RoomPage() {
         const token = localStorage.getItem('access_token');
         const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
         const host = "drawzy-backend-alb-409373296.eu-central-1.elb.amazonaws.com"
-        wsRef.current = new WebSocket(`${protocol}://${host}/ws/${code}?token=${token}`);
+        wsRef.current = new WebSocket(`${protocol}://${host}/game/ws/${code}?token=${token}`);
 
         wsRef.current.onopen = () => {
             console.log('WebSocket connection established');
