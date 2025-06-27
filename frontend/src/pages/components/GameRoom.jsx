@@ -17,35 +17,33 @@ export default function GameRoom({roomId, messages, onSendMessage, wsRef, theme,
         canvas.height = canvas.offsetHeight;
 
         function handleMouseDown(e){
+            const { offsetX, offsetY } = e;
             drawing.current = true;
             ctx.beginPath();
-            ctx.moveTo(
-                e.nativeEvent.offsetX,
-                e.nativeEvent.offsetY
-            )
-            prevPoint.current = {
-                x: e.nativeEvent.offsetX,
-                y: e.nativeEvent.offsetY
-            };
+            ctx.moveTo(offsetX, offsetY);
+            prevPoint.current = {x: offsetX, y: offsetY};
         }
 
         function handleMouseMove(e){
-            if(!drawing.current) return;
-            const x = e.nativeEvent.offsetX;
-            const y = e.nativeEvent.offsetY;
+            if (!drawing.current) return;
+            const { offsetX, offsetY } = e;
+            const x = offsetX;
+            const y = offsetY;
             ctx.lineTo(x, y);
             ctx.strokeStyle = color;
             ctx.lineWidth = size;
             ctx.stroke();
+
             const x0 = prevPoint.current.x;
             const y0 = prevPoint.current.y;
             const x1 = x;
             const y1 = y;
-            prevPoint.current = {x: x1, y: y1};
-            if(wsRef?.current?.readyState === WebSocket.OPEN) {
+            prevPoint.current = { x: x1, y: y1 };
+
+            if(wsRef.current?.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify({
                     type: 'DRAW',
-                    payload: {x0, y0, x1, y1, color, size}
+                    payload: { x0, y0, x1, y1, color, size }
                 }))
             }
         }
