@@ -1,7 +1,7 @@
 import React, {useRef, useState, useEffect} from 'react';
 import styles from './GameRoom.module.css';
 
-export default function GameRoom({roomId, messages, onSendMessage, wsRef}) {
+export default function GameRoom({roomId, messages, onSendMessage, wsRef, theme, drawingPhase}) {
     const canvasRef = useRef(null);
     const [color, setColor] = useState('#000000');
     const [size, setSize] = useState(4);
@@ -69,6 +69,11 @@ export default function GameRoom({roomId, messages, onSendMessage, wsRef}) {
 
     return (
         <div className={styles.container}>
+            {!drawingPhase && theme && (
+                <div className={styles.themeOverlay}>
+                    Draw: {theme}
+                </div>
+            )}
             <div className={styles.canvasSection}>
                 <canvas ref={canvasRef} className={styles.canvas} />
 

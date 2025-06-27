@@ -126,3 +126,13 @@ class ChatMessageResponse(BaseModel):
     
     class Config:
         from_attributes = True
+        
+class ThemeCreate(BaseModel):
+    test: str
+    
+class ThemeResponse(BaseModel):
+    id: int
+    test: str
+    
+    class Config:
+        from_attributes = True

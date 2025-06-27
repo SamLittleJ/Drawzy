@@ -87,3 +87,8 @@ class ChatMessage(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     user = relationship("User", back_populates="chat_messages")
     room = relationship("Room", back_populates="chat_messages")
+    
+class Theme(Base):
+    __tablename__ = "themes"
+    id = Column(Integer, primary_key=True, index=True)
+    test = Column(String(100), unique=True, nullable=False)
