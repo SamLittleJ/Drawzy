@@ -61,9 +61,11 @@ export default function RoomPage() {
 }, [code]);
 
     function startGame() {
-        if (wsRef.current?.readyState === WebSocket.OPEN) {
-            wsRef.current.send(JSON.stringify({type: 'START_GAME'}));
-            console.log("Sent START_GAME event")
+        const ws = wsRef.current;
+        if(ws?.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({type: 'START_GAME'}));
+            console.log("START_GAME event sent");
+            setGameStarted(true);
         } else {
             console.warn("WebSocket is not open. Cannot send START_GAME event.");
         }
