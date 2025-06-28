@@ -5,30 +5,27 @@ export default function GameRoom({roomId, messages, onSendMessage, wsRef, theme,
     const canvasRef = useRef(null);
     const [color, setColor] = useState('#000000');
     const [size, setSize] = useState(4);
-    const drawing = useRef(false);
+    const [isDrawing, setIsDrawing] = useState(false);
     const prevPoint = useRef({x: 0, y: 0});
     const [input, setInput] = useState('');
 
     useEffect(() =>{
         const canvas = canvasRef.current;
-        if(!canvas) return;
         const ctx = canvas.getContext('2d');
-        canvas.width = canvas.offsetWidth;
-        canvas.height = canvas.offsetHeight;
 
         function handleMouseDown(e){
-            const { offsetX, offsetY } = e;
-            drawing.current = true;
             ctx.beginPath();
-            ctx.moveTo(offsetX, offsetY);
-            prevPoint.current = {x: offsetX, y: offsetY};
+            const x = e.clientX - canvas.offsetLeft;
+            const y = e.clientY - canvas.offsetTop;
+            ctx.moveTo(x, y);
+            prevPoint.current = {x, y};
+            setIsDrawing(true);
         }
 
         function handleMouseMove(e){
-            if (!drawing.current) return;
-            const { offsetX, offsetY } = e;
-            const x = offsetX;
-            const y = offsetY;
+            if (!drawing) return;
+            const x = e.clientX - canvas.offsetLeft;
+            const y = e.clientY - canvas.offsetTop;
             ctx.lineTo(x, y);
             ctx.strokeStyle = color;
             ctx.lineWidth = size;
@@ -38,7 +35,7 @@ export default function GameRoom({roomId, messages, onSendMessage, wsRef, theme,
             const y0 = prevPoint.current.y;
             const x1 = x;
             const y1 = y;
-            prevPoint.current = { x: x1, y: y1 };
+            prevPoint.current = { x :x1, y: y1 };
 
             if(wsRef.current?.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify({
@@ -49,7 +46,7 @@ export default function GameRoom({roomId, messages, onSendMessage, wsRef, theme,
         }
 
         function handleMouseUp(){
-            drawing.current = false;
+            setIsDrawing(false);
         }
 
         canvas.addEventListener('mousedown', handleMouseDown);
@@ -63,7 +60,7 @@ export default function GameRoom({roomId, messages, onSendMessage, wsRef, theme,
             canvas.removeEventListener('mouseup', handleMouseUp);
             canvas.removeEventListener('mouseleave', handleMouseUp);
         }
-    }, [color, size]);
+    }, [color, size, isDrawing, wsRef]);
 
     return (
         <div className={styles.container}>
