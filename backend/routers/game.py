@@ -47,6 +47,7 @@ async def run_game_loop(room_code: str, db: Session, websocket: WebSocket):
     for round_number in range(1, max_rounds + 1):
         theme_obj = db.query(Theme).order_by(func.rand()).first()
         theme = theme_obj.text if theme_obj else f"Draw theme for round {round_number}"
+        print(f"Starting round {round_number} with theme: {theme}")
         await manager.broadcast(room_code, {
             "type": EventType.SHOW_THEME.value,
             "payload": {"theme": theme}
