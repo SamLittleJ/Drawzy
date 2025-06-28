@@ -1,0 +1,54 @@
+.container {
+    display:flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+}
+
+.playersList {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    margin: 1rem 0;
+    width: 100%;
+}
+
+.playerItem {
+    display: flex;
+    flex-direction: column;
+    align-items:center;
+}
+
+.avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 0.5rem;
+    border: 2px solid #ccc;
+}
+
+.username {
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.startButton {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    color:white;
+    background-color: #4caf50;
+    border: none;
+    border-radius:4px;
+    cursor:pointer;
+    margin-top:1rem;
+}
+
+.startButton:disabled {
+    background-color: #9E9E9E;
+    cursor: not-allowed;
+}
