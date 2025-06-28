@@ -23,7 +23,7 @@ export default function GameRoom({roomId, messages, onSendMessage, wsRef, theme,
         }
 
         function handleMouseMove(e){
-            if (!drawing) return;
+            if (!isDrawing) return;
             const x = e.clientX - canvas.offsetLeft;
             const y = e.clientY - canvas.offsetTop;
             ctx.lineTo(x, y);
