@@ -3,37 +3,6 @@ import {useParams} from 'react-router-dom';
 import WaitingRoom from './components/WaitingRoom';
 import GameRoom from './components/GameRoom';
 
-function handleMessage(event) {
-    const msg = JSON.parse(event.data);
-
-    if (msg.type === 'PLAYER_JOIN') {
-        setPlayers(prev => [...prev, {id: msg.payload.id, username: msg.payload.username, avatarUrl: msg.payload.avatarUrl}]);
-        return;
-    }
-
-    if (msg.type === 'SHOW_THEME') {
-        setCurrentTheme(msg.payload.theme);
-        setDrawingPhase(false);
-        setGameStarted(true);
-        return;
-    }
-
-    if (msg.type === 'ROUND_START') {
-        setDrawingPhase(true);
-        return;
-    }
-
-    if (msg.type === 'ROUND_END') {
-        setCurrentTheme('');
-        setDrawingPhase(false);
-        return;
-    }
-
-    if (msg.type === 'CHAT') {
-        setMessages(prev => [...prev, {user: msg.payload.username, message: msg.payload.text}]);
-        return;
-    }
-}
 
 export default function RoomPage() {
     const {code} = useParams();
@@ -43,6 +12,40 @@ export default function RoomPage() {
     const [messages, setMessages] = useState([]);
     const [currentTheme, setCurrentTheme] = useState('null');
     const [drawingPhase, setDrawingPhase] = useState(false);
+
+    const handleMessage = (event) => {
+      const msg = JSON.parse(event.data);
+
+      if (msg.type === 'PLAYER_JOIN') {
+        setPlayers(prev => [
+          ...prev,
+          { id: msg.payload.id, username: msg.payload.username, avatarUrl: msg.payload.avatarUrl }
+        ]);
+        return;
+      }
+      if (msg.type === 'SHOW_THEME') {
+        setCurrentTheme(msg.payload.theme);
+        setDrawingPhase(false);
+        setGameStarted(true);
+        return;
+      }
+      if (msg.type === 'ROUND_START') {
+        setDrawingPhase(true);
+        return;
+      }
+      if (msg.type === 'ROUND_END') {
+        setCurrentTheme('');
+        setDrawingPhase(false);
+        return;
+      }
+      if (msg.type === 'CHAT') {
+        setMessages(prev => [
+          ...prev,
+          { user: msg.payload.username, message: msg.payload.text }
+        ]);
+        return;
+      }
+    };
 
     useEffect(() =>{
         const token = localStorage.getItem('access_token');
