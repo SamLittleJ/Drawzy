@@ -3,6 +3,38 @@ import {useParams} from 'react-router-dom';
 import WaitingRoom from './components/WaitingRoom';
 import GameRoom from './components/GameRoom';
 
+function handleMessage(event) {
+    const msg = JSON.parse(event.data);
+
+    if (msg.type === 'PLAYER_JOIN') {
+        setPlayers(prev => [...prev, {id: msg.payload.id, username: msg.payload.username, avatarUrl: msg.payload.avatarUrl}]);
+        return;
+    }
+
+    if (msg.type === 'SHOW_THEME') {
+        setCurrentTheme(msg.payload.theme);
+        setDrawingPhase(false);
+        setGameStarted(true);
+        return;
+    }
+
+    if (msg.type === 'ROUND_START') {
+        setDrawingPhase(true);
+        return;
+    }
+
+    if (msg.type === 'ROUND_END') {
+        setCurrentTheme('');
+        setDrawingPhase(false);
+        return;
+    }
+
+    if (msg.type === 'CHAT') {
+        setMessages(prev => [...prev, {user: msg.payload.username, message: msg.payload.text}]);
+        return;
+    }
+}
+
 export default function RoomPage() {
     const {code} = useParams();
     const wsRef = useRef(null);
@@ -22,43 +54,14 @@ export default function RoomPage() {
             console.log('WebSocket connection established');
         }
 
-        wsRef.current.onmessage = (event) => {
-            const msg = JSON.parse(event.data);
+        wsRef.current.onmessage = handleMessage;
 
-            if(msg.type === 'PLAYER_JOIN') {
-                setPlayers(prev => [...prev, {id: msg.payload.id, username: msg.payload.username, avatarUrl: msg.payload.avatarUrl}]);
-                return;
-            }
-            if(msg.type === 'SHOW_THEME'){
-                setCurrentTheme(msg.payload.theme);
-                setGameStarted(true);
-                return;
-            }
-
-            if(msg.type === 'ROUND_START') {
-                setDrawingPhase(true);
-                return;
-            }
-
-            if(msg.type === 'ROUND_END') {
-                setCurrentTheme('');
-                setDrawingPhase(false);
-                return;
-            }
-
-            if(msg.type === 'CHAT') {
-                setMessages(prev => [...prev, {user: msg.payload.username, message: msg.payload.text}]);
-            }
-            if(msg.type === 'DRAW') {
-
-            }
-    }
         return () => {
             if (wsRef.current){
                 wsRef.current.close();
             }
         }
-}, [code]);
+    }, [code]);
 
     function startGame() {
         const ws = wsRef.current;

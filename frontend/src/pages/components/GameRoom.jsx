@@ -8,12 +8,15 @@ export default function GameRoom({roomId, messages, onSendMessage, wsRef, theme,
     const [isDrawing, setIsDrawing] = useState(false);
     const prevPoint = useRef({x: 0, y: 0});
     const [input, setInput] = useState('');
+    const colorRef = useRef(color);
+    const sizeRef = useRef(size);
 
     useEffect(() =>{
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
 
         function handleMouseDown(e){
+            if(!drawingPhase) return;
             ctx.beginPath();
             const x = e.clientX - canvas.offsetLeft;
             const y = e.clientY - canvas.offsetTop;
@@ -23,12 +26,12 @@ export default function GameRoom({roomId, messages, onSendMessage, wsRef, theme,
         }
 
         function handleMouseMove(e){
-            if (!isDrawing) return;
+            if (!drawingPhase || !isDrawing) return;
             const x = e.clientX - canvas.offsetLeft;
             const y = e.clientY - canvas.offsetTop;
             ctx.lineTo(x, y);
-            ctx.strokeStyle = color;
-            ctx.lineWidth = size;
+            ctx.strokeStyle = colorRef.current;
+            ctx.lineWidth = sizeRef.current;
             ctx.stroke();
 
             const x0 = prevPoint.current.x;
@@ -40,7 +43,7 @@ export default function GameRoom({roomId, messages, onSendMessage, wsRef, theme,
             if(wsRef.current?.readyState === WebSocket.OPEN) {
                 wsRef.current.send(JSON.stringify({
                     type: 'DRAW',
-                    payload: { x0, y0, x1, y1, color, size }
+                    payload: { x0, y0, x1, y1, color: colorRef.current, size: sizeRef.current }
                 }))
             }
         }
@@ -60,7 +63,12 @@ export default function GameRoom({roomId, messages, onSendMessage, wsRef, theme,
             canvas.removeEventListener('mouseup', handleMouseUp);
             canvas.removeEventListener('mouseleave', handleMouseUp);
         }
-    }, [color, size, isDrawing, wsRef]);
+    }, []);
+
+    useEffect(()=>{
+        colorRef.current = color;
+        sizeRef.current = size;
+    }, [color, size]);
 
     return (
         <div className={styles.container}>
