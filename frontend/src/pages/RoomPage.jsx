@@ -79,6 +79,11 @@ export default function RoomPage() {
       gameWsRef.current.onmessage = (event) => {
         console.log("RoomPage game WS raw:", event.data);
         const msg = JSON.parse(event.data);
+
+        if (msg.type === 'PLAYER_JOIN') {
+            return;
+        }
+
         if (msg.type === 'SHOW_THEME') {
           setCurrentTheme(msg.payload.theme);
           setDrawingPhase(false);
