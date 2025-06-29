@@ -13,7 +13,7 @@ from sqlalchemy.orm  import Session
 from sqlalchemy import func
 from backend.models import Room, Round, Drawing, DrawingVote, RoomPlayer, Theme
 from backend.database import get_db 
-from backend.routers.ws import manager
+from backend.routers.game_ws_manager import manager
 
 logger = logging.getLogger("ws")
 logging.basicConfig(level=logging.INFO)
