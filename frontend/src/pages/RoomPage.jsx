@@ -57,7 +57,18 @@ export default function RoomPage() {
             console.log('WebSocket connection established');
         }
 
-        wsRef.current.onmessage = handleMessage;
+        wsRef.current.onmessage = (event) =>{
+            console.log("RoomPage received message:", event.data);
+            handleMessage(event);
+        }
+
+        wsRef.current.onerror = (error) => {
+            console.error('WebSocket error:', error);
+        }
+
+        wsRef.current.onclose = (event) => {
+            console.log('WebSocket connection closed:', event);
+        }
 
         return () => {
             if (wsRef.current){
@@ -68,10 +79,10 @@ export default function RoomPage() {
 
     function startGame() {
         const ws = wsRef.current;
+        console.log("Attempting to send START_GAME event, WebSocket state:", ws?.readyState);
         if(ws?.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({type: 'START_GAME'}));
             console.log("START_GAME event sent");   
-            setGameStarted(true);
         } else {
             console.warn("WebSocket is not open. Cannot send START_GAME event.");
         }
