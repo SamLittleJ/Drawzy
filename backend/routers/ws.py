@@ -213,6 +213,4 @@ async def websocket_game(
         logger.info(f"Game WS disconnected for room={code}, user={user.username}")
     except Exception as e:
         logger.exception(f"Error in Game WS for room={code}: {e}")
-        await websocket.close(code=1011, reason="Internal Server Error")
-                
-        
+        await websocket.close(code=1011, reason="Internal Server Error")    

@@ -9,7 +9,6 @@ class ConnectionManager:
         
 
     async def connect(self, room_code: str, websocket: WebSocket):
-        await websocket.accept()
         self.active_connections.setdefault(room_code, []).append(websocket)
 
     def disconnect(self, room_code: str, websocket: WebSocket):
@@ -28,7 +27,6 @@ class ConnectionManager:
                 self.disconnect(room_code, ws)
 
     async def connect_game(self, room_code: str, websocket: WebSocket):
-        await websocket.accept()
         self.active_game_connections.setdefault(room_code, []).append(websocket)
 
     def disconnect_game(self, room_code: str, websocket: WebSocket):
