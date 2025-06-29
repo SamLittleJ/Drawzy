@@ -136,6 +136,9 @@ async def game_ws(websocket:WebSocket, room_code:str, db: Session = Depends(get_
             if msg.get("type") == EventType.START_GAME.value:
                 print(f"Starting game for room {room_code}")
                 asyncio.create_task(run_game_loop(room_code, db, websocket))
+            elif msg.get("type") == EventType.PLAYER_JOIN.value:
+                await manager.broadcast(room_code, msg)
     except WebSocketDisconnect:
-        manager.disconnect(room_code, websocket)
+        if websocket in manager.active_connections.get(room_code, []):
+            manager.disconnect(room_code, websocket)
         print(f"Disconnected ws for room_code {room_code}")
