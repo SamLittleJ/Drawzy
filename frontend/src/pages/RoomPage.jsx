@@ -81,7 +81,10 @@ export default function RoomPage() {
         const msg = JSON.parse(event.data);
 
         if (msg.type === 'PLAYER_JOIN') {
-            return;
+            setPlayers(prev => [
+                ...prev,
+                { id: msg.payload.userId, username: msg.payload.username, avatarUrl: msg.payload.avatarUrl }
+            ]);
         }
 
         if (msg.type === 'SHOW_THEME') {

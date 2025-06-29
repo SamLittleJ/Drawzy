@@ -13,6 +13,7 @@ router = APIRouter(tags=["WebSocket"])
 class ConnectionManager:
     def __init__(self):
         self.active_connections: dict[str, list[WebSocket]] = {}
+        self.active_game_connections: dict[str, list[WebSocket]] = {}
         
     async def connect(self, room_code: str, websocket: WebSocket):
         self.active_connections.setdefault(room_code, []).append(websocket)
@@ -22,6 +23,20 @@ class ConnectionManager:
         
     async def broadcast(self, room_code: str, message: dict):
         for ws in self.active_connections.get(room_code, []):
+            await ws.send_json(message)
+            
+    async def connect_game(self, room_code: str, websocket: WebSocket):
+        self.active_game_connections.setdefault(room_code, []).append(websocket)
+        
+    def disconnect_game(self, room_code: str, websocket: WebSocket):
+        connections = self.active_game_connections.get(room_code, [])
+        if websocket in connections:
+            connections.remove(websocket)
+            if not connections:
+                self.active_game_connections.pop[room_code, None]
+    
+    async def broadcast_game(self, room_code: str, message: dict):
+        for ws in self.active_game_connections.get(room_code, []):
             await ws.send_json(message)
             
 manager = ConnectionManager()
