@@ -118,29 +118,14 @@ async def run_game_loop(room_code: str, db: Session, websocket: WebSocket):
     
 @router.websocket("/game/ws/{room_code}")
 async def game_ws(websocket:WebSocket, room_code:str, db: Session = Depends(get_db)):
-    await websocket.accept()
-    print(f" game_ws accepted, room_code={room_code}")
-    token = websocket.query_params.get("token")
-    user = get_current_user(token, db)
     await manager.connect(room_code, websocket)
-    print(f"connected socket for {room_code}: {len(manager.active_connections.get(room_code, []))}")
-    await manager.broadcast(room_code, {
-        "type": EventType.PLAYER_JOIN.value,
-        "payload":{
-            "userId": user.id,
-            "username": user.username,
-            "avatarUrl": getattr(user, "avatar_url", None),
-        }
-    })
-    
+    print(f"connected socket for {room_code}: {len(manager.active_connections.get(room_code, []))}") 
     try:
         while True:
-            print("Waiting for a message on game_ws")
-            msg = await websocket.receive_json()
-            print("Received message on game_ws:", msg)
+            msg = await websocket.receive_text()
             if msg.get("type") == EventType.START_GAME.value:
-                print("START GAME received")
-                await run_game_loop(room_code, db, websocket)
+                print(f"Starting game for room {room_code}")
+                asyncio.create_task(run_game_loop(room_code, db, websocket))
     except WebSocketDisconnect:
-        if websocket in manager.active_connections.get(room_code, []):
-            manager.disconnect(room_code, websocket)
+        manager.disconnect(room_code, websocket)
+        print(f"Disconnected ws for room_code {room_code}")
