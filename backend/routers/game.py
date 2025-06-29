@@ -120,6 +120,7 @@ async def run_game_loop(room_code: str, db: Session, websocket: WebSocket):
 @router.websocket("/game/ws/{room_code}")
 async def game_ws(websocket:WebSocket, room_code:str, db: Session = Depends(get_db)):
     await websocket.accept()
+    token = websocket.query_params.get("token")
     user = get_current_user(websocket, db)
     if not user:
         await websocket.close()
