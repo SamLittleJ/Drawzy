@@ -45,14 +45,17 @@ async def run_game_loop(room_code: str, db: Session, websocket: WebSocket):
     scoreboard = []
     
     for round_number in range(1, max_rounds + 1):
-        theme_obj = db.query(Theme).order_by(func.rand()).first()
-        theme = theme_obj.text if theme_obj else f"Draw theme for round {round_number}"
+        themes = db.query(Theme).all()
+        if themes:
+            theme = random.choice(themes).text
+        else:
+            theme =f"Draw theme for round {round_number}"
         print(f"Starting round {round_number} with theme: {theme}")
         await manager.broadcast(room_code, {
             "type": EventType.SHOW_THEME.value,
             "payload": {"theme": theme}
         })
-        await asyncio.sleep(10)
+        await asyncio.sleep(5)
         
         await manager.broadcast(room_code, {
             "type": EventType.ROUND_START.value,
@@ -119,6 +122,8 @@ async def game_ws(websocket:WebSocket, room_code:str, db: Session = Depends(get_
     print(f" game_ws accepted, room_code={room_code}")
     token = websocket.query_params.get("token")
     user = get_current_user(token, db)
+    await manager.connect(room_code, websocket)
+    print(f"connected socket for {room_code}: {len(manager.active_connections.get(room_code, []))}")
     await manager.broadcast(room_code, {
         "type": EventType.PLAYER_JOIN.value,
         "payload":{
@@ -127,8 +132,7 @@ async def game_ws(websocket:WebSocket, room_code:str, db: Session = Depends(get_
             "avatarUrl": getattr(user, "avatar_url", None),
         }
     })
-    await manager.connect(room_code, websocket)
-    print(f"connected socket for {room_code}: {len(manager.active_connections.get(room_code, []))}")
+    
     try:
         while True:
             print("Waiting for a message on game_ws")

@@ -10,7 +10,7 @@ export default function RoomPage() {
     const [gameStarted, setGameStarted] = useState(false);
     const [players, setPlayers] = useState([{id:1, username: 'You', avatarUrl: null}]);
     const [messages, setMessages] = useState([]);
-    const [currentTheme, setCurrentTheme] = useState('null');
+    const [currentTheme, setCurrentTheme] = useState('');
     const [drawingPhase, setDrawingPhase] = useState(false);
 
     const handleMessage = (event) => {
@@ -19,7 +19,7 @@ export default function RoomPage() {
       if (msg.type === 'PLAYER_JOIN') {
         setPlayers(prev => [
           ...prev,
-          { id: msg.payload.id, username: msg.payload.username, avatarUrl: msg.payload.avatarUrl }
+          { id: msg.payload.userId, username: msg.payload.username, avatarUrl: msg.payload.avatarUrl }
         ]);
         return;
       }
@@ -41,7 +41,7 @@ export default function RoomPage() {
       if (msg.type === 'CHAT') {
         setMessages(prev => [
           ...prev,
-          { user: msg.payload.username, message: msg.payload.text }
+          { user: msg.payload.user, message: msg.payload.message }
         ]);
         return;
       }
@@ -57,7 +57,18 @@ export default function RoomPage() {
             console.log('WebSocket connection established');
         }
 
-        wsRef.current.onmessage = handleMessage;
+        wsRef.current.onmessage = (event) =>{
+            console.log("RoomPage received message:", event.data);
+            handleMessage(event);
+        }
+
+        wsRef.current.onerror = (error) => {
+            console.error('WebSocket error:', error);
+        }
+
+        wsRef.current.onclose = (event) => {
+            console.log('WebSocket connection closed:', event);
+        }
 
         return () => {
             if (wsRef.current){
@@ -68,10 +79,10 @@ export default function RoomPage() {
 
     function startGame() {
         const ws = wsRef.current;
+        console.log("Attempting to send START_GAME event, WebSocket state:", ws?.readyState);
         if(ws?.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({type: 'START_GAME'}));
-            console.log("START_GAME event sent");
-            setGameStarted(true);
+            console.log("START_GAME event sent");   
         } else {
             console.warn("WebSocket is not open. Cannot send START_GAME event.");
         }

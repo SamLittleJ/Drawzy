@@ -31,9 +31,9 @@
 .canvas {
     border: 2px solid #ccc;
     border-radius:4px;
-    width:100%;
+    width:800px;
     height:600px;
-    cursor:crosshair;
+    cursor:default;
 }
 
 .controls {
