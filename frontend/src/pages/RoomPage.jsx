@@ -6,7 +6,7 @@ import GameRoom from './components/GameRoom';
 
 export default function RoomPage() {
     const {code} = useParams();
-    const wsRef = useRef(null);
+    const chatWsRef = useRef(null);
     const [gameStarted, setGameStarted] = useState(false);
     const [players, setPlayers] = useState([{id:1, username: 'You', avatarUrl: null}]);
     const [messages, setMessages] = useState([]);
@@ -23,21 +23,7 @@ export default function RoomPage() {
         ]);
         return;
       }
-      if (msg.type === 'SHOW_THEME') {
-        setCurrentTheme(msg.payload.theme);
-        setDrawingPhase(false);
-        setGameStarted(true);
-        return;
-      }
-      if (msg.type === 'ROUND_START') {
-        setDrawingPhase(true);
-        return;
-      }
-      if (msg.type === 'ROUND_END') {
-        setCurrentTheme('');
-        setDrawingPhase(false);
-        return;
-      }
+      
       if (msg.type === 'CHAT') {
         setMessages(prev => [
           ...prev,
@@ -51,46 +37,39 @@ export default function RoomPage() {
         const token = localStorage.getItem('access_token');
         const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
         const host = "drawzy-backend-alb-409373296.eu-central-1.elb.amazonaws.com"
-        wsRef.current = new WebSocket(`${protocol}://${host}/game/ws/${code}?token=${token}`);
+        chatWsRef.current = new WebSocket(`${protocol}://${host}/ws/${code}?token=${token}`);
 
-        wsRef.current.onopen = () => {
+        chatWsRef.current.onopen = () => {
             console.log('WebSocket connection established');
         }
 
-        wsRef.current.onmessage = (event) =>{
+        chatWsRef.current.onmessage = (event) =>{
             console.log("RoomPage received message:", event.data);
             handleMessage(event);
         }
 
-        wsRef.current.onerror = (error) => {
+        chatWsRef.current.onerror = (error) => {
             console.error('WebSocket error:', error);
         }
 
-        wsRef.current.onclose = (event) => {
+        chatWsRef.current.onclose = (event) => {
             console.log('WebSocket connection closed:', event);
         }
 
         return () => {
-            if (wsRef.current){
-                wsRef.current.close();
+            if (chatWsRef.current){
+                chatWsRef.current.close();
             }
         }
     }, [code]);
 
     function startGame() {
-        const ws = wsRef.current;
-        console.log("Attempting to send START_GAME event, WebSocket state:", ws?.readyState);
-        if(ws?.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({type: 'START_GAME'}));
-            console.log("START_GAME event sent");   
-        } else {
-            console.warn("WebSocket is not open. Cannot send START_GAME event.");
-        }
+        
     }
 
     function sendMessage(message) {
-        if (wsRef.current?.readyState === WebSocket.OPEN) {
-            wsRef.current.send(JSON.stringify({
+        if (chatWsRef.current?.readyState === WebSocket.OPEN) {
+            chatWsRef.current.send(JSON.stringify({
                 type: 'CHAT',
                 payload: { message }
             }))
@@ -111,7 +90,7 @@ export default function RoomPage() {
             roomId={code}
             messages={messages}
             onSendMessage={sendMessage}
-            wsRef={wsRef}
+            wsRef={chatWsRef}
             theme={currentTheme}
             drawingPhase={drawingPhase}
         />
