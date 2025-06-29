@@ -12,7 +12,6 @@ export default function GameRoom({roomId: propRoomId, messages, onSendMessage, w
     const sizeRef = useRef(size);
     const isDrawing = useRef(false);
     const {roomId} = useParams();
-    const gameWsRef = useRef(null);
     const [theme, setTheme] = useState(propTheme || '');
     const [drawingPhase, setDrawingPhase] = useState(propDrawingPhase);
 
@@ -48,8 +47,8 @@ export default function GameRoom({roomId: propRoomId, messages, onSendMessage, w
             const y1 = y;
             prevPoint.current = { x :x1, y: y1 };
 
-            if(gameWsRef.current?.readyState === WebSocket.OPEN) {
-                gameWsRef.current.send(JSON.stringify({
+            if(wsRef.current?.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify({
                     type: 'DRAW',
                     payload: { x0, y0, x1, y1, color: colorRef.current, size: sizeRef.current }
                 }));
@@ -71,53 +70,12 @@ export default function GameRoom({roomId: propRoomId, messages, onSendMessage, w
             canvas.removeEventListener('mouseup', handleMouseUp);
             window.removeEventListener('mouseup', handleMouseUp);
         }
-    }, []);
+    }, [color, size]);
 
     useEffect(()=>{
         colorRef.current = color;
         sizeRef.current = size;
     }, [color, size]);
-
-    useEffect(() =>{
-        const token = localStorage.getItem('access_token');
-        const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-        const host = "drawzy-backend-alb-409373296.eu-central-1.elb.amazonaws.com";
-        gameWsRef.current = new WebSocket(`${protocol}://${host}/game/ws/${roomId}?token=${token}`);
-
-        gameWsRef.current.onopen = () =>{
-            console.log('Game WebSocket connection established');
-        }
-
-        gameWsRef.current.onmessage = (event) => {
-            const msg = JSON.parse(event.data);
-
-            if(msg.type === 'SHOW_THEME') {
-                setTheme(msg.payload.theme);
-                setDrawingPhase(false);
-            } else if (msg.type === 'ROUND_START') {
-                setDrawingPhase(true);
-            } else if (msg.type === 'ROUND_END') {
-                setDrawingPhase(false);
-            } else if (msg.type === 'DRAW') {
-                const { x0, y0, x1, y1, color, size} = msg.payload;
-                const ctx = canvasRef.current.getContext('2d');
-                ctx.strokstyle= color;
-                ctx.lineWidth = size;
-                ctx.beginPath();
-                ctx.moveTo(x0, y0);
-                ctx.lineTo(x1, y1);
-                ctx.stroke();
-            }
-        }
-
-        gameWsRef.current.onerror = (e) => {
-            if (gameWsRef.current) gameWsRef.current.close();
-        }
-
-        gameWsRef.current.onclose = (e) =>{
-            console.log('Game WebSocket connection closed:', e);
-        }
-    }, [roomId])
 
     return (
         <div className={styles.container}>
