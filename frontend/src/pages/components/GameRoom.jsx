@@ -88,7 +88,7 @@ export default function GameRoom({roomId: propRoomId, messages, onSendMessage, w
             console.log('Game WebSocket connection established');
         }
 
-        gameWsRef.current.onmesage = (event) => {
+        gameWsRef.current.onmessage = (event) => {
             const msg = JSON.parse(event.data);
 
             if(msg.type === 'SHOW_THEME') {
@@ -112,6 +112,10 @@ export default function GameRoom({roomId: propRoomId, messages, onSendMessage, w
 
         gameWsRef.current.onerror = (e) => {
             if (gameWsRef.current) gameWsRef.current.close();
+        }
+
+        gameWsRef.current.onclose = (e) =>{
+            console.log('Game WebSocket connection closed:', e);
         }
     }, [roomId])
 
