@@ -126,7 +126,7 @@ async def game_ws(websocket:WebSocket, room_code:str, db: Session = Depends(get_
         await websocket.close()
         return
     
-    manager.connect(room_code, websocket)
+    await manager.connect(room_code, websocket)
     print(f"connected socket for {room_code}: {len(manager.active_connections.get(room_code, []))}") 
     print(f"game_ws accepted, room_code={room_code}")
     print("Waiting for start game event...")
