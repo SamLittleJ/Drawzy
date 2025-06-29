@@ -5,30 +5,33 @@ export default function GameRoom({roomId, messages, onSendMessage, wsRef, theme,
     const canvasRef = useRef(null);
     const [color, setColor] = useState('#000000');
     const [size, setSize] = useState(4);
-    const [isDrawing, setIsDrawing] = useState(false);
     const prevPoint = useRef({x: 0, y: 0});
     const [input, setInput] = useState('');
     const colorRef = useRef(color);
     const sizeRef = useRef(size);
+    const isDrawing = useRef(false);
 
     useEffect(() =>{
         const canvas = canvasRef.current;
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
         const ctx = canvas.getContext('2d');
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
 
         function handleMouseDown(e){
-            if(!drawingPhase) return;
+            const {offsetX: x, offsetY: y} = e;
+            console.log('Mouse Down:', x, y);
             ctx.beginPath();
-            const x = e.clientX - canvas.offsetLeft;
-            const y = e.clientY - canvas.offsetTop;
             ctx.moveTo(x, y);
             prevPoint.current = {x, y};
-            setIsDrawing(true);
+            isDrawing.current = true;
         }
 
         function handleMouseMove(e){
-            if (!drawingPhase || !isDrawing) return;
-            const x = e.clientX - canvas.offsetLeft;
-            const y = e.clientY - canvas.offsetTop;
+            const {offsetX: x, offsetY: y} = e;
+            if(!isDrawing.current) return;
+            console.log('Mouse Move:', x, y);
             ctx.lineTo(x, y);
             ctx.strokeStyle = colorRef.current;
             ctx.lineWidth = sizeRef.current;
@@ -49,19 +52,19 @@ export default function GameRoom({roomId, messages, onSendMessage, wsRef, theme,
         }
 
         function handleMouseUp(){
-            setIsDrawing(false);
+            isDrawing.current = false;
         }
 
         canvas.addEventListener('mousedown', handleMouseDown);
         canvas.addEventListener('mousemove', handleMouseMove);
         canvas.addEventListener('mouseup', handleMouseUp);
-        canvas.addEventListener('mouseleave', handleMouseUp);
+        window.addEventListener('mouseup', handleMouseUp); // Handle mouse up when leaving the canvas
 
         return () =>{
             canvas.removeEventListener('mousedown', handleMouseDown);
             canvas.removeEventListener('mousemove', handleMouseMove);
             canvas.removeEventListener('mouseup', handleMouseUp);
-            canvas.removeEventListener('mouseleave', handleMouseUp);
+            window.removeEventListener('mouseup', handleMouseUp);
         }
     }, []);
 
@@ -97,7 +100,7 @@ export default function GameRoom({roomId, messages, onSendMessage, wsRef, theme,
                             min="1"
                             max="20"
                             value={size}
-                            onChange={(e) => setSize(e.target.value)}
+                            onChange={(e) => setSize(Number(e.target.value))}
                         />
                     </label>
                 </div>
