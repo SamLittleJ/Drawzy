@@ -19,6 +19,6 @@ async def websocket(websocket: WebSocket, code: str, db: Session = Depends(get_d
     await websocket.accept()
     print(f"WebSocket accepted for user={user.username}, room={code}")
 
-    # Keep the connection open indefinitely
-    import asyncio
-    await asyncio.Event().wait()
+    # Keep the connection open by continuously reading client messages
+    while True:
+        await websocket.receive_text()
