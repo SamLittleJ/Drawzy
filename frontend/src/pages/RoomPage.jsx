@@ -19,15 +19,30 @@ export default function RoomPage() {
       const host = "drawzy-backend-alb-409373296.eu-central-1.elb.amazonaws.com";
       wsRef.current = new WebSocket(`${protocol}://${host}/ws/${code}?token=${token}`);
 
+      let pingInterval;
+
       wsRef.current.onopen = () => {
         console.log('Unified WS connected');
+        // Start heartbeat to prevent idle timeout
+        pingInterval = setInterval(() => {
+          wsRef.current.send(JSON.stringify({ type: 'PING' }));
+        }, 15000);
         // Announce this client has joined
         wsRef.current.send(JSON.stringify({ type: 'PLAYER_JOIN' }));
       };
 
       wsRef.current.onmessage = (event) => {
-        console.log("Unified WS message received:", event.data);
         const msg = JSON.parse(event.data);
+        if (msg.type === 'PING') {
+          // reply with PONG
+          wsRef.current.send(JSON.stringify({ type: 'PONG' }));
+          return;
+        }
+        if (msg.type === 'PONG') {
+          // received heartbeat response, ignore
+          return;
+        }
+        console.log("Unified WS message received:", event.data);
         console.log("Unified WS message parsed:", msg);
         switch (msg.type) {
           case 'PLAYER_JOIN':
@@ -82,7 +97,10 @@ export default function RoomPage() {
       };
       console.log('Unified WS onclose set up');
 
-      return () =>  wsRef.current?.close();
+      return () => {
+        clearInterval(pingInterval);
+        wsRef.current?.close();
+      };
     }, [code]);
 
     function startGame() {
