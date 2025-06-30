@@ -188,14 +188,14 @@ resource "aws_lb" "ws_nlb" {
 # Target group for NLB TCP traffic on port 8080
 resource "aws_lb_target_group" "ws_nlb_tg" {
   name     = "drawzy-ws-nlb-tg"
-  port     = 80
+  port     = 8080
   protocol = "TCP"
   vpc_id   = var.vpc_id
 
   health_check {
     protocol = "HTTP"
     path     = "/health"
-    port     = "80"
+    port     = "8080"
     interval = 30
     timeout  = 5
     healthy_threshold   = 3
