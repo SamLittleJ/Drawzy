@@ -52,7 +52,6 @@ export default function RoomPage() {
             setMessages(prev => [...prev, msg.payload]);
             break;
           case 'DRAW':
-            // drawing handled in GameRoom via wsRef prop
             break;
           case 'SHOW_THEME':
             setCurrentTheme(msg.payload.theme);
@@ -67,35 +66,30 @@ export default function RoomPage() {
             setCurrentTheme('');
             break;
           case 'VOTE_RESULT':
-            // handle vote results if needed
             break;
           case 'GAME_END':
-            // handle game end if needed
             break;
           default:
             console.warn('Unknown WS type', msg.type);
         }
       };
-      console.log('Unified WS onmessage set up');
+
       wsRef.current.onerror = (event) => {
-        // Suppress protocol error 1002 (idle timeout) from spamming the console
+        // Suppress protocol error 1002 (idle timeout)
         if (event?.code && event.code !== 1002) {
           console.error('Unified WS error event:', event);
         } else {
           console.debug('Unified WS protocol error (1002) suppressed.');
         }
       };
-      console.log('Unified WS onerror set up');
 
       wsRef.current.onclose = (e) => {
         if (e.code === 1002) {
-          // Protocol error (e.g., idle timeout) - ignore silently or trigger reconnection
           console.log('Unified WS closed with code 1002 (protocol error), likely idle timeout.');
         } else {
           console.warn('Unified WS closed', e.code, e.reason);
         }
       };
-      console.log('Unified WS onclose set up');
 
       return () => {
         clearInterval(pingInterval);
