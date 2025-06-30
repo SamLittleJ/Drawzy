@@ -93,7 +93,9 @@ export default function RoomPage() {
 
       return () => {
         clearInterval(pingInterval);
-        wsRef.current?.close();
+        if (wsRef.current) {
+          wsRef.current.close();
+        }
       };
     }, [code]);
 
