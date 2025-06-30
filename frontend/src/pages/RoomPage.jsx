@@ -62,9 +62,25 @@ export default function RoomPage() {
         }
       };
       console.log('Unified WS onmessage set up');
-      wsRef.current.onerror = (e) => console.error('Unified WS error', e);
+      wsRef.current.onerror = (event) => {
+        // Suppress protocol error 1002 (idle timeout) from spamming the console
+        if (event?.code && event.code !== 1002) {
+          console.error('Unified WS error event:', event);
+        } else {
+          console.debug('Unified WS protocol error (1002) suppressed.');
+        }
+      };
       console.log('Unified WS onerror set up');
-      wsRef.current.onclose = (e) => console.warn('Unified WS closed', e.code, e.reason);
+
+      wsRef.current.onclose = (e) => {
+        if (e.code === 1002) {
+          // Protocol error (e.g., idle timeout) - ignore silently or trigger reconnection
+          console.log('Unified WS closed with code 1002 (protocol error), likely idle timeout.');
+        } else {
+          console.warn('Unified WS closed', e.code, e.reason);
+        }
+      };
+      console.log('Unified WS onclose set up');
 
       return () =>  wsRef.current?.close();
     }, [code]);
