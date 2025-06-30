@@ -1,8 +1,7 @@
 import React, {useRef, useState, useEffect} from 'react';
-import {useParams} from 'react-router-dom';
 import styles from './GameRoom.module.css';
 
-export default function GameRoom({roomId: propRoomId, messages, onSendMessage, wsRef, theme:propTheme, drawingPhase: propDrawingPhase}) {
+export default function GameRoom({ roomId, messages, onSendMessage, wsRef, theme, drawingPhase }) {
     const canvasRef = useRef(null);
     const [color, setColor] = useState('#000000');
     const [size, setSize] = useState(4);
@@ -11,9 +10,6 @@ export default function GameRoom({roomId: propRoomId, messages, onSendMessage, w
     const colorRef = useRef(color);
     const sizeRef = useRef(size);
     const isDrawing = useRef(false);
-    const {roomId} = useParams();
-    const [theme, setTheme] = useState(propTheme || '');
-    const [drawingPhase, setDrawingPhase] = useState(propDrawingPhase);
 
     useEffect(() =>{
         const canvas = canvasRef.current;
@@ -47,11 +43,16 @@ export default function GameRoom({roomId: propRoomId, messages, onSendMessage, w
             const y1 = y;
             prevPoint.current = { x :x1, y: y1 };
 
+            console.log('handleMouseMove - wsRef.current:', wsRef.current, 'readyState:', wsRef.current?.readyState);
             if(wsRef.current?.readyState === WebSocket.OPEN) {
-                wsRef.current.send(JSON.stringify({
-                    type: 'DRAW',
-                    payload: { x0, y0, x1, y1, color: colorRef.current, size: sizeRef.current }
-                }));
+                try {
+                    wsRef.current.send(JSON.stringify({
+                        type: 'DRAW',
+                        payload: { x0, y0, x1, y1, color: colorRef.current, size: sizeRef.current }
+                    }));
+                } catch (err) {
+                    console.error('Error sending DRAW event:', err);
+                }
             }
         }
 

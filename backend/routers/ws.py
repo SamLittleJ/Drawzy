@@ -65,7 +65,7 @@ async def run_game_loop(room_code: str, db: Session, vote_queue: asyncio.Queue):
         db.commit()
         db.refresh(new_round)
         
-        await manager.broadcast_game(room_code, {
+        await manager.broadcast(room_code, {
           "type": EventType.ROUND_START.value,
           "payload": {
               "round": round_num,
@@ -85,7 +85,7 @@ async def run_game_loop(room_code: str, db: Session, vote_queue: asyncio.Queue):
         db.commit()
         db.refresh(drawing)
         
-        await manager.broadcast_game(room_code, {
+        await manager.broadcast(room_code, {
             "type": EventType.SHOW_DRAWING.value,
             "payload": {
                 "round": round_num,
@@ -113,7 +113,7 @@ async def run_game_loop(room_code: str, db: Session, vote_queue: asyncio.Queue):
                 votes.append(vote)
         db.commit()
         
-        await manager.broadcast_game(room_code, {
+        await manager.broadcast(room_code, {
             "type": EventType.VOTE_RESULT.value,
             "payload": {
                 "votes": len(votes),
@@ -121,15 +121,15 @@ async def run_game_loop(room_code: str, db: Session, vote_queue: asyncio.Queue):
                 }
         })
         
-        await manager.broadcast_game(room_code, {
+        await manager.broadcast(room_code, {
             "type": EventType.ROUND_END.value,
             "payload": {
                 "round": round_num,
             }
         })
         
-    await manager.broadcast_game(room_code, {
-        "type": EventType.END_GAME.value,
+    await manager.broadcast(room_code, {
+        "type": EventType.GAME_END.value,
         "payload": {
             "message": "Game OVER!"
         }
@@ -172,27 +172,20 @@ async def websocket_chat(
             msg_type = data.get("type")
             payload = data.get("payload", {})
 
-            if msg_type == "CHAT":
-                broadcast_msg = {
-                    "type": "CHAT",
-                    "payload": {"user": user.username, "message": payload.get("message", "")}
-                }
-                await manager.broadcast(code, broadcast_msg)
-
-            elif msg_type == "DRAW":
-                await manager.broadcast(code, {"type": "DRAW", "payload": payload})
-
-            elif msg_type == EventType.PLAYER_JOIN.value:
+            if msg_type == EventType.PLAYER_JOIN.value:
                 await manager.broadcast(code, data)
-
+            elif msg_type == "CHAT":
+                await manager.broadcast(code, {"type":"CHAT", "payload":{"user":user.username, "message":payload.get("message","")}})
+            elif msg_type == "DRAW":
+                await manager.broadcast(code, {"type":"DRAW", "payload":payload})
             elif msg_type == EventType.START_GAME.value:
+                # start the game loop in background
                 asyncio.create_task(run_game_loop(code, db, vote_queue))
-
             elif msg_type == EventType.VOTE.value:
+                # enqueue votes for game loop
                 await vote_queue.put(payload)
-
             else:
-                logger.warning(f"Unknown message type {msg_type} from room={code}")
+                logger.warning(f"Unknown message type {msg_type} in chat WS")
     except Exception as e:
         logger.exception(f"Unexpected error in room={code}")
         await websocket.close(code=1011)

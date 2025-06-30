@@ -12,6 +12,8 @@ export default function RoomPage() {
     const [messages, setMessages] = useState([]);
     const [currentTheme, setCurrentTheme] = useState('');
     const [drawingPhase, setDrawingPhase] = useState(false);
+    const userId = Number(localStorage.getItem('user_id'));
+    const username = localStorage.getItem('username') || 'Anonymous';
 
     useEffect(() => {
       const token = localStorage.getItem('access_token');
@@ -20,55 +22,59 @@ export default function RoomPage() {
       wsRef.current = new WebSocket(`${protocol}://${host}/ws/${code}?token=${token}`);
 
       wsRef.current.onopen = () => {
-        console.log('WebSocket connected for all events');
+        console.log('Unified WS connected');
+        // Announce this client has joined
+        wsRef.current.send(JSON.stringify({
+          type: 'PLAYER_JOIN',
+          payload: { id: userId, username: username, avatarUrl: null }
+        }));
       };
 
       wsRef.current.onmessage = (event) => {
-        console.log('WS received:', event.data);
         const msg = JSON.parse(event.data);
-
-        if (msg.type === 'PLAYER_JOIN') {
-          setPlayers(prev => [
-            ...prev,
-            { id: msg.payload.userId, username: msg.payload.username, avatarUrl: msg.payload.avatarUrl }
-          ]);
-        } else if (msg.type === 'CHAT') {
-          setMessages(prev => [
-            ...prev,
-            { user: msg.payload.user, message: msg.payload.message }
-          ]);
-        } else if (msg.type === 'DRAW') {
-          // DRAW events will be rendered in GameRoom via wsRef prop
-        } else if (msg.type === 'VOTE_RESULT') {
-          // handle vote results if needed
-        } else if (msg.type === 'GAME_END') {
-          // handle game end
-        } else if (msg.type === 'SHOW_THEME') {
-          setCurrentTheme(msg.payload.theme);
-          setDrawingPhase(false);
-          setGameStarted(true);
-        } else if (msg.type === 'ROUND_START') {
-          setDrawingPhase(true);
-        } else if (msg.type === 'ROUND_END') {
-          setDrawingPhase(false);
-          setCurrentTheme('');
+        switch (msg.type) {
+          case 'PLAYER_JOIN':
+            setPlayers(prev => [...prev, msg.payload]);
+            break;
+          case 'CHAT':
+            setMessages(prev => [...prev, msg.payload]);
+            break;
+          case 'DRAW':
+            // drawing handled in GameRoom via wsRef prop
+            break;
+          case 'SHOW_THEME':
+            setCurrentTheme(msg.payload.theme);
+            setDrawingPhase(false);
+            setGameStarted(true);
+            break;
+          case 'ROUND_START':
+            setDrawingPhase(true);
+            break;
+          case 'ROUND_END':
+            setDrawingPhase(false);
+            setCurrentTheme('');
+            break;
+          case 'VOTE_RESULT':
+            // handle vote results if needed
+            break;
+          case 'GAME_END':
+            // handle game end if needed
+            break;
+          default:
+            console.warn('Unknown WS type', msg.type);
         }
       };
 
-      wsRef.current.onerror = (error) => {
-        console.error('WebSocket error:', error);
-      };
+      wsRef.current.onerror = (e) => console.error('Unified WS error', e);
+      wsRef.current.onclose = (e) => console.warn('Unified WS closed', e.code, e.reason);
 
-      wsRef.current.onclose = (event) => {
-        console.log('WebSocket closed:', event);
-      };
-
-      return () => wsRef.current?.close();
+      return () =>  wsRef.current?.close();
     }, [code]);
 
     function startGame() {
-      console.log('Sending START_GAME on main WS');
-      wsRef.current.send(JSON.stringify({ type: 'START_GAME' }));
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({ type: 'START_GAME' }));
+      }
       setGameStarted(true);
     }
 
