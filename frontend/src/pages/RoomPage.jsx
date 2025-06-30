@@ -12,8 +12,6 @@ export default function RoomPage() {
     const [messages, setMessages] = useState([]);
     const [currentTheme, setCurrentTheme] = useState('');
     const [drawingPhase, setDrawingPhase] = useState(false);
-    const userId = Number(localStorage.getItem('user_id'));
-    const username = localStorage.getItem('username') || 'Anonymous';
 
     useEffect(() => {
       const token = localStorage.getItem('access_token');
@@ -24,10 +22,7 @@ export default function RoomPage() {
       wsRef.current.onopen = () => {
         console.log('Unified WS connected');
         // Announce this client has joined
-        wsRef.current.send(JSON.stringify({
-          type: 'PLAYER_JOIN',
-          payload: { id: userId, username: username, avatarUrl: null }
-        }));
+        wsRef.current.send(JSON.stringify({ type: 'PLAYER_JOIN' }));
       };
 
       wsRef.current.onmessage = (event) => {
@@ -79,9 +74,9 @@ export default function RoomPage() {
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         console.log('Sending START_GAME message');
         wsRef.current.send(JSON.stringify({ type: 'START_GAME' }));
+        console.log('START_GAME sent; awaiting server response');
       }
-      console.log('Game start message sent');
-      setGameStarted(true);
+      // setGameStarted(true);
     }
 
     if (!gameStarted) {
