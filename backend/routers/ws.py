@@ -149,7 +149,11 @@ async def websocket_chat(
     print(f"WS connect attemp: room={code}, client={websocket.client}")
     await websocket.accept()
     print(f"WS user={user.username} connected to room={code}")
-    await manager.connect(code, websocket)
+    try:
+        await manager.connect(code, websocket)
+    except Exception as e:
+        await websocket.close(code=1011, reason=f"Connection error: {e}")
+        return
     print(f"WS manager connected for room={code}, user={user.username}")
     vote_queue: asyncio.Queue = asyncio.Queue()
     logger.info(f"Unified WS connected for room={code}, user={user.username}")
