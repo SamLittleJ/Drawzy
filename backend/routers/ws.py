@@ -141,7 +141,9 @@ async def websocket_chat(
     code: str,
     db: Session = Depends(get_db)
 ):
+    print("WebSocket connection attempt")
     await websocket.accept()
+    print("WebSocket connection established, entering sleep")
     await asyncio.sleep(30)
     await websocket.close(code=1000, reason="Test close after 30 seconds")
     # try:
