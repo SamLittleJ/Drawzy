@@ -141,70 +141,74 @@ async def websocket_chat(
     code: str,
     db: Session = Depends(get_db)
 ):
-    try:
-        user = await get_current_user_ws(websocket,db)
-    except Exception as e:
-        await websocket.close(code=e.code, reason=e.reason)
-        return
-    print(f"WS connect attemp: room={code}, client={websocket.client}")
+    user = await get_current_user(websocket, db)
     await websocket.accept()
-    print(f"WS user={user.username} connected to room={code}")
-    try:
-        await manager.connect(code, websocket)
-    except Exception as e:
-        await websocket.close(code=1011, reason=f"Connection error: {e}")
-        return
-    print(f"WS manager connected for room={code}, user={user.username}")
-    vote_queue: asyncio.Queue = asyncio.Queue()
-    logger.info(f"Unified WS connected for room={code}, user={user.username}")
+    await asyncio.sleep(30)
+    await websocket.close(code=1000, reason="Test close after 30 seconds")
+    # try:
+    #     user = await get_current_user_ws(websocket,db)
+    # except Exception as e:
+    #     await websocket.close(code=e.code, reason=e.reason)
+    #     return
+    # print(f"WS connect attemp: room={code}, client={websocket.client}")
+    # await websocket.accept()
+    # print(f"WS user={user.username} connected to room={code}")
+    # try:
+    #     await manager.connect(code, websocket)
+    # except Exception as e:
+    #     await websocket.close(code=1011, reason=f"Connection error: {e}")
+    #     return
+    # print(f"WS manager connected for room={code}, user={user.username}")
+    # vote_queue: asyncio.Queue = asyncio.Queue()
+    # logger.info(f"Unified WS connected for room={code}, user={user.username}")
     
-    try:
-        print(f"WS handler loop start for room={code}")
-        while True:
-            print(f"WS waiting for message in room={code}, user={user.username}")
-            try:
-                print(f"WS receiving JSON for room={code}, user={user.username}")
-                data = await websocket.receive_json()
-                print(f"WS received data: {data} for room={code}, user={user.username}")
-            except WebSocketDisconnect:
-                manager.disconnect(code, websocket)
-                logger.info(f"WS disconnected for room={code}, user={user.username}")
-                if not manager.active_connections.get(code):
-                    db.query(Room).filter(Room.code == code).delete()
-                    db.commit()
-                break
-            except Exception as e:
-                logger.warning(f"Ignoring non-JSON message or parsing error: {e}")
-                continue
+    # try:
+    #     print(f"WS handler loop start for room={code}")
+    #     while True:
+    #         print(f"WS waiting for message in room={code}, user={user.username}")
+    #         try:
+    #             print(f"WS receiving JSON for room={code}, user={user.username}")
+    #             data = await websocket.receive_json()
+    #             print(f"WS received data: {data} for room={code}, user={user.username}")
+    #         except WebSocketDisconnect:
+    #             manager.disconnect(code, websocket)
+    #             logger.info(f"WS disconnected for room={code}, user={user.username}")
+    #             if not manager.active_connections.get(code):
+    #                 db.query(Room).filter(Room.code == code).delete()
+    #                 db.commit()
+    #             break
+    #         except Exception as e:
+    #             logger.warning(f"Ignoring non-JSON message or parsing error: {e}")
+    #             continue
             
-            msg_type = data.get("type")
-            payload = data.get("payload", {})
+    #         msg_type = data.get("type")
+    #         payload = data.get("payload", {})
 
-            if msg_type == EventType.PLAYER_JOIN.value:
-                # Server-side player join: broadcast user info
-                await manager.broadcast(code, {
-                    "type": EventType.PLAYER_JOIN.value,
-                    "payload": {
-                        "id": user.id,
-                        "username": user.username,
-                        "avatarUrl": getattr(user, "avatar_url", None)
-                    }
-                })
-            elif msg_type == "CHAT":
-                await manager.broadcast(code, {"type":"CHAT", "payload":{"user":user.username, "message":payload.get("message","")}})
-            elif msg_type == "DRAW":
-                await manager.broadcast(code, {"type":"DRAW", "payload":payload})
-            elif msg_type == EventType.START_GAME.value:
-                # STUB: broadcast a SHOW_THEME event for testing instead of full game loop
-                await manager.broadcast(code, {
-                    "type": EventType.SHOW_THEME.value,
-                    "payload": { "theme": "Stub Theme: Test Round" }
-                })
-            elif msg_type == EventType.VOTE.value:
-                # enqueue votes for game loop
-                await vote_queue.put(payload)
-            else:
-                logger.warning(f"Unknown message type {msg_type} in chat WS")
-    except Exception as e:
-        logger.exception(f"Unexpected error in room={code}")
-        await websocket.close(code=1011)
+    #         if msg_type == EventType.PLAYER_JOIN.value:
+    #             # Server-side player join: broadcast user info
+    #             await manager.broadcast(code, {
+    #                 "type": EventType.PLAYER_JOIN.value,
+    #                 "payload": {
+    #                     "id": user.id,
+    #                     "username": user.username,
+    #                     "avatarUrl": getattr(user, "avatar_url", None)
+    #                 }
+    #             })
+    #         elif msg_type == "CHAT":
+    #             await manager.broadcast(code, {"type":"CHAT", "payload":{"user":user.username, "message":payload.get("message","")}})
+    #         elif msg_type == "DRAW":
+    #             await manager.broadcast(code, {"type":"DRAW", "payload":payload})
+    #         elif msg_type == EventType.START_GAME.value:
+    #             # STUB: broadcast a SHOW_THEME event for testing instead of full game loop
+    #             await manager.broadcast(code, {
+    #                 "type": EventType.SHOW_THEME.value,
+    #                 "payload": { "theme": "Stub Theme: Test Round" }
+    #             })
+    #         elif msg_type == EventType.VOTE.value:
+    #             # enqueue votes for game loop
+    #             await vote_queue.put(payload)
+    #         else:
+    #             logger.warning(f"Unknown message type {msg_type} in chat WS")
+    # except Exception as e:
+    #     logger.exception(f"Unexpected error in room={code}")
+    #     await websocket.close(code=1011)
