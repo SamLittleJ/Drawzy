@@ -145,18 +145,22 @@ async def websocket_chat(
     token = websocket.query_params.get("token")
     
     await websocket.accept()
-    
+    print(f"WS accepted for room={code}, client={websocket.client}")
     user = get_current_user(token, db)
-    
+    print(f"WS user={user.username} connected to room={code}")
     await manager.connect(code, websocket)
+    print(f"WS manager connected for room={code}, user={user.username}")
     vote_queue: asyncio.Queue = asyncio.Queue()
     logger.info(f"Unified WS connected for room={code}, user={user.username}")
     
     try:
         print(f"WS handler loop start for room={code}")
         while True:
+            print(f"WS waiting for message in room={code}, user={user.username}")
             try:
+                print(f"WS receiving JSON for room={code}, user={user.username}")
                 data = await websocket.receive_json()
+                print(f"WS received data: {data} for room={code}, user={user.username}")
             except WebSocketDisconnect:
                 manager.disconnect(code, websocket)
                 logger.info(f"WS disconnected for room={code}, user={user.username}")
