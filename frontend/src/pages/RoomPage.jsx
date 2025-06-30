@@ -19,58 +19,16 @@ export default function RoomPage() {
       const host = "drawzy-backend-alb-409373296.eu-central-1.elb.amazonaws.com";
       wsRef.current = new WebSocket(`${protocol}://${host}/ws/${code}?token=${token}`);
 
-      let pingInterval;
-
       wsRef.current.onopen = () => {
         console.log('Unified WS connected');
-        // Start heartbeat to prevent idle timeout
-        pingInterval = setInterval(() => {
-          wsRef.current.send(JSON.stringify({ type: 'PING' }));
-        }, 15000);
         // Announce this client has joined
         wsRef.current.send(JSON.stringify({ type: 'PLAYER_JOIN' }));
       };
 
       wsRef.current.onmessage = (event) => {
         const msg = JSON.parse(event.data);
-        if (msg.type === 'PING') {
-          // reply with PONG
-          wsRef.current.send(JSON.stringify({ type: 'PONG' }));
-          return;
-        }
-        if (msg.type === 'PONG') {
-          // received heartbeat response, ignore
-          return;
-        }
-        console.log("Unified WS message received:", event.data);
-        console.log("Unified WS message parsed:", msg);
-        switch (msg.type) {
-          case 'PLAYER_JOIN':
-            setPlayers(prev => [...prev, msg.payload]);
-            break;
-          case 'CHAT':
-            setMessages(prev => [...prev, msg.payload]);
-            break;
-          case 'DRAW':
-            break;
-          case 'SHOW_THEME':
-            setCurrentTheme(msg.payload.theme);
-            setDrawingPhase(false);
-            setGameStarted(true);
-            break;
-          case 'ROUND_START':
-            setDrawingPhase(true);
-            break;
-          case 'ROUND_END':
-            setDrawingPhase(false);
-            setCurrentTheme('');
-            break;
-          case 'VOTE_RESULT':
-            break;
-          case 'GAME_END':
-            break;
-          default:
-            console.warn('Unknown WS type', msg.type);
+        if (msg.type === 'PLAYER_JOIN') {
+          setPlayers(prev => [...prev, msg.payload]);
         }
       };
 
@@ -92,7 +50,6 @@ export default function RoomPage() {
       };
 
       return () => {
-        clearInterval(pingInterval);
         if (wsRef.current) {
           wsRef.current.close();
         }
