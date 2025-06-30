@@ -145,8 +145,14 @@ async def websocket_chat(
     token = websocket.query_params.get("token")
     
     await websocket.accept()
-    print(f"WS accepted for room={code}, client={websocket.client}")
-    user = get_current_user(token, db)
+    
+    try:
+        user = get_current_user(token, db)
+        print(f"WS user={user.username} authenticated for room={code}")
+    except Exception as e:
+        logger.error(f"WS connection failed for room={code}: {e}")
+        await websocket.close(code=1008, reason="auth error")
+        return
     print(f"WS user={user.username} connected to room={code}")
     await manager.connect(code, websocket)
     print(f"WS manager connected for room={code}, user={user.username}")
@@ -168,23 +174,33 @@ async def websocket_chat(
                     db.query(Room).filter(Room.code == code).delete()
                     db.commit()
                 break
-            except Exception:
-                logger.exception("Failed to parse JSON from client")
-                await websocket.close(code=1003, reason="Invalid JSON format") 
-                return
+            except Exception as e:
+                logger.warning(f"Ignoring non-JSON message or parsing error: {e}")
+                continue
             
             msg_type = data.get("type")
             payload = data.get("payload", {})
 
             if msg_type == EventType.PLAYER_JOIN.value:
-                await manager.broadcast(code, data)
+                # Server-side player join: broadcast user info
+                await manager.broadcast(code, {
+                    "type": EventType.PLAYER_JOIN.value,
+                    "payload": {
+                        "id": user.id,
+                        "username": user.username,
+                        "avatarUrl": getattr(user, "avatar_url", None)
+                    }
+                })
             elif msg_type == "CHAT":
                 await manager.broadcast(code, {"type":"CHAT", "payload":{"user":user.username, "message":payload.get("message","")}})
             elif msg_type == "DRAW":
                 await manager.broadcast(code, {"type":"DRAW", "payload":payload})
             elif msg_type == EventType.START_GAME.value:
-                # start the game loop in background
-                asyncio.create_task(run_game_loop(code, db, vote_queue))
+                # STUB: broadcast a SHOW_THEME event for testing instead of full game loop
+                await manager.broadcast(code, {
+                    "type": EventType.SHOW_THEME.value,
+                    "payload": { "theme": "Stub Theme: Test Round" }
+                })
             elif msg_type == EventType.VOTE.value:
                 # enqueue votes for game loop
                 await vote_queue.put(payload)
