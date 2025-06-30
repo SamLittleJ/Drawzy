@@ -188,14 +188,14 @@ resource "aws_lb" "ws_nlb" {
 # Target group for NLB TCP traffic on port 8080
 resource "aws_lb_target_group" "ws_nlb_tg" {
   name     = "drawzy-ws-nlb-tg"
-  port     = 8080
+  port     = 80
   protocol = "TCP"
   vpc_id   = var.vpc_id
 
   health_check {
     protocol = "HTTP"
     path     = "/health"
-    port     = "8080"
+    port     = "80"
     interval = 30
     timeout  = 5
     healthy_threshold   = 3
@@ -206,7 +206,7 @@ resource "aws_lb_target_group" "ws_nlb_tg" {
 # Listener for NLB
 resource "aws_lb_listener" "ws_nlb_listener" {
   load_balancer_arn = aws_lb.ws_nlb.arn
-  port              = 8080
+  port              = 80
   protocol          = "TCP"
 
   default_action {
