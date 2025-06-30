@@ -30,13 +30,8 @@ class EventType(str, Enum):
     ROUND_END = "ROUND_END"
     GAME_END = "GAME_END"
     
-async def wait_for_type(websocket: WebSocket, event_type: EventType) -> Dict[str, Any]:
-    while True:
-        msg = await websocket.receive_json()
-        if msg.get("type") == event_type.value:
-            return msg
         
-async def run_game_loop(room_code: str, db: Session):
+async def run_game_loop(room_code: str, db: Session, vote_queue: asyncio.Queue):
     logger.info(f"Starting game loop for room={room_code}")
     room = db.query(Room).filter(Room.code == room_code).first()
     if not room:
@@ -101,20 +96,27 @@ async def run_game_loop(room_code: str, db: Session):
         
         await asyncio.sleep(15)
         
-        for voter in player_ids:
-            if voter != player_id:
+        votes = []
+        votes_needed = num_players - 1
+        
+        while len(votes) < votes_needed:
+            vote_payload = await vote_queue.get()
+            score = vote_payload["score"]
+            voter_id = vote_payload["voter_id"]
+            if voter_id != player_id:  # Ensure drawer doesn't vote for their own drawing
                 vote = DrawingVote(
                     drawing_id=drawing.id,
-                    user_id=voter,
-                    vote=True
+                    user_id=voter_id,
+                    vote=score
                 )
                 db.add(vote)
+                votes.append(vote)
         db.commit()
         
         await manager.broadcast_game(room_code, {
             "type": EventType.VOTE_RESULT.value,
             "payload": {
-                "votes": num_players -1,
+                "votes": len(votes),
                 "drawer": username,
                 }
         })
@@ -122,16 +124,16 @@ async def run_game_loop(room_code: str, db: Session):
         await manager.broadcast_game(room_code, {
             "type": EventType.ROUND_END.value,
             "payload": {
-                round: round_num,
+                "round": round_num,
             }
         })
         
-        await manager.broadcast_game(room_code, {
-            "type": EventType.END_GAME.value,
-            "payload": {
-                "message": "Game OVER!"
-            }
-        })
+    await manager.broadcast_game(room_code, {
+        "type": EventType.END_GAME.value,
+        "payload": {
+            "message": "Game OVER!"
+        }
+    })
         
 @router.websocket("/ws/{code}")
 async def websocket_chat(
@@ -147,6 +149,8 @@ async def websocket_chat(
     user = get_current_user(token, db)
     
     await manager.connect(code, websocket)
+    vote_queue: asyncio.Queue = asyncio.Queue()
+    logger.info(f"Unified WS connected for room={code}, user={user.username}")
     
     try:
         print(f"WS handler loop start for room={code}")
@@ -155,6 +159,7 @@ async def websocket_chat(
                 data = await websocket.receive_json()
             except WebSocketDisconnect:
                 manager.disconnect(code, websocket)
+                logger.info(f"WS disconnected for room={code}, user={user.username}")
                 if not manager.active_connections.get(code):
                     db.query(Room).filter(Room.code == code).delete()
                     db.commit()
@@ -166,51 +171,28 @@ async def websocket_chat(
             
             msg_type = data.get("type")
             payload = data.get("payload", {})
-            
-            if msg_type =="CHAT":
+
+            if msg_type == "CHAT":
                 broadcast_msg = {
                     "type": "CHAT",
-                    "payload": {
-                        "user": user.username,
-                        "message": payload.get("message", "")
-                    }
+                    "payload": {"user": user.username, "message": payload.get("message", "")}
                 }
                 await manager.broadcast(code, broadcast_msg)
-                
+
             elif msg_type == "DRAW":
-                broadcast_msg = {"type": "DRAW", "payload": payload}
-                await manager.broadcast(code, broadcast_msg)
-    except WebSocketDisconnect:
-        manager.disconnect(code, websocket)  
-        if not manager.active_connections.get(code):
-            db.query(Room).filter(Room.code == code).delete()
-            db.commit()  
+                await manager.broadcast(code, {"type": "DRAW", "payload": payload})
+
+            elif msg_type == EventType.PLAYER_JOIN.value:
+                await manager.broadcast(code, data)
+
+            elif msg_type == EventType.START_GAME.value:
+                asyncio.create_task(run_game_loop(code, db, vote_queue))
+
+            elif msg_type == EventType.VOTE.value:
+                await vote_queue.put(payload)
+
+            else:
+                logger.warning(f"Unknown message type {msg_type} from room={code}")
     except Exception as e:
         logger.exception(f"Unexpected error in room={code}")
         await websocket.close(code=1011)
-        
-@router.websocket("/game/ws/{code}")
-async def websocket_game(
-    websocket: WebSocket,
-    code: str,
-    db: Session = Depends(get_db)
-):
-    token = websocket.query_params.get("token")
-    user = get_current_user(token, db)
-    
-    await websocket.accept()
-    await manager.connect_game(code, websocket)
-    logger.info(f"Game WS connected for room={code}, user={user.username}, total_connections={len(manager.active_game_connections.get(code, []))}")
-    
-    try:
-        while True:
-            data = await websocket.receive_json()
-            msg_type = data.get("type")
-            if msg_type == "START_GAME":
-                asyncio.create_task(run_game_loop(code, db))
-    except WebSocketDisconnect:
-        manager.disconnect_game(code, websocket)
-        logger.info(f"Game WS disconnected for room={code}, user={user.username}")
-    except Exception as e:
-        logger.exception(f"Error in Game WS for room={code}: {e}")
-        await websocket.close(code=1011, reason="Internal Server Error")    
