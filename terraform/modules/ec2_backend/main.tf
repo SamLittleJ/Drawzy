@@ -126,6 +126,24 @@ resource "aws_lb_target_group" "backend_tg" {
   }
 }
 
+# Target group for WebSocket connections (HTTP 1.1 upgrade support)
+resource "aws_lb_target_group" "websocket_tg" {
+  name     = "drawzy-websocket-tg"
+  port     = 80
+  protocol = "HTTP"
+  protocol_version = "HTTP1_1"
+  vpc_id   = var.vpc_id
+
+  health_check {
+    path                = "/health"
+    protocol            = "HTTP"
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+  }
+}
+
 # Alb listener for the backend
 resource "aws_lb_listener" "backend_listener" {
   load_balancer_arn = aws_lb.backend_alb.arn
@@ -135,6 +153,23 @@ resource "aws_lb_listener" "backend_listener" {
   default_action {
     type = "forward"
     target_group_arn = aws_lb_target_group.backend_tg.arn
+  }
+}
+
+# Listener rule for WebSocket traffic
+resource "aws_lb_listener_rule" "ws_rule" {
+  listener_arn = aws_lb_listener.backend_listener.arn
+  priority     = 10
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.websocket_tg.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/ws/*"]
+    }
   }
 }
 
