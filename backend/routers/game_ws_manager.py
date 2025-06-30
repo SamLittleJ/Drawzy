@@ -18,10 +18,9 @@ class ConnectionManager:
                 self.active_connections.pop(room_code, None)
 
     async def broadcast(self, room_code: str, message: dict):
-        data = json.dumps(message)
         for ws in list(self.active_connections.get(room_code, [])):
             try:
-                await ws.send_text(data)
+                await ws.send_json(message)
             except:
                 self.disconnect(room_code, ws)
                     
