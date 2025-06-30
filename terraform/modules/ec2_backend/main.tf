@@ -131,7 +131,7 @@ resource "aws_lb_target_group" "websocket_tg" {
   name     = "drawzy-websocket-tg"
   port     = 80
   protocol = "HTTP"
-  protocol_version = "HTTP1_1"
+  protocol_version = "HTTP1"
   vpc_id   = var.vpc_id
 
   health_check {
