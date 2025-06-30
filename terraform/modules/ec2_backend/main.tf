@@ -86,6 +86,7 @@ resource "aws_autoscaling_group" "backend_asg" {
   target_group_arns = [
     aws_lb_target_group.backend_tg.arn,
     aws_lb_target_group.websocket_tg.arn,
+    aws_lb_target_group.ws_nlb_tg.arn,
   ]
 
   tag {
@@ -173,6 +174,44 @@ resource "aws_lb_listener_rule" "ws_rule" {
     path_pattern {
       values = ["/ws/*"]
     }
+  }
+}
+
+# Network Load Balancer for WebSocket (TCP)
+resource "aws_lb" "ws_nlb" {
+  name               = "drawzy-ws-nlb"
+  internal           = false
+  load_balancer_type = "network"
+  subnets            = var.subnet_ids
+}
+
+# Target group for NLB TCP traffic on port 8080
+resource "aws_lb_target_group" "ws_nlb_tg" {
+  name     = "drawzy-ws-nlb-tg"
+  port     = 80
+  protocol = "TCP"
+  vpc_id   = var.vpc_id
+
+  health_check {
+    protocol = "HTTP"
+    path     = "/health"
+    port     = "80"
+    interval = 30
+    timeout  = 5
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+  }
+}
+
+# Listener for NLB
+resource "aws_lb_listener" "ws_nlb_listener" {
+  load_balancer_arn = aws_lb.ws_nlb.arn
+  port              = 8080
+  protocol          = "TCP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.ws_nlb_tg.arn
   }
 }
 
