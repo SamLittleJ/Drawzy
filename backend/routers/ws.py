@@ -139,20 +139,11 @@ async def run_game_loop(room_code: str, db: Session, vote_queue: asyncio.Queue):
 async def websocket_chat(
     websocket: WebSocket,
     code: str,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
 ):
     print(f"WS connect attemp: room={code}, client={websocket.client}")
-    token = websocket.query_params.get("token")
-    
     await websocket.accept()
-    
-    try:
-        user = get_current_user(token, db)
-        print(f"WS user={user.username} authenticated for room={code}")
-    except Exception as e:
-        logger.error(f"WS connection failed for room={code}: {e}")
-        await websocket.close(code=1008, reason="auth error")
-        return
     print(f"WS user={user.username} connected to room={code}")
     await manager.connect(code, websocket)
     print(f"WS manager connected for room={code}, user={user.username}")
