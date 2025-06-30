@@ -1,5 +1,5 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
-from backend.dependencies import get_current_user
+from backend.dependencies import get_current_user, get_current_user_ws
 from backend.database import get_db
 from sqlalchemy.orm import Session
 import logging
@@ -142,7 +142,7 @@ async def websocket_chat(
     db: Session = Depends(get_db)
 ):
     try:
-        user = await get_current_user(websocket,db)
+        user = await get_current_user_ws(websocket,db)
     except Exception as e:
         await websocket.close(code=e.code, reason=e.reason)
         return
