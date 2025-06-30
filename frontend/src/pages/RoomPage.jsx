@@ -12,7 +12,7 @@ export default function RoomPage(){
     useEffect(() =>{
         const token = localStorage.getItem('access_token');
         const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-        const host = 'drawzy-backend-alb-409373296.eu-central-1.elb.amazonaws.com';
+        const host = 'drawzy-ws-nlb-a06e066743dd7e7d.elb.eu-central-1.amazonaws.com';
         const ws = new WebSocket(`${protocol}://${host}/ws/${code}?token=${token}`);
         wsRef.current = ws;
 
