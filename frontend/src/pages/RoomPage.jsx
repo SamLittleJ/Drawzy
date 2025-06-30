@@ -8,7 +8,7 @@ export default function RoomPage() {
     const {code} = useParams();
     const wsRef = useRef(null);
     const [gameStarted, setGameStarted] = useState(false);
-    const [players, setPlayers] = useState([{id:1, username: 'You', avatarUrl: null}]);
+    const [players, setPlayers] = useState([]);
     const [messages, setMessages] = useState([]);
     const [currentTheme, setCurrentTheme] = useState('');
     const [drawingPhase, setDrawingPhase] = useState(false);
@@ -31,7 +31,9 @@ export default function RoomPage() {
       };
 
       wsRef.current.onmessage = (event) => {
+        console.log("Unified WS message received:", event.data);
         const msg = JSON.parse(event.data);
+        console.log("Unified WS message parsed:", msg);
         switch (msg.type) {
           case 'PLAYER_JOIN':
             setPlayers(prev => [...prev, msg.payload]);
@@ -64,17 +66,21 @@ export default function RoomPage() {
             console.warn('Unknown WS type', msg.type);
         }
       };
-
+      console.log('Unified WS onmessage set up');
       wsRef.current.onerror = (e) => console.error('Unified WS error', e);
+      console.log('Unified WS onerror set up');
       wsRef.current.onclose = (e) => console.warn('Unified WS closed', e.code, e.reason);
 
       return () =>  wsRef.current?.close();
     }, [code]);
 
     function startGame() {
+        console.log('Starting game in room', code);
       if (wsRef.current?.readyState === WebSocket.OPEN) {
+        console.log('Sending START_GAME message');
         wsRef.current.send(JSON.stringify({ type: 'START_GAME' }));
       }
+      console.log('Game start message sent');
       setGameStarted(true);
     }
 
