@@ -296,7 +296,7 @@ resource "aws_security_group" "ec2_sg_backend" {
     from_port = 22
     to_port = 22
     protocol = "tcp"
-    cidr_blocks = ["82.77.109.33/32"]
+    cidr_blocks = ["82.77.109.74/32"]
   }
 
   ingress {
