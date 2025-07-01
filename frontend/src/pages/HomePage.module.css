@@ -2,18 +2,35 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 4rem 1rem;
+    justify-content: center;
+    padding: 4rem 2rem;
+    min-height: 100vh;
 }
 
 .title {
     font-size: 2.5rem;
     font-weight: bold;
     margin-bottom: 1rem;
+    position: relative;
+}
+.title::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: -0.5rem;
+    width: 50%;
+    height: 4px;
+    background: #ffeb3b;
+    border-radius: 2px;
 }
 
 .subtitle {
-    font-size:1.125rem;
-    margin-bottom:2rem;
+    font-size: 1.25rem;
+    margin: 2rem 0 3rem;
+    color: #e0e0e0;
+    max-width: 600px;
+    text-align: center;
 }
 
 .buttons {
@@ -32,4 +49,21 @@
 
 .button:hover {
     background-color: #555;
+}
+
+.mainButton {
+  background: var(--accent1);
+  color: var(--bg);
+  border: 3px solid #ffeb3b;
+  padding: 0.75rem 1.5rem;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.1s ease, transform 0.1s ease, box-shadow 0.1s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+.mainButton:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  background: #ffeb3b;
+  color: #000;
 }

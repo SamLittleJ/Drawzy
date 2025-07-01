@@ -23,5 +23,56 @@ class ConnectionManager:
                 await ws.send_json(message)
             except:
                 self.disconnect(room_code, ws)
+
+    async def start_game(self, room_code: str, theme: str):
+        """
+        Begin the game by showing the theme and starting the first round.
+        """
+        # Notify all players of the theme
+        await self.broadcast(room_code, {
+            "type": "SHOW_THEME",
+            "payload": {"theme": theme}
+        })
+        # Signal start of drawing round
+        await self.broadcast(room_code, {
+            "type": "ROUND_START"
+        })
+
+    async def end_round(self, room_code: str):
+        """
+        End the current drawing round.
+        """
+        await self.broadcast(room_code, {
+            "type": "ROUND_END"
+        })
+
+    async def send_chat(self, room_code: str, user: dict, message: str):
+        """
+        Broadcast a chat message from a user.
+        """
+        await self.broadcast(room_code, {
+            "type": "CHAT",
+            "payload": {
+                "user": user,
+                "message": message
+            }
+        })
+
+    async def send_draw(self, room_code: str, draw_data: dict):
+        """
+        Broadcast drawing data to all players.
+        """
+        await self.broadcast(room_code, {
+            "type": "DRAW",
+            "payload": draw_data
+        })
+
+    async def end_game(self, room_code: str):
+        """
+        Signal the end of the game.
+        """
+        await self.broadcast(room_code, {
+            "type": "GAME_END"
+        })
                     
 manager = ConnectionManager()

@@ -1,3 +1,18 @@
+/* Ensure full-height for background */
+html, body {
+  height: 100%;
+}
+/* Retro Pixel Art Theme Variables */
+:root {
+  --bg: #336699;
+  --fg: #e0e0e0;
+  --accent1: #ffd700;
+  --accent2: #ff5555;
+  --accent3: #55ff55;
+  --accent4: #5555ff;
+  --border: #00ffff;
+}
+
 /* App.css */
 
 /* Reset simplu */
@@ -9,9 +24,9 @@
   
   /* Font şi background global */
   body {
-    font-family: Arial, sans-serif;
-    background-color: #f5f5f5;
-    color: #333;
+    font-family: 'VT323', monospace;
+    background-color: var(--bg);
+    color: var(--fg);
     line-height: 1.6;
   }
   
@@ -46,3 +61,146 @@
     font-size: 1rem;
     cursor: pointer;
   }
+
+/* Headings and pixel text */
+h1, h2, button, .pixel-text {
+  font-family: 'Press Start 2P', cursive;
+}
+
+/* Retro button default */
+button {
+  background: var(--accent1);
+  color: var(--bg);
+  border: none;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  transition: background 0.1s, transform 0.1s;
+}
+button:hover {
+  background: var(--accent2);
+}
+button:active {
+  transform: translate(1px, 1px);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--accent3);
+}
+
+/* Particles container */
+.particles {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: -1;
+}
+
+.particle {
+  position: absolute;
+  background-size: auto;
+  background-repeat: no-repeat;
+  opacity: 0;
+  animation-fill-mode: both;
+}
+
+/* Individual tool icons */
+.particle.brush {
+  width: 16px;
+  height: 16px;
+  background-color: var(--accent1);
+  border-radius: 50%;
+  animation: float1 15s linear infinite;
+  animation-delay: 0s;
+}
+.particle.eraser {
+  width: 14px;
+  height: 14px;
+  background-color: var(--accent2);
+  animation: float2 18s linear infinite;
+  animation-delay: 5s;
+}
+.particle.palette {
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 16px solid var(--accent3);
+  animation: float3 12s linear infinite;
+  animation-delay: 10s;
+}
+
+.particle.pencil {
+  width: 4px;
+  height: 20px;
+  background-color: var(--border);
+  border-radius: 2px;
+  animation: flyUp 12s linear infinite;
+  animation-delay: 2s;
+}
+
+.particle.bucket {
+  width: 12px;
+  height: 12px;
+  background-color: #99ccff; /* lighter blue for better visibility */
+  border-radius: 50% 50% 0 0;
+  animation: flyNW 20s linear infinite;
+  animation-delay: 4s;
+}
+
+.particle.marker {
+  width: 6px;
+  height: 14px;
+  background-color: var(--accent3);
+  clip-path: polygon(0 0, 100% 0, 80% 100%, 20% 100%);
+  animation: flyNE 18s linear infinite;
+  animation-delay: 6s;
+}
+
+/* Keyframes for varied motion */
+@keyframes float1 {
+  0%   { transform: translate(-10%, 20vh) rotate(0deg); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translate(110vw, 80vh) rotate(360deg); opacity: 0; }
+}
+@keyframes float2 {
+  0%   { transform: translate(110vw, 40vh) rotate(0deg); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translate(-10%, 60vh) rotate(-360deg); opacity: 0; }
+}
+@keyframes float3 {
+  0%   { transform: translate(-20%, 80vh) rotate(0deg); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translate(120vw, 30vh) rotate(360deg); opacity: 0; }
+}
+
+@keyframes flyNE {
+  0%   { transform: translate(-20%, 100vh) rotate(0deg); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translate(120vw, -20vh) rotate(360deg); opacity: 0; }
+}
+
+@keyframes flyNW {
+  0%   { transform: translate(120vw, 100vh) rotate(0deg); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translate(-20%, -20vh) rotate(-360deg); opacity: 0; }
+}
+
+@keyframes flyUp {
+  0%   { transform: translate(0, 110vh) rotate(0deg); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translate(0, -20vh) rotate(360deg); opacity: 0; }
+}
+
+@keyframes flyDown {
+  0%   { transform: translate(0, -20vh) rotate(0deg); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translate(0, 110vh) rotate(-360deg); opacity: 0; }
+}
