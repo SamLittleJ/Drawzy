@@ -1,19 +1,59 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin: 4rem auto 0;
+  padding: 0 25px;
+  box-sizing: content-box;
+}
+.chatWrapper {
+  display: inline-block;
+  vertical-align: top;
+}
+.container,
+.chatSection {
+  display: inline-block;
+  vertical-align: top;
+  margin: 0; /* remove flex margins */
+}
 .container {
-    display:flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 2rem;
-    background-color: #f9f9f9;
-    border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background-color: #ffffff;
+  border-radius: 1rem;
+  /* center card and move it down */
+  max-width: 600px;
+  /* pixel art font and visible text color */
+  font-family: 'Press Start 2P', cursive;
+  color: #000;
+  line-height: 1.5;
+  /* add spacing between direct child elements */
+  > * + * {
+    margin-top: 1.25rem;
+  }
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Extra spacing below Players ready */
+.container > p:nth-of-type(2) {
+  margin-bottom: 1.5rem;
+}
+
+.mainSection {
+  width: 100%;
+  align-items: flex-start;
 }
 
 .playersList {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
-    gap: 1rem;
+    justify-content: flex-start;
     margin: 1rem 0;
-    width: 100%;
+    flex: 1;
 }
 
 .playerItem {
@@ -34,7 +74,7 @@
 .username {
     font-weight: bold;
     font-size: 0.9rem;
-    color: #333;
+    color: #000;
 }
 
 .startButton {
@@ -51,4 +91,83 @@
 .startButton:disabled {
     background-color: #9E9E9E;
     cursor: not-allowed;
+}
+
+.leaveButton {
+  background-color: #e53935; /* red */
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.75rem 1.5rem;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.1s ease, transform 0.1s ease;
+}
+
+/* Chat area */
+.chatSection {
+  display: inline-block;
+  vertical-align: top;
+  margin: 0;
+  background: #ffffff;
+  border-radius: 1rem;
+  padding: 1rem;
+  width: 600px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  height: 400px; /* or desired fixed height */
+}
+
+.chatSection h3 {
+  font-family: 'Press Start 2P', cursive;
+  text-align: center;
+  margin: 0;
+  color: #000;
+}
+
+.messages {
+  display: flex;
+  flex-direction: column-reverse;
+  max-height: 200px;
+  overflow-y: auto;
+  background: #fafafa;
+  padding: 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+
+.inputArea {
+  display: flex;
+  gap: 0.5rem;
+  background: #ffffff;
+  border-radius: 1rem;
+  padding: 0.5rem;
+  width: 600px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  margin: 0.5rem 0 0;
+}
+
+.inputArea input {
+  flex: 1;
+  border: 1px solid #ccc;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.75rem;
+}
+
+.inputArea button {
+  padding: 0.5rem 1rem;
+  background: var(--accent1);
+  color: #000;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.75rem;
+  transition: transform 0.1s;
+}
+
+.inputArea button:active {
+  transform: translate(1px, 1px);
 }

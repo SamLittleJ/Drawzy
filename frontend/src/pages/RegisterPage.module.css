@@ -1,13 +1,16 @@
 .formContainer {
-    max-width:400px;
-    margin:50px auto;
-    padding:1rem;
-    border:1px solid #ddd;
-    border-radius:8px;
+    color: #000;
+    max-width: 800px;
+    margin: 100px auto 20px;
+    padding: 2rem;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     background-color: #fafafa;
 }
 
 .title {
+    font-family: 'Press Start 2P', cursive;
     text-align: center;
     font-size: 1.5rem;
     margin-bottom:1rem;
@@ -24,6 +27,7 @@
 }
 
 .label {
+    font-family: 'Press Start 2P', cursive;
     display: block;
     margin-bottom: 0.25rem;
     font-weight: 500;
@@ -32,27 +36,34 @@
 .input {
     width: 100%;
     padding: 0.5rem;
+    box-shadow: inset 0 0 0 2px #000;
     border: none;
-    background-color: #333;
-    color: #fff;
-    font-size: 1rem;
-    cursor:pointer;
     border-radius: 4px;
+    background-color: #fafafa;
+    color: #000;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 1rem;
+    cursor: text;
+}
+.input::placeholder {
+    font-family: 'Press Start 2P', cursive;
 }
 
 .submitButton {
     width: 100%;
-    padding:0.5rem;
+    padding: 0.75rem 1.5rem;
+    box-shadow: inset 0 0 0 2px #000;
     border: none;
-    background-color: #333;
-    color:#fff;
+    border-radius: 4px;
+    background-color: var(--accent1);
+    color: #000;
+    font-family: 'Press Start 2P', cursive;
     font-size: 1rem;
     cursor: pointer;
-    border-radius: 4px;
 }
-
 .submitButton:hover {
-    background-color: #555;
+    background-color: var(--accent2);
+    transform: translate(1px, 1px);
 }
 
 .footerText {
@@ -61,8 +72,9 @@
 }
 
 .footerLink {
-    color: #0066cc;
+    color: var(--accent4);
     text-decoration: none;
+    font-family: 'Press Start 2P', cursive;
 }
 
 .footerLink:hover {
