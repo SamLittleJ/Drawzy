@@ -81,9 +81,8 @@ jobs:
 
       # Pas: Scriere fișier .env
       - name: Write .env
-        working-directory: terraform/environments/dev
         run: |
-          echo "DATABASE_URL=${{ env.DB_URL }}" > ../../backend/.env
+          echo "DATABASE_URL=${{ env.DB_URL }}" > backend/.env
 
   # Job: build_and_push
   # • Rol: Construiește și publică imaginile Docker pentru backend și frontend.
