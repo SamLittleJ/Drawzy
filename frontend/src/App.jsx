@@ -9,17 +9,34 @@ import LobbyPage from './pages/LobbyPage';
 import RoomPage from './pages/RoomPage';
 import './App.css';
 
+// Funcție: isLoggedIn
+// • Rol: Verifică dacă utilizatorul este autentificat prin existența unui token în localStorage.
+// • Motiv: Permite protejarea rutelor private (lobby, room) și redirecționarea utilizatorilor neautentificați.
+// • Alternative: Verificare a expirării token-ului sau consultare API pentru validitate.
+// • Observații: Simplă validare booleană, nu detectează token expirat.
 export function isLoggedIn() {
     const token = localStorage.getItem('access_token');
     return Boolean(token);
 }
 
+// Componentă: App
+// • Rol: Punctul de intrare al aplicației, definește schema de navigație și animațiile de fundal.
+// • Motiv: Centralizează router-ul React și efectele vizuale pentru toate paginile.
+// • Alternative: Separarea animațiilor într-un provider/Hook separat.
+// • Observații: Folosește useMemo pentru a genera o dată lista de particule.
 export default function App() {
-    // Helper to generate random percentage positions
+    // Helper: randPercent
+    // • Rol: Generează un procent aleator între 0% și 100% pentru poziționarea particulelor.
+    // • Motiv: Alocă poziții random pe axele X și Y la inițializare.
+    // • Alternative: Funcție pur matematică, fără procent (valori de 0 la 1).
     const randPercent = () => `${Math.random() * 100}%`;
 
     const animNames = ['float1', 'float2', 'float3', 'flyNE', 'flyNW', 'flyUp', 'flyDown'];
 
+    // Generare particule: particlesList
+    // • Rol: Creează o listă de obiecte cu atribute pentru animațiile de fundal (tip, direcție, durată).
+    // • Motiv: Eficientizează calculul folosind useMemo pentru a nu regenera la fiecare render.
+    // • Alternative: Generare la mount cu useEffect și stocare în state.
     const particlesList = useMemo(() => {
       return ['brush', 'eraser', 'palette', 'pencil', 'bucket', 'marker'].flatMap(type =>
         Array.from({ length: 10 }).map((_, i) => {
@@ -49,6 +66,9 @@ export default function App() {
 
     return (
       <>
+        {/* Secțiune vizuală: particule animate */}
+        {/* • Rol: Afișează elemente decorative animate pe fundalul aplicației */}
+        {/* • Observații: Particlele nu interacționează cu restul UI-ului */}
         <div className="particles">
           {particlesList.map(({ type, animName, delay, duration, style }, idx) => (
             <div
@@ -64,6 +84,10 @@ export default function App() {
             />
           ))}
         </div>
+
+        {/* Router Principal */}
+        {/* • Rol: Definește rutele aplicației și protejează paginile cu autentificare */}
+        {/* • Alternative: Alte librării de routing sau server-side routing */}
         <BrowserRouter>
         <Routes>
             <Route path="/" element={<HomePage />} />

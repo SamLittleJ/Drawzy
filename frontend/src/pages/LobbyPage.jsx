@@ -1,9 +1,26 @@
+// Import React și hook-urile necesare
+// • Rol: React pentru JSX; useState pentru gestionarea stărilor locale; useEffect pentru efecte secundare (încarcarea datelor).
 import React, { useState, useEffect } from 'react';
+
+// Import React Router
+// • Rol: useNavigate pentru navigare programatică între pagini.
 import { useNavigate } from 'react-router-dom';
-import api from '../api'; // Assuming you have an api.js file for API calls
+
+// Import API client
+// • Rol: Funcții pentru apeluri HTTP către backend (preluare și creare camere).
+import api from '../api';
+
+// Import stiluri CSS module
+// • Rol: Clase CSS izolate pentru stilizarea componentei lobby.
 import styles from './LobbyPage.module.css';
 
+// Componentă: LobbyPage
+// • Rol: Pagina principală de lobby, permite crearea și alăturarea la camere.
+// • Motiv: Centralizează opțiunile de configurare a camerei și lista camerelor disponibile.
+// • Alternative: Putea fi separată în componente mai mici pentru form și listă.
 export default function LobbyPage(){
+    // State-uri componentă
+    // • Rol: Stochează valorile pentru cod, setările camerei și lista de camere.
     const [code, setCode] = useState('');
     const [maxPlayers, setMaxPlayers] = useState(6);
     const [roundTime, setRoundTime] = useState(60);
@@ -14,6 +31,9 @@ export default function LobbyPage(){
     const nav = useNavigate();
     const [rooms, setRooms] = useState([]);
 
+    // Hook: useEffect pentru încărcarea camerelor
+    // • Rol: Preia lista de camere de la backend la montarea componentei.
+    // • Alternative: Utilizarea SWR sau React Query pentru caching și revalidare.
     useEffect(() => {
         const loadRooms = async () =>{
             try {
@@ -26,28 +46,42 @@ export default function LobbyPage(){
         loadRooms();
     }, []);
 
-   
+    // Funcție: createRoom
+    // • Rol: Trimite solicitarea de creare a unei camere cu parametrii selectați.
+    // • Observații: Redirecționează utilizatorul în camera nou creată.
     const createRoom = async () => {
         try {
-            const resp = await api.createRoom ({max_players: maxPlayers, round_time: roundTime, max_rounds: maxRounds, target_score: targetScore, is_public: isPublic});
+            const resp = await api.createRoom({
+                max_players: maxPlayers,
+                round_time: roundTime,
+                max_rounds: maxRounds,
+                target_score: targetScore,
+                is_public: isPublic
+            });
             nav(`/rooms/${resp.data.code}`);
         } catch (err) {
             console.error("Failed to create room", err);
         }
     }
 
+    // Funcție: joinRoomByCode
+    // • Rol: Navighează către camera specificată prin cod introdus manual.
+    // • Observații: Ignoră coduri goale.
     const joinRoomByCode = () => {
         if (code.trim()){
             nav(`/rooms/${code.trim()}`);
         }
     }
 
+    // Funcție: logout
+    // • Rol: Șterge token-ul de autentificare și redirecționează la pagina de login.
     const logout = () => {
         localStorage.removeItem('access_token');
         nav('/login');
     }
-    
 
+    // Render UI
+    // • Rol: Afișează interfața lobby-ului: buton de creare cameră, form de configurare, listă camere și buton logout.
     return (
         <div className={styles.container}>
             <h1>Lobby</h1>

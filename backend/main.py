@@ -13,84 +13,54 @@ from backend.routers.chat import router as chat_router
 from backend.routers.votes import router as votes_router
 from backend.routers.ws import router as ws_router
 
-#HOURS SPEND ON THIS SHIT = 24
-#No point to this IG
+# Context criptare parole
+# • Rol: Configurează algoritmi de hashing pentru parole (bcrypt).
 pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
-#Create the database tables (if they don't exist)
+
+# Creare tabele DB
+# • Rol: Creează automat tabelele definite în modele dacă nu există deja.
 models.Base.metadata.create_all(bind=engine)
 
+# Instanțiere aplicație FastAPI
+# • Rol: Initializează serverul web ASGI pentru rutare și procesarea cererilor.
 app = FastAPI()
 
-#Allowing all origins
+# Middleware CORS
+# • Rol: Configurează permisiunile Cross-Origin pentru a permite apeluri din frontend.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], #You can specify allowed origins here e.g. ["http://localhost", "http://localhost:3000"]
+    allow_origins=["*"],  # Aici poți restrânge originile (ex. ["http://localhost:3000"])
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Înregistrare router WebSocket
+# • Rol: Adaugă endpoint-urile WebSocket definite în ws_router.
 app.include_router(ws_router)
+# Înregistrare router API utilizatori
 app.include_router(users_router)
+# Înregistrare router API camere
 app.include_router(rooms_router)
+# Înregistrare router API tururi
 app.include_router(rounds_router)
+# Înregistrare router API desene
 app.include_router(drawings_router)
+# Înregistrare router API chat
 app.include_router(chat_router)
+# Înregistrare router API voturi
 app.include_router(votes_router)
 
-#Dependency to get the database session for the current request
-
-        
-#Basic root endpoint to verify that the API is running
+# Endpoint rădăcină
+# • Rol: Verifică că API-ul rulează și răspunde cu un mesaj de bun venit.
 @app.get("/")
 def read_root(db = Depends(get_db)):
     return {"message": "Welcome to Drawzy! This is changing as i write! Look it changed! And again! Whatever"}
 
+# Endpoint health-check
+# • Rol: Returnează starea serviciului pentru monitorizarea uptime-ului.
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
 
-#User registration endpoint
-
-
-# @app.websocket("/ws/echo")
-# async def echo_websocket(websocket: WebSocket):
-#     await websocket.accept()
-#     print("WebSocket connection established")
-#     await websocket.send_text("Hello from the server!")
-#     try:
-#         while True:
-#             # #await websocket.send_text("Hello from the server!")
-#             # message = await websocket.receive()
-#             # print("Hello")
-#             # msg_type = message.get("type")
-#             # print("Raw event", message)
-            
-#             # if msg_type == "websocket.receive":
-#             #     print("Hello3")
-#             #     if "text" in message and message["text"] is not None:
-#             #         print("Hello4")
-#             #         data = message["text"]
-#             #         print(f"Received message: {data!r}")
-#             #         await websocket.send_text(data)
-#             #     elif "bytes" in message and message["bytes"] is not None:
-#             #         data = message["bytes"]
-#             #         print(f"Received bytes: {data!r}")
-#             #         await websocket.send_bytes(data)
-            
-#             # elif msg_type == "websocket.disconnect":
-#             #     code = message.get('code')
-#             #     print(f"WebSocket disconnected with code: {code}")
-#             #     break
-            
-#             data = await websocket.receive_text()
-#             print(f"Received message: {data!r}")
-#             await websocket.send_text(data)
-#     except WebSocketDisconnect as e:
-#         print(f"WebSocket disconnected: {e.code}")        
-            
-#     except Exception as e:
-#         print("WebSocket handler error:", e)
-#     finally:
-#         print("WebSocket connection closed")
-            
+# (Comentarii adiționale pentru alte endpoint-uri sau WebSocket handlers pot fi puse în fișierele router corespunzătoare.)

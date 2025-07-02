@@ -1,12 +1,28 @@
+// Import React și hook-uri
+// • Rol: React pentru JSX; useState pentru stări locale; useEffect pentru efecte secundare; useRef pentru referințe DOM.
 import React, { useState, useEffect, useRef } from 'react';
+
+// Import stiluri modulare CSS
+// • Rol: Clasă CSS izolată pentru interfața GameRoom.
 import styles from './GameRoom.module.css';
+
+// Import GameTools
+// • Rol: Listă de unelte disponibile pentru desen.
 import tools from './GameTools';
+
+// Import useNavigate din React Router
+// • Rol: Navigare programatică între rute (ex: Leave Room).
 import { useNavigate } from 'react-router-dom';
 
+// Funcție: rgbToHex
+// • Rol: Convertește valorile RGB la un string hexa (‘#rrggbb’).
 function rgbToHex(r, g, b) {
   return "#" + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
 }
 
+// Componentă: GameRoom
+// • Rol: Gestionează și afișează interfața de joc (canvas, chat, jucători, unelte).
+// • Motiv: Centralizează logica de desen și comunicare prin WebSocket.
 export default function GameRoom({
   roomId,
   players,
@@ -15,11 +31,21 @@ export default function GameRoom({
   drawingPhase,
   wsRef
 }) {
+
+  // Hook: useNavigate
+// • Rol: Permite navigarea programatică (ex: la /lobby când dai Leave Room).
   const navigate = useNavigate();
+
+  // Ref Canvas
+// • Rol: Referință către elementul <canvas> pentru desen.
   const canvasRef = useRef(null);
+
+  // State Chat Input
+// • Rol: Stochează textul curent pentru chat.
   const [chatInput, setChatInput] = useState('');
 
-  // Drawing state and refs
+  // State Desen
+// • Rol: Indică dacă se face desen (mousedown activ).
   const [isDrawing, setIsDrawing] = useState(false);
   const [lastPos, setLastPos] = useState({ x: 0, y: 0 });
   const [color, setColor] = useState('#000');
@@ -29,6 +55,8 @@ export default function GameRoom({
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
   const [savedImage, setSavedImage] = useState(null);
 
+  // Funcție: startDrawing
+// • Rol: Inițiază sesiunile de desen (sau clear/fill/colorPicker).
   const startDrawing = (e) => {
     const rect = canvasRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -75,6 +103,8 @@ export default function GameRoom({
     }
   };
 
+  // Funcție: draw
+// • Rol: Desenează puncte libere sau previzualizează forme în timpul drag-ului.
   const draw = (e) => {
     if (!isDrawing) return;
     const rect = canvasRef.current.getBoundingClientRect();
@@ -137,6 +167,8 @@ export default function GameRoom({
     }
   };
 
+  // Funcție: stopDrawing
+// • Rol: Finalizează desenul și trimite datele formei către server.
   const stopDrawing = () => {
     if (!isDrawing) return;
     setIsDrawing(false);
@@ -205,7 +237,8 @@ export default function GameRoom({
     }
   };
 
-  // Handle incoming DRAW messages
+  // Hook: useEffect pentru mesaje DRAW
+// • Rol: Primește evenimente DRAW de la server și le redă pe canvas.
   useEffect(() => {
     const ws = wsRef.current;
     if (!ws) return;
@@ -227,7 +260,8 @@ export default function GameRoom({
     return () => ws.removeEventListener('message', listener);
   }, [wsRef]);
 
-  // Update cursorPos when using eraser to render preview circle
+  // Hook: useEffect pentru preview radieră
+// • Rol: Ascultă mișcarea mouse-ului pentru afișarea cercului de radieră.
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -243,7 +277,8 @@ export default function GameRoom({
     };
   }, [selectedTool, size]);
 
-  // Send chat message
+  // Funcție: sendChat
+// • Rol: Trimite mesajul prin WebSocket și golește câmpul de input.
   const sendChat = () => {
     if (chatInput.trim() && wsRef.current) {
       wsRef.current.send(
@@ -253,16 +288,20 @@ export default function GameRoom({
     }
   };
 
+  // Render UI
+// • Rol: Afișează structura GameRoom: tema, lista jucătorilor, canvas-ul, chatul, uneltele și sliderul de mărime.
   return (
     <div className={styles.container}>
       {/* Theme Header */}
+{/* • Rol: Afișează tema curentă de joc */}
       <div className={styles.themeHeader}>
         {theme || 'Waiting for theme...'}
       </div>
 
       {/* Main Content Area */}
       <div className={styles.mainArea}>
-        {/* Player List and Leave Button */}
+        {/* Player List */}
+{/* • Rol: Afișează scorurile și butonul Leave Room */}
         <div className={styles.playerList}>
           <h2>Players</h2>
           <ul>
@@ -280,7 +319,8 @@ export default function GameRoom({
           </button>
         </div>
 
-        {/* Canvas */}
+        {/* Canvas Section */}
+{/* • Rol: Zona de desen cu preview radieră */}
         <div className={styles.canvasSection}>
           <canvas
             ref={canvasRef}
@@ -308,6 +348,7 @@ export default function GameRoom({
         </div>
 
         {/* Chat Section */}
+{/* • Rol: Mesaje și input chat */}
         <div className={styles.chatSection}>
           <h2>Chat</h2>
           <div className={styles.messages}>
@@ -331,6 +372,7 @@ export default function GameRoom({
       </div>
 
       {/* Tools Bar */}
+{/* • Rol: Iconițe pentru unelte și color picker */}
       <div className={styles.toolsBar}>
         <div className={styles.toolsList}>
           {tools.map(tool => (
@@ -358,6 +400,9 @@ export default function GameRoom({
           </label>
         </div>
       </div>
+      
+      {/* Size Control */}
+{/* • Rol: Slider pentru dimensiunea uneltei selectate */}
       <div className={styles.sizeControl}>
         <label htmlFor="tool-size">Size:</label>
         <input

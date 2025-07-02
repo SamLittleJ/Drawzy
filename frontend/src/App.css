@@ -1,8 +1,17 @@
-/* Ensure full-height for background */
-html, body {
+/* Stil de bază pentru înălțime completă
+ * • Rol: Asigură că elementele html și body umplu ecranul complet.
+ * • Motiv: Permite animațiilor pe fundal să acopere întreaga zonă vizibilă.
+ * • Alternative: Setarea înălțimii doar pe body (puțină consistență în unele browsere).
+ */
+ html, body {
   height: 100%;
 }
-/* Retro Pixel Art Theme Variables */
+
+/* Variabile temă Retro Pixel Art
+ * • Rol: Definește culorile principale (fundal, text, accente) ale aplicației.
+ * • Motiv: Centralizează palette-ul de culori pentru ușurință în întreținere.
+ * • Alternative: Hardcodarea culorilor direct în reguli CSS (mai puțin flexibil).
+ */
 :root {
   --bg: #336699;
   --fg: #e0e0e0;
@@ -13,61 +22,77 @@ html, body {
   --border: #00ffff;
 }
 
-/* App.css */
-
-/* Reset simplu */
+/* Reset simplu global
+ * • Rol: Elimină marginile și padding-urile implicite și setează box-sizing.
+ * • Motiv: Normalizează comportamentul elementelor între browsere.
+ * • Alternative: Utilizarea unui reset CSS complet sau Normalize.css.
+ */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-  
-  /* Font şi background global */
-  body {
-    font-family: 'VT323', monospace;
-    background-color: var(--bg);
-    color: var(--fg);
-    line-height: 1.6;
-  }
-  
-  /* Container centrat pentru toate paginile */
-  #root, .App {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-  }
-  
-  /* Poţi adăuga un container intern */
-  .container {
-    flex: 1;
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 1rem;
-  }
-  
-  /* Stiluri pentru link-uri la nivel global */
-  a {
-    color: #0066cc;
-    text-decoration: none;
-  }
-  
-  a:hover {
-    text-decoration: underline;
-  }
-  
-  /* Butoane globale (pe lângă cele specifice modulului CSS) */
-  button {
-    font-family: inherit;
-    font-size: 1rem;
-    cursor: pointer;
-  }
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-/* Headings and pixel text */
+/* Stil global pentru body
+ * • Rol: Setează fontul principal și background-ul temei.
+ * • Motiv: Aplică tema retro pixel art pe întreaga aplicație.
+ * • Alternative: Schimbare dinamică a temei prin clase CSS sau JS.
+ */
+body {
+  font-family: 'VT323', monospace;
+  background-color: var(--bg);
+  color: var(--fg);
+  line-height: 1.6;
+}
+
+/* Container principal
+ * • Rol: Creează un container flex vertical care ocupă toată înălțimea.
+ * • Motiv: Permite alinierea conținutului pe întreaga pagină.
+ * • Alternative: Utilizarea grid în loc de flexbox.
+ */
+#root, .App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Container intern centrat
+ * • Rol: Limitează lățimea conținutului și adaugă padding.
+ * • Motiv: Crează margini laterale egale și spațiu intern consistent.
+ * • Alternative: Container fluid fără max-width.
+ */
+.container {
+  flex: 1;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* Stil link-uri
+ * • Rol: Definește culoarea și comportamentul la hover pentru link-uri.
+ * • Motiv: Asigură consistența interactivității elementelor <a>.
+ */
+a {
+  color: #0066cc;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* Stil butoane și text pixel
+ * • Rol: Aplică fontul monospace și tema pixel art la butoane și elemente text spéciale.
+ * • Motiv: Păstrează un stil unificat retro în întreg UI-ul.
+ * • Alternative: Utilizarea altor fonturi pixel (ex. Press Start 2P).
+ */
 h1, h2, button, .pixel-text {
   font-family: 'Press Start 2P', cursive;
 }
 
-/* Retro button default */
+/* Stil implicit butoane retro
+ * • Rol: Definește culorile, padding-ul și efectele hover/active pentru butoane.
+ * • Motiv: Asigură consistență în toate butoanele aplicației.
+ */
 button {
   background: var(--accent1);
   color: var(--bg);
@@ -83,7 +108,11 @@ button:active {
   transform: translate(1px, 1px);
 }
 
-/* Scrollbar styling */
+/* Stilizare scrollbar
+ * • Rol: Personalizează lățimea și culoarea thumb-ului scroll-ului.
+ * • Motiv: Se potrivește cu paleta de accente a aplicației.
+ * • Alternative: Stiluri implicite de browser.
+ */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -91,7 +120,11 @@ button:active {
   background: var(--accent3);
 }
 
-/* Particles container */
+/* Particule animate pe fundal
+ * • Rol: Container și elemente pentru animațiile decorative.
+ * • Motiv: Îmbogățește vizual experiența utilizatorului.
+ * • Alternative: Canvas sau WebGL pentru animații complexe.
+ */
 .particles {
   position: fixed;
   top: 0;
@@ -102,7 +135,6 @@ button:active {
   overflow: hidden;
   z-index: -1;
 }
-
 .particle {
   position: absolute;
   background-size: auto;
@@ -111,7 +143,10 @@ button:active {
   animation-fill-mode: both;
 }
 
-/* Individual tool icons */
+/* Particulă brush/eraser/palette/pencil/bucket/marker
+ * • Rol: Stilizează fiecare iconiță animată (dimensiune, culoare, animație).
+ * • Motiv: Diversifică elementele animate și evidențiază diferitele unelte.
+ */
 .particle.brush {
   width: 16px;
   height: 16px;
@@ -136,7 +171,6 @@ button:active {
   animation: float3 12s linear infinite;
   animation-delay: 10s;
 }
-
 .particle.pencil {
   width: 4px;
   height: 20px;
@@ -145,7 +179,6 @@ button:active {
   animation: flyUp 12s linear infinite;
   animation-delay: 2s;
 }
-
 .particle.bucket {
   width: 12px;
   height: 12px;
@@ -154,7 +187,6 @@ button:active {
   animation: flyNW 20s linear infinite;
   animation-delay: 4s;
 }
-
 .particle.marker {
   width: 6px;
   height: 14px;
@@ -164,7 +196,11 @@ button:active {
   animation-delay: 6s;
 }
 
-/* Keyframes for varied motion */
+/* Keyframes animații variate
+ * • Rol: Definește traiectoria și comportamentul animațiilor particulelor.
+ * • Motiv: Creează mișcare diversificată (direcții multiple, rotații).
+ * • Alternative: JavaScript pentru animație programatică.
+ */
 @keyframes float1 {
   0%   { transform: translate(-10%, 20vh) rotate(0deg); opacity: 0; }
   10%  { opacity: 1; }
@@ -180,25 +216,21 @@ button:active {
   10%  { opacity: 1; }
   100% { transform: translate(120vw, 30vh) rotate(360deg); opacity: 0; }
 }
-
 @keyframes flyNE {
   0%   { transform: translate(-20%, 100vh) rotate(0deg); opacity: 0; }
   10%  { opacity: 1; }
   100% { transform: translate(120vw, -20vh) rotate(360deg); opacity: 0; }
 }
-
 @keyframes flyNW {
   0%   { transform: translate(120vw, 100vh) rotate(0deg); opacity: 0; }
   10%  { opacity: 1; }
   100% { transform: translate(-20%, -20vh) rotate(-360deg); opacity: 0; }
 }
-
 @keyframes flyUp {
   0%   { transform: translate(0, 110vh) rotate(0deg); opacity: 0; }
   10%  { opacity: 1; }
   100% { transform: translate(0, -20vh) rotate(360deg); opacity: 0; }
 }
-
 @keyframes flyDown {
   0%   { transform: translate(0, -20vh) rotate(0deg); opacity: 0; }
   10%  { opacity: 1; }

@@ -1,4 +1,7 @@
-#Load balancer for the frontend
+# • Rol: Definește configurația instanțelor EC2 pentru frontend (AMI, tip instanță, user_data).
+# • Motiv: Centralizează setările și permite autoscaling folosind același template.
+# • Implementare: Script de inițializare instalare Docker, autentificare ECR și rulare container frontend.
+# • Alternative: Utilizarea Terraform provisioners (remote-exec) sau construirea manuală a instanțelor.
 resource "aws_launch_template" "frontend_lt" {
   name_prefix = "drawzy-frontend-"
   image_id = data.aws_ami.frontend.id   #AMI that includes your backend or docker runtime
@@ -53,7 +56,9 @@ resource "aws_launch_template" "frontend_lt" {
   }
 }
 
-#ASG for the frontend
+# • Rol: Gestionează în mod automat numărul de instanțe frontend în funcție de cerere.
+# • Motiv: Asigură scalare și disponibilitate continuă.
+# • Config cheie: Rolling updates cu min_healthy_percentage pentru a menține serviciul online în timpul actualizărilor.
 resource "aws_autoscaling_group" "frontend_asg" {
   name_prefix = "drawzy-frontend-asg-"
   desired_capacity = var.desired_capacity
@@ -82,7 +87,9 @@ resource "aws_autoscaling_group" "frontend_asg" {
   }
 }
 
-#Load balancer for the frontend
+# • Rol: Application Load Balancer care distribuie cererile HTTP către instanțele frontend.
+# • Motiv: Oferă un punct de intrare public, health checks și opțiuni TLS.
+# • Alternative: Network Load Balancer sau Classic Load Balancer pentru alte scenarii.
 resource "aws_lb" "frontend_alb" {
   name = "drawzy-frontend-alb"
   internal = false
@@ -91,7 +98,9 @@ resource "aws_lb" "frontend_alb" {
   subnets = var.subnet_ids
 }
 
-# Target group for the frontend
+# • Rol: Definește portul 80 și setările de health check pentru grupul țintă frontend.
+# • Motiv: Dirijează traficul doar către instanțele sănătoase.
+# • Alternative: Sărirea health checks (nu recomandat).
 resource "aws_lb_target_group" "frontend_tg" {
   name = "drawzy-frontend-tg"
   port = 80
@@ -108,7 +117,9 @@ resource "aws_lb_target_group" "frontend_tg" {
   }
 }
 
-# Alb listener for the frontend
+# • Rol: Ascultă pe portul 80 și redirecționează cererile către target group.
+# • Motiv: Configurarea punctului de intrare HTTP pentru aplicația frontend.
+# • Alternative: Adăugarea unui listener HTTPS cu certificare ACM pentru securitate.
 resource "aws_lb_listener" "frontend_listener" {
   load_balancer_arn = aws_lb.frontend_alb.arn
   port = 80
@@ -120,6 +131,9 @@ resource "aws_lb_listener" "frontend_listener" {
   }
 }
 
+# • Rol: Obține cea mai recentă AMI Amazon Linux 2 pentru instanțele frontend.
+# • Motiv: Folosirea unei imagini oficiale și updatate fără a hardcoda ID-ul.
+# • Alternative: Utilizarea SSM Parameter Store sau hardcodarea manuală a unui AMI.
 data "aws_ami" "frontend" {
     most_recent = true
     owners = ["amazon"]
@@ -130,7 +144,9 @@ data "aws_ami" "frontend" {
     }
 }
 
-#New IAM role and instance profile for EC2 with ECR permissions
+# • Rol: Permite instanțelor EC2 să tragă imagini din ECR.
+# • Motiv: Necesită permisiuni pentru autentificarea și descărcarea imaginilor din registry-ul AWS.
+# • Alternative: Configurarea manuală de credențiale în user_data (mai puțin sigur).
 resource "aws_iam_role" "ec2_role" {
   name = "drawzy-ec2-instance-role-frontend"
   assume_role_policy = jsonencode({
@@ -146,21 +162,18 @@ resource "aws_iam_role" "ec2_role" {
     ]
   })
 }
-
 resource "aws_iam_role_policy_attachment" "ec2_ecr" {
   role       = aws_iam_role.ec2_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
-
 resource "aws_iam_instance_profile" "ec2_instance_profile" {
   name = "drawzy-ec2-instance-profile-frontend"
   role = aws_iam_role.ec2_role.name
 }
 
-# Security group for the frontend ALB:
-# Allows inbound HTTP traffic on port 80 from any IPv4 address (0.0.0.0/0),
-# allows SSH access on port 22 from the specified admin IP,
-# and allows all outbound traffic.
+# • Rol: Permite inbound HTTP (port 80) din public și SSH (port 22) din IP-ul admin către ALB.
+# • Motiv: Expune doar Load Balancer-ul și limitează accesul SSH.
+# • Alternative: Utilizarea ACL-urilor sau whitelist IP cu servicii de firewall externe.
 resource "aws_security_group" "alb_sg_frontend" {
   name = "drawzy-frontend-alb-sg"
   description = "Allow HTTP and HTTPS inbound traffic"
@@ -191,7 +204,9 @@ resource "aws_security_group" "alb_sg_frontend" {
   }
 }
 
-# Security group for the EC2 instance:
+# • Rol: Permite traficul HTTP de la ALB și SSH de la IP-ul admin către instanțele frontend.
+# • Motiv: Protecția instanțelor astfel încât acestea să nu fie expuse direct public.
+# • Alternative: Deschiderea altor porturi pentru monitorizare sau debugging.
 resource "aws_security_group" "ec2_sg_frontend" {
   name = "drawzy-frontend-ec2-sg"
   description = "Allow HTTP and SSH inbound traffic"
@@ -220,10 +235,11 @@ resource "aws_security_group" "ec2_sg_frontend" {
   }
 }
 
+
+# Output-uri: Expun ID-urile Security Group-urilor frontend pentru reutilizare.
 output "frontend_alb_sg_id" {
   value = aws_security_group.alb_sg_frontend.id
 }
-
 output "frontend_ec2_sg_id" {
   value = aws_security_group.ec2_sg_frontend.id
 }
