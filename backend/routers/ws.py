@@ -1,18 +1,31 @@
+# Importuri FastAPI și dependințe
+# • Rol: Definirea router-ului WebSocket și obținerea utilizatorului curent și a sesiunii DB.
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from backend.dependencies import get_current_user_ws
 from backend.database import get_db
 from sqlalchemy.orm import Session
 from backend.routers.game_ws_manager import manager
 
+# Instanțiere router WebSocket
+# • Rol: Configurare punct de intrare pentru endpoint-urile WS.
 router = APIRouter()
 
+# Endpoint WS simplificat
+# • Rol: Gestionează evenimente de tip PLAYER_JOIN fără accept explicit și autentificare.
 @router.websocket("/ws/{code}")
-async def websocket(websocket: WebSocket, code: str, db: Session = Depends(get_db), user = Depends(get_current_user_ws)):
+async def websocket_simple(
+    websocket: WebSocket,
+    code: str,
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user_ws)
+):
+    # Manager conectare
+    # • Rol: Înregistrează conexiunea clientului în manager pentru broadcast.
     await manager.connect(code, websocket)
     try:
         while True:
             data = await websocket.receive_json()
-            if data.get('type') == 'PLAYER_JOIN':
+            if data.get("type") == "PLAYER_JOIN":
                 await manager.broadcast(code, {
                     "type": "PLAYER_JOIN",
                     "payload": {
@@ -21,20 +34,35 @@ async def websocket(websocket: WebSocket, code: str, db: Session = Depends(get_d
                     }
                 })
     except WebSocketDisconnect:
+        # Tratamente deconectare
+        # • Rol: Elimină conexiunea din manager la deconectare.
         manager.disconnect(code, websocket)
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, WebSocketException
-from backend.dependencies import get_current_user_ws
-from backend.database import get_db
-from sqlalchemy.orm import Session
-from backend.routers.game_ws_manager import manager
+
+
+
+# Importuri suplimentare și logging
+# • Rol: Adaugă suport pentru WebSocketException și logare evenimente WS.
+from fastapi import WebSocketException
 import logging
 
-router = APIRouter()
+# Configurare logger
+# • Rol: Obține un logger dedicat pentru mesaje și erori WS.
 logger = logging.getLogger("ws")
 
+# Instanțiere router cu autentificare
+# • Rol: Configurează endpoint-urile WS care fac autentificare inițială.
+router = APIRouter()
+
+# Endpoint WS cu autentificare
+# • Rol: Acceptă și autorizează conexiuni, apoi redirecționează mesaje prin manager.
 @router.websocket("/ws/{code}")
-async def websocket_chat(websocket: WebSocket, code: str, db: Session = Depends(get_db)):
-    # Authenticate user
+async def websocket_chat(
+    websocket: WebSocket,
+    code: str,
+    db: Session = Depends(get_db)
+):
+    # Autentificare WebSocket
+    # • Rol: Verifică token-ul JWT din query params și închide conexiunea dacă e invalid.
     try:
         user = await get_current_user_ws(websocket, db)
     except WebSocketException as e:
@@ -42,21 +70,25 @@ async def websocket_chat(websocket: WebSocket, code: str, db: Session = Depends(
         await websocket.close(code=e.code, reason=e.reason)
         return
 
-    # Accept the connection
+    # Acceptare conexiune
+    # • Rol: Confirmă upgrade-ul la protocolul WebSocket.
     await websocket.accept()
     logger.info(f"WebSocket connected: user={user.username}, room={code}")
 
-    # Register connection with manager
+    # Manager conectare cu autentificare
+    # • Rol: Înregistrează conexiunea autentificată în manager.
     await manager.connect(code, websocket)
 
     try:
         while True:
+            # Citire mesaj
+            # • Rol: Primește payload JSON trimis de client.
             data = await websocket.receive_json()
             msg_type = data.get("type")
             payload = data.get("payload", {})
             logger.debug(f"Received WS message type={msg_type}, payload={payload}")
+
             if msg_type == "PLAYER_JOIN":
-                # Broadcast the authenticated user's info, ignoring any client payload
                 await manager.broadcast(code, {
                     "type": "PLAYER_JOIN",
                     "payload": {
@@ -82,6 +114,9 @@ async def websocket_chat(websocket: WebSocket, code: str, db: Session = Depends(
                 await manager.broadcast(code, {"type": "GAME_END"})
             else:
                 logger.warning("Unknown WS type: %s", msg_type)
+
     except WebSocketDisconnect:
+        # Deconectare controlată
+        # • Rol: Elimină conexiunea din manager și loghează deconectarea.
         await manager.disconnect(code, websocket)
         logger.info(f"WebSocket disconnected: user={user.username}, room={code}")

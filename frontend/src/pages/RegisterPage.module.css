@@ -1,4 +1,9 @@
-.formContainer {
+/* Container Formular
+ * • Rol: Încadrează și stilizează secțiunea principală a formularului de înregistrare.
+ * • Motiv: Asigură o margine clară, umplutură și umbră pentru evidențiere.
+ * • Alternative: Utilizarea unui wrapper generic cu clase partajate.
+ */
+ .formContainer {
     color: #000;
     max-width: 800px;
     margin: 100px auto 20px;
@@ -9,6 +14,11 @@
     background-color: #fafafa;
 }
 
+/* Titlu Pagină
+ * • Rol: Stilizează textul principal al paginii de înregistrare.
+ * • Motiv: Oferă un font pixel art și spațiu de separare vizuală.
+ * • Alternative: Alte fonturi retro sau fonturi sans-serif.
+ */
 .title {
     font-family: 'Press Start 2P', cursive;
     text-align: center;
@@ -16,16 +26,31 @@
     margin-bottom:1rem;
 }
 
+/* Mesaje de Eroare
+ * • Rol: Afișează textul erorilor cu culoare roșie și aliniere centrală.
+ * • Motiv: Evidențiază validările incorecte pentru utilizator.
+ * • Alternative: Afișarea erorilor inline lângă fiecare câmp.
+ */
 .error {
     color: #c00;
     margin-bottom:1rem;
     text-align: center;
 }
 
+/* Grup Câmpuri Formular
+ * • Rol: Marchează fiecare grup de etichetă și input pentru spațiere.
+ * • Motiv: Creează distanță între diferite câmpuri ale formularului.
+ * • Alternative: Utilizarea flexbox pentru aliniere orizontală.
+ */
 .formGroup {
     margin-bottom:1rem;
 }
 
+/* Etichetă Câmp
+ * • Rol: Stilizează textul etichetei formularului cu font pixel art.
+ * • Motiv: Oferă claritate și consistență vizuală pentru fiecare câmp.
+ * • Alternative: Folosirea unor fonturi normale și mai subtile.
+ */
 .label {
     font-family: 'Press Start 2P', cursive;
     display: block;
@@ -33,6 +58,11 @@
     font-weight: 500;
 }
 
+/* Input Text
+ * • Rol: Definire stil pentru câmpurile de text cu umbră internă și margini.
+ * • Motiv: Permite utilizatorului să completeze date cu aspect retro.
+ * • Alternative: Folosirea border tradițional și focus outline.
+ */
 .input {
     width: 100%;
     padding: 0.5rem;
@@ -46,9 +76,18 @@
     cursor: text;
 }
 .input::placeholder {
+    /* Placeholder Text
+     * • Rol: Stilizează fontul placeholder-ului cu tema pixel art.
+     * • Motiv: Asigură coerență vizuală între textul implicit și cel introdus.
+     */
     font-family: 'Press Start 2P', cursive;
 }
 
+/* Buton Submit
+ * • Rol: Stilizează butonul de trimitere cu font pixel art și efect de umbră.
+ * • Motiv: Evidențiază acțiunea principală și menține tema retro.
+ * • Alternative: Utilizarea unei culori mai închise pentru contrast mai mare.
+ */
 .submitButton {
     width: 100%;
     padding: 0.75rem 1.5rem;
@@ -62,21 +101,38 @@
     cursor: pointer;
 }
 .submitButton:hover {
+    /* Hover Buton Submit
+     * • Rol: Aplică o nuanță diferită și mișcare ușoară la hover.
+     * • Motiv: Oferă feedback vizual atunci când utilizatorul interacționează.
+     */
     background-color: var(--accent2);
     transform: translate(1px, 1px);
 }
 
+/* Text Subsol Formular
+ * • Rol: Stilizează textul informativ de sub formular.
+ * • Motiv: Ghidează utilizatorii către pagina de login dacă au cont.
+ * • Alternative: Afișarea link-ului într-o linie superioară.
+ */
 .footerText {
     text-align: center;
     margin-top:1rem;
 }
 
+/* Link Subsol
+ * • Rol: Stilizează link-ul spre pagina de login cu culoare accent.
+ * • Motiv: Evidențiază opțiunea de navigare către login.
+ * • Alternative: Utilizarea unui buton în loc de link text.
+ */
 .footerLink {
     color: var(--accent4);
     text-decoration: none;
     font-family: 'Press Start 2P', cursive;
 }
-
 .footerLink:hover {
+    /* Hover Link Subsol
+     * • Rol: Adaugă subliniere la hover pentru claritate interactivă.
+     * • Motiv: Indică faptul că elementul este clicabil.
+     */
     text-decoration: underline;
 }

@@ -1,10 +1,27 @@
+# Versiune Docker Compose
+# • Rol: Specifică versiunea formatului Compose utilizat.
+# • De ce: Asigură compatibilitate cu funcționalitățile de la versiunea 3.8.
+# • Alternative: Versiuni mai vechi (3.7, 3.6) sau mai noi, în funcție de cerințe.
 version: '3.8'
 
+# Secțiunea Services
+# • Rol: Definește serviciile containerizate care alcătuiesc aplicația.
+# • De ce: Centralizează configurația pentru backend și frontend.
+# • Alternative: Utilizarea mai multor fișiere Compose cu extensii (override).
 services:
+
+  # Serviciu: backend
+  # • Rol: Rulează API-ul Python cu Uvicorn și gestionează WebSocket-urile.
+  # • De ce: Containerizează backend-ul pentru consistență și portabilitate.
+  # • Implementare: Construiește imaginea din `backend/Dockerfile` și expune portul 8080.
+  # • Alternative: Rulare fără Docker sau cu orchestrator Kubernetes.
   backend:
+    # Build context și Dockerfile
     build: 
       context: .
       dockerfile: backend/Dockerfile
+
+    # Comanda de pornire a aplicației Uvicorn
     command:
       - uvicorn
       - backend.main:app
@@ -16,18 +33,30 @@ services:
       - "8080"
       - --ws-per-message-deflate
       - "false"
+
+    # Mapare port backend (host:container)
     ports:
       - "8080:80"
+
+    # Variabile de mediu – încarcă fișierul .env
     environment:
-      #Make sure the databse url maches the AWS credentials
       - /Users/sam_little_j/Drawzy/backend/.env
+
+    # Mount cod sursă pentru dezvoltare live
     volumes:
       - ./backend:/app
 
+  # Serviciu: frontend
+  # • Rol: Servește aplicația React statică.
+  # • De ce: Containerizează frontend-ul pentru consistență între medii.
+  # • Implementare: Construiește imaginea din `frontend/Dockerfile` și expune portul 8081.
+  # • Alternative: Servire directă prin CDN sau server static (Nginx).
   frontend:
+    # Build context și Dockerfile
     build: 
       context: ./frontend
       dockerfile: Dockerfile
+
+    # Mapare port frontend (host:container)
     ports:
-       - "8081:80"
-      
+      - "8081:80"

@@ -1,3 +1,7 @@
+# Sursa de date: Obține cea mai recentă AMI Amazon Linux 2
+# • Rol: Asigură că folosim o imagine actuală și oficială pentru instanțe.
+# • Motiv: Evită hardcodarea unui ID de AMI și beneficiază de actualizările Amazon.
+# • Alternative: Hardcodarea manuală a unui AMI sau utilizarea unui parametru SSM.
 data "aws_ami" "backend" {
     most_recent = true
     owners = ["amazon"]
@@ -8,7 +12,11 @@ data "aws_ami" "backend" {
     }
 }
 
-#Launch template for EC2 instances
+# • Rol: Definirea configurației instanțelor EC2 (AMI, tip instanță, rol IAM, user_data).
+# • Motiv: Centralizează setările pentru autoscaling și actualizări controlate.
+# • Implementare: Script de inițializare care instalează Docker, autentifică la ECR și rulează containerul backend.
+# • Alternative: Configurare manuală EC2 sau utilizarea provisioner-elor Terraform (remote-exec).
+# • Observație: create_before_destroy previne downtime-ul la actualizarea user_data.
 resource "aws_launch_template" "backend_lt" {
   name_prefix = "drawzy-backend-"
   image_id = data.aws_ami.backend.id   #AMI that includes your backend or docker runtime
@@ -70,7 +78,10 @@ resource "aws_launch_template" "backend_lt" {
   }
 }
 
-# Autoscaling group for the backend
+# • Rol: Gestionează automat numărul de instanțe în funcție de capacitate.
+# • Motiv: Asigură disponibilitate ridicată și scalare automată a backend-ului.
+# • Alternative: Utilizarea Spot Fleet sau scalare manuală.
+# • Config cheie: Rolling updates cu min_healthy_percentage = 90% pentru a menține uptime.
 resource "aws_autoscaling_group" "backend_asg" {
   name_prefix = "drawzy-backend-asg-"
   desired_capacity = var.desired_capacity
@@ -102,7 +113,9 @@ resource "aws_autoscaling_group" "backend_asg" {
   }
 }
 
-#Load balancer for the backend
+# • Rol: Distribuie traficul HTTP către instanțele sănătoase.
+# • Motiv: Oferă punct de intrare stabil, health checks și integrare cu autoscaling.
+# • Alternative: Classic Load Balancer sau Network Load Balancer pe TCP.
 resource "aws_lb" "backend_alb" {
   name = "drawzy-backend-alb"
   internal = false
@@ -111,7 +124,9 @@ resource "aws_lb" "backend_alb" {
   subnets = var.subnet_ids
 }
 
-#Target group for the backend
+# • Rol: Definește portul și setările health check pentru ALB.
+# • Motiv: Redirecționează numai către instanțele sănătoase.
+# • Alternative: Sări peste health checks (nu recomandat).
 resource "aws_lb_target_group" "backend_tg" {
   name = "drawzy-backend-tg"
   port = 80
@@ -128,7 +143,9 @@ resource "aws_lb_target_group" "backend_tg" {
   }
 }
 
-# Alb listener for the backend
+# • Rol: Ascultă pe portul 80 și forward-ează traficul către target group.
+# • Motiv: Configurarea punctului de intrare HTTP pentru ALB.
+# • Alternative: Adăugarea unui listener HTTPS cu certificat ACM.
 resource "aws_lb_listener" "backend_listener" {
   load_balancer_arn = aws_lb.backend_alb.arn
   port = 80
@@ -140,7 +157,9 @@ resource "aws_lb_listener" "backend_listener" {
   }
 }
 
-#New IAM role and instance profile for EC2 with ECR permissions
+# • Rol: Permite instanțelor EC2 să tragă imagini din ECR.
+# • Motiv: Necesită autentificare securizată la registry-ul AWS ECR.
+# • Alternative: Includerea credențialelor în user_data (mai puțin sigur).
 resource "aws_iam_role" "ec2_role" {
   name_prefix = "drawzy-ec2-instance-role-backend"
   assume_role_policy = jsonencode({
@@ -156,20 +175,18 @@ resource "aws_iam_role" "ec2_role" {
     ]
   })
 }
-
 resource "aws_iam_role_policy_attachment" "ec2_ecr" {
   role       = aws_iam_role.ec2_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
-
 resource "aws_iam_instance_profile" "ec2_instance_profile" {
   name = "drawzy-ec2-instance-profile-backend"
   role = aws_iam_role.ec2_role.name
 }
 
-# Security group for the backend ALB:
-# Allows inbound HTTP traffic on port 8080 from any IPv4 address (0.0.0.0/0)
-# and allows all outbound traffic.
+# • Rol: Permite trafic HTTP/HTTPS public către ALB.
+# • Motiv: Izolează EC2-urile din spate și expune doar ALB-ul.
+# • Alternative: Separarea SG-urilor pentru fiecare protocol sau whitelist IP.
 resource "aws_security_group" "alb_sg_backend" {
   name_prefix = "drawzy-backend-alb-sg"
   description = "Allow HTTP and HTTPS inbound traffic"
@@ -200,8 +217,9 @@ resource "aws_security_group" "alb_sg_backend" {
   }
 }
 
-# Security group for the EC2 instance:
-# Allows inbound HTTP traffic on port 8080 for the ALB SG and SSH from your admin CIDR
+# • Rol: Permite SSH din rețeaua de administratori și HTTP doar de la ALB.
+# • Motiv: Protejează instanțele backend de acces direct neautorizat.
+# • Alternative: Deschiderea altor porturi pentru monitorizare sau health checks custom.
 resource "aws_security_group" "ec2_sg_backend" {
   name_prefix = "drawzy-backend-ec2-sg"
   description = "Allow HTTP and SSH inbound traffic"
@@ -240,14 +258,13 @@ resource "aws_security_group" "ec2_sg_backend" {
   }
 }
 
+# Output-uri: Expun ID-urile SG și subnet-urilor pentru reutilizare în alte module.
 output "backend_alb_sg_id" {
   value = aws_security_group.alb_sg_backend.id
 }
-
 output "backend_ec2_sg_id" {
   value = aws_security_group.ec2_sg_backend.id
 }
-
 output "subnet_ids" {
   value = var.subnet_ids
 }

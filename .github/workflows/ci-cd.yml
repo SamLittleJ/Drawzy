@@ -1,130 +1,192 @@
+# Pipeline CI/CD pentru aplicație
+# • Rol: Rulează fluxul de CI și CD la push în branch-ul main.
 name: CI/CD Pipeline
 
+# Evenimente declanșatoare
+# • Rol: Specifică când se inițiază pipeline-ul.
 on:
-    push:
-        branches:
-            - main
+  # Declanșare la push
+  # • Rol: Pornește pipeline-ul la fiecare push în branch-urile specificate.
+  push:
+    # Ramuri monitorizate
+    # • Rol: Listează branch-urile pentru care se execută pipeline-ul.
+    branches:
+      - main
 
+# Variabile de mediu globale
+# • Rol: Definește regiunea AWS și URL-ul contului ECR pentru joburi.
 env:
-    AWS_REGION: eu-central-1
-    ECR_ACCOUNT_URL: 980921758343.dkr.ecr.eu-central-1.amazonaws.com
+  AWS_REGION: eu-central-1
+  ECR_ACCOUNT_URL: 980921758343.dkr.ecr.eu-central-1.amazonaws.com
 
+# Permisiuni GitHub Actions
+# • Rol: Conține permisiuni de citire pentru conținut și scriere de ID token pentru AWS OIDC.
 permissions:
   contents: read
   id-token: write
 
+# Definiția joburilor
+# • Rol: Setează secțiunile de joburi pentru infrastructură, build și deploy Terraform.
 jobs:
-    infra-base:
-        name: Terraform "base" infrastructure
-        runs-on: ubuntu-latest
-        steps:
-          - name: Checkout repo
-            uses: actions/checkout@v2
-          
-          - name: Configure AWS Credentials
-            uses: aws-actions/configure-aws-credentials@v2
-            with:
-              role-to-assume: arn:aws:iam::980921758343:role/gitRead
-              aws-region: ${{ env.AWS_REGION }}
-          - name: Setup Terraform
-            uses: hashicorp/setup-terraform@v2
-            with:
-              terraform_wrapper: false
-          - name: Terraform init
-            working-directory: terraform/environments/dev
-            run: |
-              terraform init \
-               -backend-config="bucket=drawzy-terraform-state-dev" \
-               -backend-config="key=terraform.tfstate" \
-               -backend-config="region=${{ env.AWS_REGION }}" \
-               -backend-config="dynamodb_table=drawzy-terraform-state-locks" 
-          
-          - name: Terraform Apply (rds, ecr)
-            working-directory: terraform/environments/dev
-            run: |
-             terraform apply -auto-approve \
-             -target=module.rds_mysql \
-             -target=module.ecr 
-          - name: Get RDS endpoint
-            id: endpoint
-            run: |
-              echo "DB_URL=$(terraform output -raw DATABASE_URL)" >> $GITHUB_ENV
-            working-directory: terraform/environments/dev
-          - name: Write .env 
-            run: |
-              echo "DATABASE_URL=${{ env.DB_URL }}" > backend/.env
+  # Job: infra-base
+  # • Rol: Configurează infrastructura de bază prin Terraform (RDS, ECR).
+  infra-base:
+    name: Terraform "base" infrastructure
+    runs-on: ubuntu-latest
+    steps:
+      # Pași job infra-base
+      # • Rol: Checkout repo, configurare AWS, setup Terraform, init și apply.
 
+      # Pas: Checkout cod sursă
+      - name: Checkout repo
+        uses: actions/checkout@v2
 
-    build_and_push:
-        name: Build & Push Docker Images
-        needs: infra-base
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v3
-            - name: Configure AWS Credentials
-              uses: aws-actions/configure-aws-credentials@v2
-              with:
-                role-to-assume: arn:aws:iam::980921758343:role/gitRead
-                aws-region: ${{ env.AWS_REGION }}
-            - name: Login to ECR
-              id: login-ecr
-              uses: aws-actions/amazon-ecr-login@v2
-            - name: Build and Docker backend image
-              run: |
-                docker build \
-                -t $ECR_ACCOUNT_URL/drawzy-backend:latest \
-                -f ./backend/Dockerfile \
-                ./backend
-                docker push $ECR_ACCOUNT_URL/drawzy-backend:latest
-            - name: Build and Docker frontend image
-              run: |
-                docker build \
-                -t $ECR_ACCOUNT_URL/drawzy-frontend:latest \
-                -f ./frontend/Dockerfile \
-                ./frontend
-                docker push $ECR_ACCOUNT_URL/drawzy-frontend:latest
-    terraform:
-        name: Terraform deploying
-        needs: [infra-base, build_and_push]
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v3
-            - name: Setup Terraform
-              uses: hashicorp/setup-terraform@v2
-              with:
-               terraform_wrapper: false
-            
-            - name: Configure AWS Credentials
-              uses: aws-actions/configure-aws-credentials@v2
-              with:
-                role-to-assume: arn:aws:iam::980921758343:role/gitRead
-                aws-region: ${{ env.AWS_REGION }}
+      # Pas: Configurare credentiale AWS
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::980921758343:role/gitRead
+          aws-region: ${{ env.AWS_REGION }}
 
-            - name: Terraform fmt (auto-format)
-              working-directory: terraform/environments/dev
-              run: terraform fmt -recursive
-            - name: Terraform fmt-check
-              working-directory: terraform/environments/dev
-              run: terraform fmt -check -recursive
-              
-            - name: Terraform init
-              working-directory: terraform/environments/dev
-              run: |
-                terraform init -reconfigure \
-                 -backend-config="bucket=drawzy-terraform-state-dev" \
-                 -backend-config="key=terraform.tfstate" \
-                 -backend-config="region=${{ env.AWS_REGION }}" \
-                 -backend-config="dynamodb_table=drawzy-terraform-state-locks" \
-            
-            - name: Terraform Validate
-              working-directory: terraform/environments/dev
-              run: terraform validate
-            - name: Terraform plan
-              run: terraform plan
-              working-directory: terraform/environments/dev
-            - name: Terraform apply
-              run: terraform apply -auto-approve
-              working-directory: terraform/environments/dev
-            
+      # Pas: Instalare Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
+
+      # Pas: Terraform init
+      - name: Terraform init
+        working-directory: terraform/environments/dev
+        run: |
+          terraform init \
+            -backend-config="bucket=drawzy-terraform-state-dev" \
+            -backend-config="key=terraform.tfstate" \
+            -backend-config="region=${{ env.AWS_REGION }}" \
+            -backend-config="dynamodb_table=drawzy-terraform-state-locks"
+
+      # Pas: Terraform Apply pentru RDS și ECR
+      - name: Terraform Apply (rds, ecr)
+        working-directory: terraform/environments/dev
+        run: |
+          terraform apply -auto-approve \
+            -target=module.rds_mysql \
+            -target=module.ecr
+
+      # Pas: Obținere endpoint RDS
+      - name: Get RDS endpoint
+        id: endpoint
+        working-directory: terraform/environments/dev
+        run: |
+          echo "DB_URL=$(terraform output -raw DATABASE_URL)" >> $GITHUB_ENV
+
+      # Pas: Scriere fișier .env
+      - name: Write .env
+        working-directory: terraform/environments/dev
+        run: |
+          echo "DATABASE_URL=${{ env.DB_URL }}" > backend/.env
+
+  # Job: build_and_push
+  # • Rol: Construiește și publică imaginile Docker pentru backend și frontend.
+  build_and_push:
+    name: Build & Push Docker Images
+    needs: infra-base
+    runs-on: ubuntu-latest
+    steps:
+      # Pași job build_and_push
+      # • Rol: Checkout, configurare AWS, autentificare ECR, build și push imagini.
+
+      # Pas: Checkout cod sursă
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Pas: Configurare credentiale AWS
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::980921758343:role/gitRead
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Pas: Login ECR
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # Pas: Build și push backend
+      - name: Build and Docker backend image
+        run: |
+          docker build \
+            -t $ECR_ACCOUNT_URL/drawzy-backend:latest \
+            -f ./backend/Dockerfile \
+            ./backend
+          docker push $ECR_ACCOUNT_URL/drawzy-backend:latest
+
+      # Pas: Build și push frontend
+      - name: Build and Docker frontend image
+        run: |
+          docker build \
+            -t $ECR_ACCOUNT_URL/drawzy-frontend:latest \
+            -f ./frontend/Dockerfile \
+            ./frontend
+          docker push $ECR_ACCOUNT_URL/drawzy-frontend:latest
+
+  # Job: terraform
+  # • Rol: Execută validări, formatări și aplică complet configurațiile Terraform.
+  terraform:
+    name: Terraform deploying
+    needs: [infra-base, build_and_push]
+    runs-on: ubuntu-latest
+    steps:
+      # Pași job terraform
+      # • Rol: Checkout, setup Terraform, configurare AWS, fmt, validate, plan și apply.
+
+      # Pas: Checkout cod sursă
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Pas: Setup Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
+
+      # Pas: Configurare credentiale AWS
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::980921758343:role/gitRead
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Pas: Terraform fmt
+      - name: Terraform fmt (auto-format)
+        working-directory: terraform/environments/dev
+        run: terraform fmt -recursive
+
+      # Pas: Terraform fmt-check
+      - name: Terraform fmt-check
+        working-directory: terraform/environments/dev
+        run: terraform fmt -check -recursive
+
+      # Pas: Terraform init reconfigure
+      - name: Terraform init
+        working-directory: terraform/environments/dev
+        run: |
+          terraform init -reconfigure \
+            -backend-config="bucket=drawzy-terraform-state-dev" \
+            -backend-config="key=terraform.tfstate" \
+            -backend-config="region=${{ env.AWS_REGION }}" \
+            -backend-config="dynamodb_table=drawzy-terraform-state-locks"
+
+      # Pas: Terraform Validate
+      - name: Terraform Validate
+        working-directory: terraform/environments/dev
+        run: terraform validate
+
+      # Pas: Terraform plan
+      - name: Terraform plan
+        working-directory: terraform/environments/dev
+        run: terraform plan
+
+      # Pas: Terraform apply
+      - name: Terraform apply
+        working-directory: terraform/environments/dev
+        run: terraform apply -auto-approve

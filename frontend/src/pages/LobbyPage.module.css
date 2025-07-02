@@ -1,15 +1,25 @@
-.container {
+/* Container Principal Lobby
+ * • Rol: Definește zona centrală a paginii de lobby cu padding și centrare.
+ * • Motiv: Oferă un card vizual plăcut și lizibil pentru opțiuni și listă camere.
+ * • Alternative: Folosirea unui wrapper fluid fără max-width.
+ */
+ .container {
     color: #000;
     text-align: center;
     max-width: 1000px;
     margin: 4rem auto;
     padding: 2rem;
     background-color: #ffffff;
-    border-radius: 0;
+    border-radius: 4px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     font-family: 'Press Start 2P', cursive;
 }
 
+/* Titlu Pagina Lobby
+ * • Rol: Stilizează antetul principal cu font pixel-art și centrare.
+ * • Motiv: Evidențiază titlul secțiunii lobby.
+ * • Alternative: Fonturi sans-serif pentru un aspect modern.
+ */
 h1 {
     text-align: center;
     margin-bottom: 2rem;
@@ -17,17 +27,32 @@ h1 {
     color: #000;
 }
 
+/* Secțiune Conținut
+ * • Rol: Separă vizual blocurile de conținut din lobby.
+ * • Motiv: Adaugă spațiu între secțiuni pentru claritate.
+ * • Alternative: Margin în interiorul cardului principal.
+ */
 .section {
-    margin-bottom: 2rem;;
+    margin-bottom: 2rem;
 }
 
-.section h2{
+/* Subtitlu Secțiune
+ * • Rol: Stilizează titlurile secundare pentru fiecare secțiune.
+ * • Motiv: Asigură ierarhie vizuală în cadrul lobby-ului.
+ * • Alternative: Aliniere diferită sau culori accent.
+ */
+.section h2 {
     margin-bottom: 0.5rem;
-    font-size:1.25rem;
+    font-size: 1.25rem;
     font-family: 'Press Start 2P', cursive;
     color: #000;
 }
 
+/* Rând Formular
+ * • Rol: Aliniază orizontal etichete și controale de input.
+ * • Motiv: Creează un layout ordonat pentru setările camerei.
+ * • Alternative: Grid layout în loc de flexbox.
+ */
 .formRow {
     display: flex;
     gap: 1rem;
@@ -36,12 +61,23 @@ h1 {
     margin-bottom: 1rem;
 }
 
+/* Etichetă Formular
+ * • Rol: Stilizează textul etichetelor cu font pixel-art.
+ * • Motiv: Claritate și consistență vizuală în rândurile de opțiuni.
+ * • Alternative: Fonturi normale cu weight diferit.
+ */
 .formRow label {
     flex: 1;
     font-family: 'Press Start 2P', cursive;
     color: #000;
+    font-size: 1rem;
 }
 
+/* Input Text și Numeric
+ * • Rol: Configurează aspectul câmpurilor de text și numeric.
+ * • Motiv: Aspect retro cu bordură pixel-art internă.
+ * • Alternative: Bordură externă clasică.
+ */
 .formRow input {
     flex: 2;
     padding: 0.5rem;
@@ -52,6 +88,42 @@ h1 {
     color: #000;
 }
 
+/* Radio Button
+ * • Rol: Proprietați vizuale pentru butoane radio.
+ * • Motiv: Asigură dimensiuni și accent consistent.
+ * • Alternative: Stiluri implicite ale browserului.
+ */
+.formRow input[type="radio"] {
+    width: 1.5rem;
+    height: 1.5rem;
+    accent-color: #000;
+    cursor: pointer;
+}
+
+/* Select Dropdown
+ * • Rol: Stilizează lista derulantă cu același design retro.
+ * • Motiv: Consistență vizuală cu celelalte controale formular.
+ * • Alternative: Componente custom React pentru dropdown.
+ */
+.formRow select {
+    flex: 2;
+    padding: 0.5rem;
+    border: none;
+    box-shadow: inset 0 0 0 2px #000;
+    border-radius: 4px;
+    background-color: #fafafa;
+    color: #000;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 1rem;
+    appearance: none;
+    cursor: pointer;
+}
+
+/* Buton Principal
+ * • Rol: Stilizează butoanele de acțiune din lobby (Creare, Join).
+ * • Motiv: Evidențiază acțiunile principale cu culoare accent și efect pixel.
+ * • Alternative: Culori și efecte hover diferite.
+ */
 .button {
     padding: 0.75rem 1.5rem;
     background: var(--accent1);
@@ -64,16 +136,30 @@ h1 {
     transition: background 0.1s ease, transform 0.1s ease;
 }
 
-.button:hover{
+/* Hover Buton Principal
+ * • Rol: Feedback vizual la hover cu schimbare de culoare și poziție.
+ * • Motiv: Indicarea interactivității butonului.
+ */
+.button:hover {
     background: var(--accent2);
     transform: translate(1px, 1px);
 }
 
-ul{
+/* Lista Camere Disponibile
+ * • Rol: Elimină stilurile implicite ale listelor.
+ * • Motiv: Afișează camerele într-un format curat și ordonat.
+ * • Alternative: Table layout pentru listare.
+ */
+ul {
     list-style-type: none;
     padding: 0;
 }
 
+/* Element Listă Cameră
+ * • Rol: Definește formatul fiecărei intrări de cameră (titlu și buton Join).
+ * • Motiv: Claritate și spațiu uniform între camere.
+ * • Alternative: Carduri separate pentru fiecare intrare.
+ */
 li {
     display: flex;
     justify-content: space-between;
@@ -83,10 +169,16 @@ li {
     border-bottom: 1px solid #eee;
 }
 
+/* Ultimul element listă fără bordură jos */
 li:last-child {
     border-bottom: none;
 }
 
+/* Buton Logout
+ * • Rol: Stilizează butonul de ieșire din cont.
+ * • Motiv: Evidențiază acțiunea critică cu culoare roșie și stil pixel.
+ * • Alternative: Link simplu text cu iconă.
+ */
 .logoutButton {
     display: block;
     margin: 2rem auto 0;
@@ -99,39 +191,32 @@ li:last-child {
     cursor: pointer;
     transition: transform 0.1s ease;
 }
+
+/* Active Logout
+ * • Rol: Efect vizual la apăsarea butonului de logout.
+ * • Motiv: Feedback la clic similar cu celelalte butoane.
+ */
 .logoutButton:active {
     transform: translate(1px, 1px);
 }
-.formRow input[type="radio"] {
-  width: 1.5rem;
-  height: 1.5rem;
-  accent-color: #000;
-  cursor: pointer;
-}
-.formRow select {
-  flex: 2;
-  padding: 0.5rem;
-  border: none;
-  box-shadow: inset 0 0 0 2px #000;
-  border-radius: 4px;
-  background-color: #fafafa;
-  color: #000;
-  font-family: 'Press Start 2P', cursive;
-  font-size: 1rem;
-  appearance: none;
-  cursor: pointer;
-}
-.formRow label {
-  font-size: 1rem;
-}
 
+/* Focus State Butoane
+ * • Rol: Elimină stilurile implicite de focus pentru consistență.
+ * • Motiv: Asigură un aspect curat fără contur albastru.
+ * • Alternative: Contur custom pe culoarea accent.
+ */
 .button:focus,
 .logoutButton:focus {
-  outline: none;
-  box-shadow: none;
+    outline: none;
+    box-shadow: none;
 }
 
+/* Focus State Input și Select
+ * • Rol: Elimină contururile implicite la focus.
+ * • Motiv: Consistență vizuală cu design pixel-art.
+ * • Alternative: Contur pixelizat în culoarea accent.
+ */
 .formRow input:focus,
 .formRow select:focus {
-  outline: none;
+    outline: none;
 }

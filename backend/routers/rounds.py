@@ -1,3 +1,5 @@
+# Importuri FastAPI și SQLAlchemy
+# • Rol: APIRouter pentru definirea rutelor; HTTPException și status pentru gestionarea erorilor; Depends pentru injectarea dependențelor.
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 from datetime import datetime
@@ -5,10 +7,18 @@ from backend.dependencies import get_current_user
 from backend import models, schemas
 from backend.database import get_db
 
+# Router Rounds
+# • Rol: Grupează endpoint-urile pentru operațiunile legate de tururile unui joc.
 router = APIRouter(prefix="/rounds", tags=["Rounds"])
 
+# Endpoint POST /rounds/
+# • Rol: Creează un nou tur într-o cameră; validează existența camerei și drepturile utilizatorului.
 @router.post("/", response_model=schemas.RoundResponse, status_code=status.HTTP_201_CREATED)
-def create_round(round_in: schemas.RoundCreate, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def create_round(
+    round_in: schemas.RoundCreate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     room = db.query(models.Room).filter(models.Room.id == round_in.room_id).first()
     if not room:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
@@ -29,6 +39,8 @@ def create_round(round_in: schemas.RoundCreate, current_user: models.User = Depe
     db.refresh(round_obj)
     return round_obj
 
+# Endpoint GET /rounds/
+# • Rol: Listează tururile din toate camerele sau dintr-o cameră specificată (parametru room_id).
 @router.get("/", response_model=list[schemas.RoundResponse])
 def list_rounds(room_id: int = None, db: Session = Depends(get_db)):
     query = db.query(models.Round)
@@ -36,6 +48,8 @@ def list_rounds(room_id: int = None, db: Session = Depends(get_db)):
         query = query.filter(models.Round.room_id == room_id)
     return query.order_by(models.Round.round_number).all()
 
+# Endpoint GET /rounds/{round_id}
+# • Rol: Returnează detaliile unui tur specific sau eroare 404 dacă nu există.
 @router.get("/{round_id}", response_model=schemas.RoundResponse)
 def get_round(round_id: int, db: Session = Depends(get_db)):
     round_obj = db.query(models.Round).get(round_id)

@@ -1,4 +1,9 @@
-body {
+/* Stil global pentru body
+ * • Rol: Elimină marginile implicite și setează fontul principal al aplicației.
+ * • Motiv: Asigură un aspect curat și consistent pe toate paginile.
+ * • Alternative: Reset CSS extern sau Normalize.css.
+ */
+ body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -7,6 +12,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Stil pentru elemente <code>
+ * • Rol: Definirea unei familii monospace specifice pentru afișarea codului.
+ * • Motiv: Îmbunătățește lizibilitatea blocurilor de cod sau inline.
+ * • Alternative: Utilizarea fonturilor monospace implicite ale sistemului.
+ */
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
