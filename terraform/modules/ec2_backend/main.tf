@@ -85,8 +85,6 @@ resource "aws_autoscaling_group" "backend_asg" {
 
   target_group_arns = [
     aws_lb_target_group.backend_tg.arn,
-    aws_lb_target_group.websocket_tg.arn,
-    aws_lb_target_group.ws_nlb_tg.arn,
   ]
 
   tag {
@@ -130,24 +128,6 @@ resource "aws_lb_target_group" "backend_tg" {
   }
 }
 
-# Target group for WebSocket connections (HTTP 1.1 upgrade support)
-resource "aws_lb_target_group" "websocket_tg" {
-  name     = "drawzy-websocket-tg"
-  port     = 80
-  protocol = "HTTP"
-  protocol_version = "HTTP1"
-  vpc_id   = var.vpc_id
-
-  health_check {
-    path                = "/health"
-    protocol            = "HTTP"
-    interval            = 30
-    timeout             = 5
-    healthy_threshold   = 3
-    unhealthy_threshold = 3
-  }
-}
-
 # Alb listener for the backend
 resource "aws_lb_listener" "backend_listener" {
   load_balancer_arn = aws_lb.backend_alb.arn
@@ -159,62 +139,6 @@ resource "aws_lb_listener" "backend_listener" {
     target_group_arn = aws_lb_target_group.backend_tg.arn
   }
 }
-
-# Listener rule for WebSocket traffic
-resource "aws_lb_listener_rule" "ws_rule" {
-  listener_arn = aws_lb_listener.backend_listener.arn
-  priority     = 10
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.websocket_tg.arn
-  }
-
-  condition {
-    path_pattern {
-      values = ["/ws/*"]
-    }
-  }
-}
-
-# Network Load Balancer for WebSocket (TCP)
-resource "aws_lb" "ws_nlb" {
-  name               = "drawzy-ws-nlb"
-  internal           = false
-  load_balancer_type = "network"
-  subnets            = var.subnet_ids
-}
-
-# Target group for NLB TCP traffic on port 8080
-resource "aws_lb_target_group" "ws_nlb_tg" {
-  name     = "drawzy-ws-nlb-tg"
-  port     = 80
-  protocol = "TCP"
-  vpc_id   = var.vpc_id
-
-  health_check {
-    protocol = "HTTP"
-    path     = "/health"
-    port     = "80"
-    interval = 30
-    timeout  = 5
-    healthy_threshold   = 3
-    unhealthy_threshold = 3
-  }
-}
-
-# Listener for NLB
-resource "aws_lb_listener" "ws_nlb_listener" {
-  load_balancer_arn = aws_lb.ws_nlb.arn
-  port              = 80
-  protocol          = "TCP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.ws_nlb_tg.arn
-  }
-}
-
 
 #New IAM role and instance profile for EC2 with ECR permissions
 resource "aws_iam_role" "ec2_role" {
@@ -284,14 +208,6 @@ resource "aws_security_group" "ec2_sg_backend" {
   vpc_id = var.vpc_id
 
   ingress {
-    description = "Allow HTTP from ALB"
-    from_port = 80
-    to_port = 80
-    protocol = "tcp"
-    security_groups = [aws_security_group.alb_sg_backend.id]
-  }
-
-  ingress {
     description = "Allow SSH"
     from_port = 22
     to_port = 22
@@ -312,7 +228,7 @@ resource "aws_security_group" "ec2_sg_backend" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    security_groups = [aws_security_group.alb_sg_backend.id]
   }
 
   egress {
