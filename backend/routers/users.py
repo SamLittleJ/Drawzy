@@ -14,7 +14,7 @@ from passlib.context import CryptContext
 # Import dependențe autentificare JWT
 # • Rol: SECRET_KEY și algoritmul (ALOGRITH) pentru semnarea tokenurilor;
 #   oauth2_scheme pentru schema Bearer.
-from backend.dependencies import SECRET_KEY, ALOGRITH, oauth2_scheme
+from backend.dependencies import SECRET_KEY, ALGORITHM, oauth2_scheme
 
 # Import JOSE JWT
 # • Rol: Permite codificarea și decodificarea tokenurilor JWT.
@@ -69,7 +69,7 @@ def login_user(credentials: schemas.UserLogin, db: Session = Depends(get_db)):
 
     # Generare JWT
     # • Rol: Codifică payload-ul într-un token sigur folosind SECRET_KEY și algoritmul HS256.
-    access_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALOGRITH)
+    access_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
     return {"access_token": access_token, "token_type": "bearer"}
 

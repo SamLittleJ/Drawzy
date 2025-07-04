@@ -48,7 +48,7 @@ venv/
 
 # Fisiere cache Python compilate
 __pycache__/
-backend/__pycache__/
+backend/__pycache__
 *.py[cod]
 
 
