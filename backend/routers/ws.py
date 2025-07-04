@@ -71,7 +71,7 @@ async def websocket_chat(
             elif msg_type == "CHAT":
                 await manager.broadcast(code, {"type": "CHAT", "payload": payload})
             elif msg_type == "DRAW":
-                await manager.broadcast(code, {"type": "DRAW", "payload": payload}, exclude = [websocket])
+                await manager.broadcast(code, {"type": "DRAW", "payload": payload}, exclude=websocket)
             elif msg_type == "START_GAME":
                 theme_obj = db.query(models.Theme).order_by(func.random()).first()
                 theme = theme_obj.text if theme_obj else "No theme available"
