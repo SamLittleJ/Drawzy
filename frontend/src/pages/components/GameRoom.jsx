@@ -126,11 +126,15 @@ export default function GameRoom({
       }
       setLastPos({ x, y });
     } else if (selectedTool === 'brush') {
-      ctx.globalCompositeOperation = 'source-over';
+      ctx.globalCompositeOperation = "source-over";
       ctx.strokeStyle = color;
       ctx.lineWidth = size;
+
+      ctx.beginPath();
+      ctx.moveTo(lastPos.x, lastPos.y);
       ctx.lineTo(x, y);
       ctx.stroke();
+
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.send(JSON.stringify({
           type: 'DRAW',
@@ -400,7 +404,7 @@ export default function GameRoom({
           </label>
         </div>
       </div>
-      
+
       {/* Size Control */}
 {/* • Rol: Slider pentru dimensiunea uneltei selectate */}
       <div className={styles.sizeControl}>
