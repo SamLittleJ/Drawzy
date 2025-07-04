@@ -12,36 +12,6 @@ from backend import models
 # • Rol: Configurare punct de intrare pentru endpoint-urile WS.
 router = APIRouter()
 
-# Endpoint WS simplificat
-# • Rol: Gestionează evenimente de tip PLAYER_JOIN fără accept explicit și autentificare.
-@router.websocket("/ws/{code}")
-async def websocket_simple(
-    websocket: WebSocket,
-    code: str,
-    db: Session = Depends(get_db),
-    user = Depends(get_current_user_ws)
-):
-    # Manager conectare
-    # • Rol: Înregistrează conexiunea clientului în manager pentru broadcast.
-    await manager.connect(code, websocket)
-    try:
-        while True:
-            data = await websocket.receive_json()
-            if data.get("type") == "PLAYER_JOIN":
-                await manager.broadcast(code, {
-                    "type": "PLAYER_JOIN",
-                    "payload": {
-                        "id": user.id,
-                        "username": user.username,
-                    }
-                })
-    except WebSocketDisconnect:
-        # Tratamente deconectare
-        # • Rol: Elimină conexiunea din manager la deconectare.
-        manager.disconnect(code, websocket)
-
-
-
 # Importuri suplimentare și logging
 # • Rol: Adaugă suport pentru WebSocketException și logare evenimente WS.
 from fastapi import WebSocketException
@@ -101,7 +71,7 @@ async def websocket_chat(
             elif msg_type == "CHAT":
                 await manager.broadcast(code, {"type": "CHAT", "payload": payload})
             elif msg_type == "DRAW":
-                await manager.broadcast(code, {"type": "DRAW", "payload": payload})
+                await manager.broadcast(code, {"type": "DRAW", "payload": payload}, exclude = [websocket])
             elif msg_type == "START_GAME":
                 theme_obj = db.query(models.Theme).order_by(func.random()).first()
                 theme = theme_obj.text if theme_obj else "No theme available"

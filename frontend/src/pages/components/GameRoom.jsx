@@ -17,6 +17,8 @@ export default function GameRoom({
   drawingPhase,
   wsRef
 }) {
+  // Unique ID for this client instance to filter out own DRAW echoes
+  const clientId = useRef(`client_${Math.random().toString(36).substr(2, 9)}`);
   const navigate = useNavigate();
   const canvasRef = useRef(null);
 
@@ -129,7 +131,7 @@ export default function GameRoom({
       if (wsRef.current?.readyState === WebSocket.OPEN) {      
         wsRef.current.send(JSON.stringify({
           type: 'DRAW',
-          payload: { tool: selectedTool, x, y, color, size }
+          payload: { tool: selectedTool, x, y, color, size, clientId: clientId.current }
         }));
       }
       setLastPos({ x, y });
@@ -216,7 +218,8 @@ export default function GameRoom({
   useEffect(() => {
     const ws = wsRef.current;
     if (!ws) return;
-    const handleDraw = ({ x, y, color, size }) => {
+    const handleDraw = ({ x, y, color, size, clientId: senderId }) => {
+      if (senderId === clientId.current) return;
       const canvas = canvasRef.current;
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
