@@ -4,7 +4,9 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from backend.dependencies import get_current_user_ws
 from backend.database import get_db
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from backend.routers.game_ws_manager import manager
+from backend import models
 
 # Instanțiere router WebSocket
 # • Rol: Configurare punct de intrare pentru endpoint-urile WS.
@@ -101,9 +103,14 @@ async def websocket_chat(
             elif msg_type == "DRAW":
                 await manager.broadcast(code, {"type": "DRAW", "payload": payload})
             elif msg_type == "START_GAME":
-                await manager.broadcast(code, {"type": "START_GAME"})
-            elif msg_type == "SHOW_THEME":
-                await manager.broadcast(code, {"type": "SHOW_THEME", "payload": payload})
+                theme_obj = db.query(models.Theme).order_by(func.random()).first()
+                theme = theme_obj.text if theme_obj else "No theme available"
+                
+                await manager.broadcast(code, {
+                    "type": "SHOW_THEME",
+                    "payload": {"theme": theme}
+                })
+                
             elif msg_type == "ROUND_START":
                 await manager.broadcast(code, {"type": "ROUND_START"})
             elif msg_type == "ROUND_END":
