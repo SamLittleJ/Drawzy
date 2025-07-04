@@ -236,12 +236,15 @@ export default function GameRoom({
     return () => ws.removeEventListener('message', listener);
   }, [wsRef]);
 
-  // Preview radieră (cursor eraser) — actualizat să folosească getPointerPos
+  // Preview radieră (cursor eraser) — actualizat să folosească CSS coordinates
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const updateCursor = (e) => {
-      const { x, y } = getPointerPos(e);
+      const canvas = canvasRef.current;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
       setCursorPos({ x, y });
     };
     if (selectedTool === 'eraser') {
@@ -280,7 +283,10 @@ export default function GameRoom({
             Leave Room
           </button>
         </div>
-        <div className={styles.canvasSection}>
+        <div 
+           className={styles.canvasSection}
+           style={{ position: 'relative', overflow: 'hidden' }}
+        >
           <canvas
             ref={canvasRef}
             className={styles.canvas}
@@ -293,6 +299,7 @@ export default function GameRoom({
             <div
               className={styles.eraserCursor}
               style={{
+                position: 'absolute',
                 left: cursorPos.x - size,
                 top: cursorPos.y - size,
                 width: size * 2,
