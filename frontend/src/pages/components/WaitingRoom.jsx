@@ -13,7 +13,7 @@ import styles from './WaitingRoom.module.css';
 // Componentă: WaitingRoom
 // • Rol: Afișează sala de așteptare, lista jucătorilor și chat-ul.
 // • Motiv: Centralizează logica UI și integrarea WebSocket.
-export default function WaitingRoom({ roomId, players = [], onStart, wsRef }) {
+export default function WaitingRoom({ roomId, players = [], onStart, messages = [], onSend }) {
 
     // Hook: useNavigate
     // • Rol: Navigare programatică (Leave Room, Join Room).
@@ -21,9 +21,7 @@ export default function WaitingRoom({ roomId, players = [], onStart, wsRef }) {
 
     // State-uri componentă
     // • chatInput: textul curent din câmpul de chat. 
-    // • messages: lista mesajelor primite de la WebSocket.
     const [chatInput, setChatInput] = useState('');
-    const [messages, setMessages] = useState([]);
 
     // Local copy of players list, synced via WS
     const [playerList, setPlayerList] = useState(players);
@@ -33,53 +31,10 @@ export default function WaitingRoom({ roomId, players = [], onStart, wsRef }) {
       setPlayerList(players);
     }, [players]);
 
-    // Hook: useEffect pentru mesaje WS
-    // • Rol: Înregistrează listener pentru mesajele de tip CHAT din WebSocket.
-    // • Cleanup: Elimină listener la demontare.
-    useEffect(() => {
-      if (!wsRef?.current) return;
-      const ws = wsRef.current;
-      const handleMessage = e => {
-        const msg = JSON.parse(e.data);
-        if (msg.type === 'CHAT') {
-          setMessages(prev => [...prev, { user: msg.payload.user, message: msg.payload.message }]);
-        }
-      };
-      ws.addEventListener('message', handleMessage);
-      return () => ws.removeEventListener('message', handleMessage);
-    }, [wsRef]);
-
     // Sync PLAYER_JOIN events from WS into local players list
     useEffect(() => {
-      if (!wsRef?.current) return;
-      const ws = wsRef.current;
-      const handlePlayerJoin = e => {
-        const msg = JSON.parse(e.data);
-        if (msg.type === 'PLAYER_JOIN') {
-          const { id, username, avatarUrl } = msg.payload;
-          setPlayerList(prev => {
-            // avoid duplicate entries
-            if (prev.some(p => p.id === id)) return prev;
-            return [...prev, { id, username, avatarUrl }];
-          });
-        }
-      };
-      ws.addEventListener('message', handlePlayerJoin);
-      return () => ws.removeEventListener('message', handlePlayerJoin);
-    }, [wsRef]);
-
-    // Funcție: sendChat
-    // • Rol: Trimite mesajul curent prin WebSocket și golește câmpul de input.
-    function sendChat() {
-      const text = chatInput.trim();
-      if (!text || wsRef.current.readyState !== WebSocket.OPEN) return;
-      wsRef.current.send(JSON.stringify({
-        type: 'CHAT',
-        payload: { message: text }
-      }));
-      setChatInput('');
-      
-    }
+      // This effect is removed because wsRef is no longer passed, so no WS listeners here.
+    }, []);
 
     // Render UI
     // • Rol: Afișează structura WaitingRoom: cod camere, jucători, butoane și chat.
@@ -134,7 +89,9 @@ export default function WaitingRoom({ roomId, players = [], onStart, wsRef }) {
               onChange={e => setChatInput(e.target.value)}
               placeholder="Type a message..."
             />
-            <button onClick={sendChat}>Send</button>
+            <button onClick={() => { onSend(chatInput); setChatInput(''); }}>
+              Send
+            </button>
           </div>
         </div>
       </div>
