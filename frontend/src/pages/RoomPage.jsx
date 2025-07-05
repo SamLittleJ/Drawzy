@@ -27,6 +27,7 @@ export default function RoomPage() {
   const [messages, setMessages] = useState([]);
   const [currentTheme, setCurrentTheme] = useState('');
   const [drawingPhase, setDrawingPhase] = useState(false);
+  const [roundDuration, setRoundDuration] = useState(0);
 
   // Hook: useEffect pentru inițializarea WebSocket
   // • Rol: Deschide conexiunea WS la montarea componentei și o închide la demontare.
@@ -63,6 +64,7 @@ export default function RoomPage() {
           setGameStarted(true);
           break;
         case 'ROUND_START':
+          setRoundDuration(msg.payload.duration);
           setDrawingPhase(true);
           break;
         case 'ROUND_END':
@@ -125,6 +127,7 @@ export default function RoomPage() {
       messages={messages}
       theme={currentTheme}
       drawingPhase={drawingPhase}
+      roundDuration={roundDuration}
       wsRef={wsRef}
     />
   );
