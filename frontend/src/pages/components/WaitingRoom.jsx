@@ -25,6 +25,9 @@ export default function WaitingRoom({ roomId, players = [], onStart, wsRef }) {
     const [chatInput, setChatInput] = useState('');
     const [messages, setMessages] = useState([]);
 
+    // Local copy of players list, synced via WS
+    const [playerList, setPlayerList] = useState(players);
+
     // Hook: useEffect pentru mesaje WS
     // • Rol: Înregistrează listener pentru mesajele de tip CHAT din WebSocket.
     // • Cleanup: Elimină listener la demontare.
@@ -34,24 +37,43 @@ export default function WaitingRoom({ roomId, players = [], onStart, wsRef }) {
       const handleMessage = e => {
         const msg = JSON.parse(e.data);
         if (msg.type === 'CHAT') {
-          const { user, message } = msg.payload;
-          setMessages(prev => [...prev, { user, message }]);
+          setMessages(prev => [...prev, { user: msg.payload.user, message: msg.payload.message }]);
         }
       };
       ws.addEventListener('message', handleMessage);
       return () => ws.removeEventListener('message', handleMessage);
     }, [wsRef]);
 
+    // Sync PLAYER_JOIN events from WS into local players list
+    useEffect(() => {
+      if (!wsRef?.current) return;
+      const ws = wsRef.current;
+      const handlePlayerJoin = e => {
+        const msg = JSON.parse(e.data);
+        if (msg.type === 'PLAYER_JOIN') {
+          const { id, username, avatarUrl } = msg.payload;
+          setPlayerList(prev => {
+            // avoid duplicate entries
+            if (prev.some(p => p.id === id)) return prev;
+            return [...prev, { id, username, avatarUrl }];
+          });
+        }
+      };
+      ws.addEventListener('message', handlePlayerJoin);
+      return () => ws.removeEventListener('message', handlePlayerJoin);
+    }, [wsRef]);
+
     // Funcție: sendChat
     // • Rol: Trimite mesajul curent prin WebSocket și golește câmpul de input.
     function sendChat() {
-      if (chatInput.trim() && wsRef?.current?.readyState === WebSocket.OPEN) {
-        wsRef.current.send(JSON.stringify({
-          type: 'CHAT',
-          payload: { message: chatInput }
-        }));
-        setChatInput('');
-      }
+      const text = chatInput.trim();
+      if (!text || wsRef.current.readyState !== WebSocket.OPEN) return;
+      wsRef.current.send(JSON.stringify({
+        type: 'CHAT',
+        payload: { message: text }
+      }));
+      setChatInput('');
+      
     }
 
     // Render UI
@@ -61,12 +83,12 @@ export default function WaitingRoom({ roomId, players = [], onStart, wsRef }) {
         <div className={styles.container}>
           <h2>Waiting Room</h2>
           <p>Room Code: {roomId}</p>
-          <p>Players ready: {players.length}</p>
+          <p>Players ready: {playerList.length}</p>
 
           {/* Secțiune Jucători */}
           {/* • Rol: Afișează avatarurile și username-urile participanților. */}
           <div className={styles.playersList}>
-            {players.map((player) => (
+            {playerList.map((player) => (
               <div key={player.id} className={styles.playerItem}>
                 {player.avatarUrl && (
                   <img src={player.avatarUrl} alt={player.username} className={styles.avatar} />
