@@ -16,6 +16,8 @@ router = APIRouter()
 # • Rol: Adaugă suport pentru WebSocketException și logare evenimente WS.
 from fastapi import WebSocketException
 import logging
+import asyncio
+from backend.routers.game import run_game_loop
 
 # Configurare logger
 # • Rol: Obține un logger dedicat pentru mesaje și erori WS.
@@ -69,26 +71,16 @@ async def websocket_chat(
                     }
                 })
             elif msg_type == "CHAT":
-                await manager.broadcast(code, {"type": "CHAT", "payload": payload})
+                await manager.broadcast(code, {"type": "CHAT", "payload": {
+                    "user": user.username,
+                    "message": payload.get("message", "")
+                }})
             elif msg_type == "DRAW":
                 await manager.broadcast(code, {"type": "DRAW", "payload": payload})
             elif msg_type == "START_GAME":
-                theme_obj = db.query(models.Theme).order_by(func.random()).first()
-                theme = theme_obj.text if theme_obj else "No theme available"
+                # Start the asynchronous game loop
+                asyncio.create_task(run_game_loop(code, db))
                 
-                await manager.broadcast(code, {
-                    "type": "SHOW_THEME",
-                    "payload": {"theme": theme}
-                })
-                
-            elif msg_type == "ROUND_START":
-                await manager.broadcast(code, {"type": "ROUND_START"})
-            elif msg_type == "ROUND_END":
-                await manager.broadcast(code, {"type": "ROUND_END"})
-            elif msg_type == "VOTE_RESULT":
-                await manager.broadcast(code, {"type": "VOTE_RESULT", "payload": payload})
-            elif msg_type == "GAME_END":
-                await manager.broadcast(code, {"type": "GAME_END"})
             else:
                 logger.warning("Unknown WS type: %s", msg_type)
 

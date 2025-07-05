@@ -417,9 +417,29 @@
     font-weight: bold;
 }
 
+li {
+  font-size: 1.5rem;
+}
+
 /* Player score in game room */
 .score {
     font-size: 1.25rem;
     font-weight: bold;
     margin-left: 0.75rem;
+}
+
+
+
+/* Timer display positioned top-right of the canvas */
+.timer {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.85);
+  padding: 0.25rem 0.5rem;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.85rem;
+  border: 2px solid var(--border);
+  border-radius: 4px;
+  z-index: 101;
 }

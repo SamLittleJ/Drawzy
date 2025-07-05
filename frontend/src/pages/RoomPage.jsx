@@ -47,9 +47,7 @@ export default function RoomPage() {
     // Eveniment WS onmessage
     // • Rol: Procesează mesajele primite de la server și actualizează stările relevante.
     ws.onmessage = (event) => {
-      console.log('Unified WS message received:', event.data);
       const msg = JSON.parse(event.data);
-      console.log('Unified WS message parsed:', msg);
       switch (msg.type) {
         case 'PLAYER_JOIN':
           setPlayers(prev => [...prev, msg.payload]);
@@ -100,10 +98,7 @@ export default function RoomPage() {
   // • Rol: Trimite comanda START_GAME prin WebSocket și actualizează starea locală.
   // • Alternative: Schema de evenimente ar putea include confirmare de la server.
   function startGame() {
-    console.log('Starting game in room', code);
-    setGameStarted(true);
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      console.log('Sending START_GAME message');
       wsRef.current.send(JSON.stringify({ type: 'START_GAME' }));
       console.log('START_GAME sent; awaiting server response');
     }

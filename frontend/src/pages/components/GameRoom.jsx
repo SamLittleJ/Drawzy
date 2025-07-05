@@ -15,8 +15,20 @@ export default function GameRoom({
   messages,
   theme,
   drawingPhase,
+  roundDuration,
   wsRef
 }) {
+  const [timeLeft, setTimeLeft] = useState(0);
+  // Countdown timer for the drawing phase
+  useEffect(() => {
+    if (drawingPhase && roundDuration > 0) {
+      setTimeLeft(roundDuration);
+      const timerId = setInterval(() => {
+        setTimeLeft(prev => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+      return () => clearInterval(timerId);
+    }
+  }, [drawingPhase, roundDuration]);
   // Unique ID for this client instance to filter out own DRAW echoes
   const clientId = useRef(`client_${Math.random().toString(36).substr(2, 9)}`);
   const navigate = useNavigate();
@@ -298,6 +310,7 @@ export default function GameRoom({
            className={styles.canvasSection}
            style={{ position: 'relative', overflow: 'hidden' }}
         >
+          <div className={styles.timer}>{timeLeft}</div>
           <canvas
             ref={canvasRef}
             className={styles.canvas}
