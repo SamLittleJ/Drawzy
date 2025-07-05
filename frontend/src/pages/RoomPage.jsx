@@ -116,6 +116,12 @@ export default function RoomPage() {
     }
   }
 
+  function sendMessage(text) {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ type: 'CHAT', payload: { message: text } }));
+    }
+  }
+
   // Render WaitingRoom
   // • Rol: Afișează sala de așteptare cu lista de jucători și butonul de start.
   if (!gameStarted) {
@@ -123,8 +129,9 @@ export default function RoomPage() {
       <WaitingRoom
         roomId={code}
         players={players}
+        messages={messages}
         onStart={startGame}
-        wsRef={wsRef}
+        onSend={sendMessage}
       />
     );
   }
@@ -141,6 +148,7 @@ export default function RoomPage() {
       roundDuration={roundDuration}
       currentRound={currentRound}
       maxRounds={maxRounds}
+      onSend={sendMessage}
       wsRef={wsRef}
     />
   );
