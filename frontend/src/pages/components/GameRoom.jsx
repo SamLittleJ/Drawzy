@@ -16,8 +16,8 @@ export default function GameRoom({
   theme,
   drawingPhase,
   roundDuration,
-  currentRound,
-  maxRounds,
+  currentRound = 1,
+  maxRounds = 1,
   wsRef
 }) {
   const [timeLeft, setTimeLeft] = useState(0);
@@ -318,6 +318,9 @@ export default function GameRoom({
            style={{ position: 'relative', overflow: 'hidden' }}
         >
           <div className={styles.timer}>{timeLeft}</div>
+          <div className={styles.roundInfo}>
+            Rounds {currentRound}/{maxRounds}
+          </div>
           <canvas
             ref={canvasRef}
             className={styles.canvas}
@@ -338,9 +341,6 @@ export default function GameRoom({
               }}
             />
           )}
-        </div>
-        <div className={styles.roundInfo}>
-          Rounds {currentRound}/{maxRounds}
         </div>
         <div className={styles.chatSection}>
           <div className={styles.messages}>
