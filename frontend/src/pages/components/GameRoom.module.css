@@ -321,9 +321,6 @@
 /* Ascunde Titlu Chat
  * • Rol: Elimină titlul implicit 'Chat' pentru un design curat.
  */
-.chatSection h2 {
-    display: none;
-}
 
 /* Control Mărime Unelte
  * • Rol: Slider pentru ajustarea dimensiunii uneltelor (pensulă, linie etc.).
