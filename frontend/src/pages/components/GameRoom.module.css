@@ -411,3 +411,15 @@
   opacity: 0;
   cursor: pointer;
 }
+/* Player name in game room */
+.username {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+/* Player score in game room */
+.score {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-left: 0.75rem;
+}

@@ -174,8 +174,8 @@ export default function GameRoom({
     const { x: x0, y: y0 } = startPos;
     const { x, y } = lastPos;
     const dx = x - x0, dy = y - y0;
-    const width  = dx  || size;
-    const height = dy  || size;
+    const width = dx;
+    const height = dy;
     const radius = Math.hypot(dx, dy) / 2;
 
     let payload = null;
@@ -190,8 +190,18 @@ export default function GameRoom({
         break;
 
       case 'rectangle':
-        ctx.strokeRect(x0, y0, width, height);
-        payload = { tool: 'rectangle', x: x0, y: y0, width, height, color, size };
+        if (width !== 0 && height != 0) {
+          ctx.strokeRect(x0, y0, width, height);
+          payload = {
+            tool: 'rectangle',
+            x: x0,
+            y: y0,
+            width,
+            height,
+            color,
+            size
+          }
+        }
         break;
 
       case 'circle':
@@ -275,7 +285,8 @@ export default function GameRoom({
           <ul>
             {players.map(p => (
               <li key={p.id || p.username}>
-                {p.username} – {p.score ?? 0}
+                <span className={styles.username}>{p.username}</span>
+                <span className={styles.score}>{p.score ?? 0}</span>
               </li>
             ))}
           </ul>
@@ -313,7 +324,7 @@ export default function GameRoom({
           <div className={styles.messages}>
             {messages.map((m, idx) => (
               <div key={idx} className={styles.message}>
-                <strong>{m.user?.username || 'Unknown'}:</strong> {m.message}
+                <strong>{m.user || 'Unknown'}:</strong> {m.message}
               </div>
             ))}
           </div>
