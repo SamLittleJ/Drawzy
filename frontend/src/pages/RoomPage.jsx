@@ -28,6 +28,8 @@ export default function RoomPage() {
   const [currentTheme, setCurrentTheme] = useState('');
   const [drawingPhase, setDrawingPhase] = useState(false);
   const [roundDuration, setRoundDuration] = useState(0);
+  const [currentRound, setCurrentRound] = useState(0);
+  const [maxRounds, setMaxRounds] = useState(0);
 
   // Hook: useEffect pentru inițializarea WebSocket
   // • Rol: Deschide conexiunea WS la montarea componentei și o închide la demontare.
@@ -65,6 +67,8 @@ export default function RoomPage() {
           break;
         case 'ROUND_START':
           setRoundDuration(msg.payload.duration);
+          setCurrentRound(msg.payload.round);
+          setMaxRounds(msg.payload.maxRounds);
           setDrawingPhase(true);
           break;
         case 'ROUND_END':
@@ -116,6 +120,7 @@ export default function RoomPage() {
         roomId={code}
         players={players}
         onStart={startGame}
+        wsRef={wsRef}
       />
     );
   }
@@ -130,6 +135,8 @@ export default function RoomPage() {
       theme={currentTheme}
       drawingPhase={drawingPhase}
       roundDuration={roundDuration}
+      currentRound={currentRound}
+      maxRounds={maxRounds}
       wsRef={wsRef}
     />
   );
