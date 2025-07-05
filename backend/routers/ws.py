@@ -63,17 +63,15 @@ async def websocket_chat(
     # Manager conectare cu autentificare
     # • Rol: Înregistrează conexiunea autentificată în manager.
     await manager.connect(code, websocket)
-
     room_obj = db.query(Room).filter(Room.code == code).first()
     if room_obj:
         existing_players = db.query(RoomPlayer).filter(RoomPlayer.room_id == room_obj.id).all()
-        payload = [
-            {"id": rp.user_id, "username": rp.user.username}
-            for rp in existing_players
-        ]
         await websocket.send_json({
             "type": EventType.EXISTING_PLAYERS.value,
-            "payload": payload
+            "payload": [
+                {"id": p.user_id, "username": p.user.username}
+                for p in existing_players
+            ]
         })
 
     try:
