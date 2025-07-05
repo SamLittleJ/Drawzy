@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, WebSocket
 from backend.database import get_db
 from backend.routers.game_ws_manager import manager
 from backend import models
@@ -50,7 +50,7 @@ async def run_game_loop(room_code: str, db: Session):
 
 # WebSocket endpoint to start game explicitly if desired
 @router.websocket("/game/{code}/start")
-async def game_start(websocket: models.WebSocket, code: str, db: Session = Depends(get_db)):
+async def game_start(websocket: WebSocket, code: str, db: Session = Depends(get_db)):
     # This endpoint is optional — can be used to trigger run_game_loop via WS
     await websocket.accept()
     await manager.connect(code, websocket)
