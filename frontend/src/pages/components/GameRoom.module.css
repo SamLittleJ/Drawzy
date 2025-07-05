@@ -109,7 +109,7 @@
 .message {
     margin-bottom:0.5rem;
     font-family: 'Press Start 2P', cursive;
-    font-size: 0.5rem;
+    font-size: 0.75rem;
     color: #000;
 }
 
@@ -415,10 +415,6 @@
 .username {
     font-size: 1.5rem;
     font-weight: bold;
-}
-
-li {
-  font-size: 1.5rem;
 }
 
 /* Player score in game room */

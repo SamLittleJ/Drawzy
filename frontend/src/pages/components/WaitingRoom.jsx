@@ -34,7 +34,8 @@ export default function WaitingRoom({ roomId, players = [], onStart, wsRef }) {
       const handleMessage = e => {
         const msg = JSON.parse(e.data);
         if (msg.type === 'CHAT') {
-          setMessages(prev => [...prev, msg.payload]);
+          const { user, message } = msg.payload;
+          setMessages(prev => [...prev, { user, message }]);
         }
       };
       ws.addEventListener('message', handleMessage);
@@ -45,7 +46,10 @@ export default function WaitingRoom({ roomId, players = [], onStart, wsRef }) {
     // • Rol: Trimite mesajul curent prin WebSocket și golește câmpul de input.
     function sendChat() {
       if (chatInput.trim() && wsRef?.current?.readyState === WebSocket.OPEN) {
-        wsRef.current.send(JSON.stringify({ type: 'CHAT', payload: chatInput }));
+        wsRef.current.send(JSON.stringify({
+          type: 'CHAT',
+          payload: { message: chatInput }
+        }));
         setChatInput('');
       }
     }
@@ -89,7 +93,10 @@ export default function WaitingRoom({ roomId, players = [], onStart, wsRef }) {
             <h3>Chat</h3>
             <div className={styles.messages}>
               {messages.map((msg, idx) => (
-                <div key={idx} className={styles.message}>{msg}</div>
+                <div key={idx} className={styles.message}>
+                  <strong>{msg.user}: </strong>
+                  {msg.message}
+                </div>
               ))}
             </div>
           </div>

@@ -6,7 +6,7 @@ from backend.database import get_db
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from backend.routers.game_ws_manager import manager
-from backend import models
+from backend.models import Room, RoomPlayer
 
 # Instanțiere router WebSocket
 # • Rol: Configurare punct de intrare pentru endpoint-urile WS.
@@ -52,6 +52,18 @@ async def websocket_chat(
     # Manager conectare cu autentificare
     # • Rol: Înregistrează conexiunea autentificată în manager.
     await manager.connect(code, websocket)
+
+    room_obj = db.query(Room).filter(Room.code == code).first()
+    if room_obj:
+        existing_players = db.query(RoomPlayer).filter(RoomPlayer.room_id == room_obj.id).all()
+        for rp in existing_players:
+            await websocket.send_json({
+                "type": "PLAYER_JOIN",
+                "payload": {
+                    "id": rp.user_id,
+                    "username": rp.user.username
+                }
+            })
 
     try:
         while True:
