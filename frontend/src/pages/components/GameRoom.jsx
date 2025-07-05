@@ -318,9 +318,6 @@ export default function GameRoom({
            style={{ position: 'relative', overflow: 'hidden' }}
         >
           <div className={styles.timer}>{timeLeft}</div>
-          <div className={styles.roundInfo}>
-            Rounds {currentRound}/{maxRounds}
-          </div>
           <canvas
             ref={canvasRef}
             className={styles.canvas}
@@ -343,6 +340,7 @@ export default function GameRoom({
           )}
         </div>
         <div className={styles.chatSection}>
+          <h2>Rounds {currentRound}/{maxRounds}</h2>
           <div className={styles.messages}>
             {messages.map((m, idx) => (
               <div key={idx} className={styles.message}>
