@@ -17,33 +17,44 @@ async def run_game_loop(room_code: str, db: Session):
         return
     room.status = "in_progress"
     db.commit()
+    max_rounds = room.max_rounds
+    round_time = room.round_time
 
-    # Choose a random theme and broadcast
-    theme_obj = db.query(models.Theme).order_by(func.random()).first()
-    theme = theme_obj.text if theme_obj else "No theme available"
-    await manager.broadcast(room_code, {
-        "type": "SHOW_THEME",
-        "payload": {"theme": theme}
-    })
+    # Loop through each round
+    for current_round in range(1, max_rounds + 1):
+        # Choose and broadcast theme
+        theme_obj = db.query(models.Theme).order_by(func.random()).first()
+        theme = theme_obj.text if theme_obj else f"Round {current_round}"
+        await manager.broadcast(room_code, {
+            "type": "SHOW_THEME",
+            "payload": {"theme": theme}
+        })
 
-    # Short reveal period before drawing starts
-    await asyncio.sleep(5)
+        # Short reveal period before drawing
+        await asyncio.sleep(5)
 
-    # Broadcast round start with the configured duration
-    await manager.broadcast(room_code, {
-        "type": "ROUND_START",
-        "payload": {"duration": room.round_time}
-    })
+        # Broadcast round start with duration and round info
+        await manager.broadcast(room_code, {
+            "type": "ROUND_START",
+            "payload": {
+                "duration": round_time,
+                "round": current_round,
+                "maxRounds": max_rounds
+            }
+        })
 
-    # Wait for the drawing phase to complete
-    await asyncio.sleep(room.round_time)
+        # Wait for drawing phase
+        await asyncio.sleep(round_time)
 
-    # End of round — notify clients
-    await manager.broadcast(room_code, {
-        "type": "ROUND_END"
-    })
+        # End of this round
+        await manager.broadcast(room_code, {
+            "type": "ROUND_END",
+            "payload": {"round": current_round}
+        })
 
-    # End of game sequence
+        # Optionally break if game-end condition met (e.g., target score)
+
+    # After all rounds, broadcast game end
     await manager.broadcast(room_code, {
         "type": "GAME_END"
     })

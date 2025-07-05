@@ -24,7 +24,15 @@ from backend.routers.game import run_game_loop
 logger = logging.getLogger("ws")
 
 # Definire tipuri evenimente
-EXISTING_PLAYERS = "EXISTING_PLAYERS"
+from enum import Enum
+
+class EventType(str, Enum):
+    PLAYER_JOIN      = "PLAYER_JOIN"
+    EXISTING_PLAYERS = "EXISTING_PLAYERS"
+    CHAT             = "CHAT"
+    DRAW             = "DRAW"
+    START_GAME       = "START_GAME"
+    # adaugă aici și alte tipuri dacă ai nevoie
 
 # Instanțiere router cu autentificare
 # • Rol: Configurează endpoint-urile WS care fac autentificare inițială.
@@ -64,7 +72,7 @@ async def websocket_chat(
             for rp in existing_players
         ]
         await websocket.send_json({
-            "type": EXISTING_PLAYERS,
+            "type": EventType.EXISTING_PLAYERS.value,
             "payload": existing
         })
 
@@ -77,25 +85,24 @@ async def websocket_chat(
             payload = data.get("payload", {})
             logger.debug(f"Received WS message type={msg_type}, payload={payload}")
 
-            if msg_type == "PLAYER_JOIN":
+            if msg_type == EventType.PLAYER_JOIN.value:
                 await manager.broadcast(code, {
-                    "type": "PLAYER_JOIN",
+                    "type": EventType.PLAYER_JOIN.value,
                     "payload": {
                         "id": user.id,
                         "username": user.username
                     }
                 })
-            elif msg_type == "CHAT":
-                await manager.broadcast(code, {"type": "CHAT", "payload": {
+            elif msg_type == EventType.CHAT.value:
+                await manager.broadcast(code, {"type": EventType.CHAT.value, "payload": {
                     "user": user.username,
                     "message": payload.get("message", "")
                 }})
-            elif msg_type == "DRAW":
-                await manager.broadcast(code, {"type": "DRAW", "payload": payload})
-            elif msg_type == "START_GAME":
+            elif msg_type == EventType.DRAW.value:
+                await manager.broadcast(code, {"type": EventType.DRAW.value, "payload": payload})
+            elif msg_type == EventType.START_GAME.value:
                 # Start the asynchronous game loop
                 asyncio.create_task(run_game_loop(code, db))
-                
             else:
                 logger.warning("Unknown WS type: %s", msg_type)
 
