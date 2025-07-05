@@ -32,7 +32,7 @@ class EventType(str, Enum):
     CHAT             = "CHAT"
     DRAW             = "DRAW"
     START_GAME       = "START_GAME"
-    # adaugă aici și alte tipuri dacă ai nevoie
+    GET_EXISTING_PLAYERS = "GET_EXISTING_PLAYERS"
 
 # Instanțiere router cu autentificare
 # • Rol: Configurează endpoint-urile WS care fac autentificare inițială.
@@ -64,15 +64,15 @@ async def websocket_chat(
     # • Rol: Înregistrează conexiunea autentificată în manager.
     await manager.connect(code, websocket)
     room_obj = db.query(Room).filter(Room.code == code).first()
-    if room_obj:
-        existing_players = db.query(RoomPlayer).filter(RoomPlayer.room_id == room_obj.id).all()
-        await websocket.send_json({
-            "type": EventType.EXISTING_PLAYERS.value,
-            "payload": [
-                {"id": p.user_id, "username": p.user.username}
-                for p in existing_players
-            ]
-        })
+    # if room_obj:
+    #     existing_players = db.query(RoomPlayer).filter(RoomPlayer.room_id == room_obj.id).all()
+    #     await websocket.send_json({
+    #         "type": EventType.EXISTING_PLAYERS.value,
+    #         "payload": [
+    #             {"id": p.user_id, "username": p.user.username}
+    #             for p in existing_players
+    #         ]
+    #     })
 
     try:
         while True:
@@ -81,6 +81,17 @@ async def websocket_chat(
             data = await websocket.receive_json()
             msg_type = data.get("type")
             payload = data.get("payload", {})
+            if msg_type == EventType.GET_EXISTING_PLAYERS.value:
+                # Respond with current roster only to requester
+                existing_players = db.query(RoomPlayer).filter(RoomPlayer.room_id == room_obj.id).all()
+                await websocket.send_json({
+                    "type": EventType.EXISTING_PLAYERS.value,
+                    "payload": [
+                        {"id": p.user_id, "username": p.user.username}
+                        for p in existing_players
+                    ]
+                })
+                continue
             logger.debug(f"Received WS message type={msg_type}, payload={payload}")
 
             if msg_type == EventType.PLAYER_JOIN.value:
