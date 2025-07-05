@@ -128,12 +128,12 @@ export default function GameRoom({
     if (selectedTool === 'brush' || selectedTool === 'eraser') {
       ctx.lineTo(x, y);
       ctx.stroke();
-      if (wsRef.current?.readyState === WebSocket.OPEN) {      
-        wsRef.current.send(JSON.stringify({
-          type: 'DRAW',
-          payload: { tool: selectedTool, x, y, color, size, clientId: clientId.current }
-        }));
-      }
+      // if (wsRef.current?.readyState === WebSocket.OPEN) {      
+      //   wsRef.current.send(JSON.stringify({
+      //     type: 'DRAW',
+      //     payload: { tool: selectedTool, x, y, color, size, clientId: clientId.current }
+      //   }));
+      //}
       setLastPos({ x, y });
 
     } else if (savedImage) {
