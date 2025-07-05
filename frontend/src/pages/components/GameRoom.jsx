@@ -16,8 +16,8 @@ export default function GameRoom({
   theme,
   drawingPhase,
   roundDuration,
-  currentRound = 1,
-  maxRounds = 1,
+  currentRound,
+  maxRounds,
   wsRef
 }) {
   const [timeLeft, setTimeLeft] = useState(0);
