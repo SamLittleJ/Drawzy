@@ -23,6 +23,9 @@ from backend.routers.game import run_game_loop
 # • Rol: Obține un logger dedicat pentru mesaje și erori WS.
 logger = logging.getLogger("ws")
 
+# Definire tipuri evenimente
+EXISTING_PLAYERS = "EXISTING_PLAYERS"
+
 # Instanțiere router cu autentificare
 # • Rol: Configurează endpoint-urile WS care fac autentificare inițială.
 router = APIRouter()
@@ -56,14 +59,14 @@ async def websocket_chat(
     room_obj = db.query(Room).filter(Room.code == code).first()
     if room_obj:
         existing_players = db.query(RoomPlayer).filter(RoomPlayer.room_id == room_obj.id).all()
-        for rp in existing_players:
-            await websocket.send_json({
-                "type": "PLAYER_JOIN",
-                "payload": {
-                    "id": rp.user_id,
-                    "username": rp.user.username
-                }
-            })
+        existing = [
+            {"id": rp.user_id, "username": rp.user.username, "avatarUrl": rp.user.avatar_url}
+            for rp in existing_players
+        ]
+        await websocket.send_json({
+            "type": EXISTING_PLAYERS,
+            "payload": existing
+        })
 
     try:
         while True:
@@ -79,7 +82,8 @@ async def websocket_chat(
                     "type": "PLAYER_JOIN",
                     "payload": {
                         "id": user.id,
-                        "username": user.username
+                        "username": user.username,
+                        "avatarUrl": user.avatar_url
                     }
                 })
             elif msg_type == "CHAT":

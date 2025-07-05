@@ -52,6 +52,10 @@ export default function RoomPage() {
     ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);
       switch (msg.type) {
+        case 'EXISTING_PLAYERS':
+          // Initialize full player list when joining
+          setPlayers(msg.payload);
+          break;
         case 'PLAYER_JOIN':
           setPlayers(prev => [...prev, msg.payload]);
           break;
