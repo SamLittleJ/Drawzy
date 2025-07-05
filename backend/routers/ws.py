@@ -64,15 +64,15 @@ async def websocket_chat(
     # • Rol: Înregistrează conexiunea autentificată în manager.
     await manager.connect(code, websocket)
     room_obj = db.query(Room).filter(Room.code == code).first()
-    # if room_obj:
-    #     existing_players = db.query(RoomPlayer).filter(RoomPlayer.room_id == room_obj.id).all()
-    #     await websocket.send_json({
-    #         "type": EventType.EXISTING_PLAYERS.value,
-    #         "payload": [
-    #             {"id": p.user_id, "username": p.user.username}
-    #             for p in existing_players
-    #         ]
-    #     })
+    if room_obj:
+        existing_players = db.query(RoomPlayer).filter(RoomPlayer.room_id == room_obj.id).all()
+        await websocket.send_json({
+            "type": EventType.EXISTING_PLAYERS.value,
+            "payload": [
+                {"id": p.user_id, "username": p.user.username}
+                for p in existing_players
+            ]
+        })
 
     try:
         while True:
