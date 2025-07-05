@@ -100,4 +100,9 @@ async def websocket_chat(
         # Deconectare controlată
         # • Rol: Elimină conexiunea din manager și loghează deconectarea.
         await manager.disconnect(code, websocket)
+        # If the room has no more active WebSocket connections, delete it
+        if not manager.active_connections.get(code):
+            db.query(Room).filter(Room.code == code).delete()
+            db.commit()
+            logger.info(f"Room {code} deleted as no clients remain")
         logger.info(f"WebSocket disconnected: user={user.username}, room={code}")

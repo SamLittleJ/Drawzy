@@ -16,6 +16,8 @@ export default function GameRoom({
   theme,
   drawingPhase,
   roundDuration,
+  currentRound,
+  maxRounds,
   wsRef
 }) {
   const [timeLeft, setTimeLeft] = useState(0);
@@ -337,8 +339,10 @@ export default function GameRoom({
             />
           )}
         </div>
+        <div className={styles.roundInfo}>
+          Rounds {currentRound}/{maxRounds}
+        </div>
         <div className={styles.chatSection}>
-          <h2>Chat</h2>
           <div className={styles.messages}>
             {messages.map((m, idx) => (
               <div key={idx} className={styles.message}>

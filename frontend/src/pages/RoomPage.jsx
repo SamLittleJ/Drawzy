@@ -74,6 +74,8 @@ export default function RoomPage() {
         case 'VOTE_RESULT':
           break;
         case 'GAME_END':
+          // Switch back to waiting room without closing WS
+          setGameStarted(false);
           break;
         default:
           console.warn('Unknown WS type', msg.type);
