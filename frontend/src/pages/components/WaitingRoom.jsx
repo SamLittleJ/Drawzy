@@ -28,6 +28,11 @@ export default function WaitingRoom({ roomId, players = [], onStart, wsRef }) {
     // Local copy of players list, synced via WS
     const [playerList, setPlayerList] = useState(players);
 
+    // Sync initial and updated players prop into local list
+    useEffect(() => {
+      setPlayerList(players);
+    }, [players]);
+
     // Hook: useEffect pentru mesaje WS
     // • Rol: Înregistrează listener pentru mesajele de tip CHAT din WebSocket.
     // • Cleanup: Elimină listener la demontare.
