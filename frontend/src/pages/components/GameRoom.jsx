@@ -16,6 +16,8 @@ export default function GameRoom({
   theme,
   drawingPhase,
   roundDuration,
+  currentRound,
+  maxRounds,
   wsRef
 }) {
   const [timeLeft, setTimeLeft] = useState(0);
@@ -74,6 +76,7 @@ export default function GameRoom({
 
   // 3. Start drawing: un singur beginPath + moveTo
   const startDrawing = (e) => {
+    if (!drawingPhase) return;
     const { x, y } = getPointerPos(e);
     const ctx = canvasRef.current.getContext('2d');
     ctx.lineCap = 'round';
@@ -128,6 +131,10 @@ export default function GameRoom({
 
   // 4. Draw: fără beginPath intern, doar lineTo
   const draw = (e) => {
+    if (!drawingPhase) {
+      setIsDrawing(false);
+      return;
+    }
     if (!isDrawing) return;
     const { x, y } = getPointerPos(e);
     const ctx = canvasRef.current.getContext('2d');
@@ -296,7 +303,7 @@ export default function GameRoom({
           <h2>Players</h2>
           <ul>
             {players.map(p => (
-              <li key={p.id || p.username}>
+              <li key={p.id || p.username} className={styles.username}>
                 <span className={styles.username}>{p.username}</span>
                 <span className={styles.score}>{p.score ?? 0}</span>
               </li>
@@ -317,7 +324,7 @@ export default function GameRoom({
             onMouseDown={startDrawing}
             onMouseMove={draw}
             onMouseUp={stopDrawing}
-            style={{ cursor: 'crosshair' }}
+            style={{ cursor: drawingPhase ? 'crosshair' : 'not-allowed' }}
           />
           {selectedTool === 'eraser' && (
             <div
@@ -332,8 +339,10 @@ export default function GameRoom({
             />
           )}
         </div>
+        <div className={styles.roundInfo}>
+          Rounds {currentRound}/{maxRounds}
+        </div>
         <div className={styles.chatSection}>
-          <h2>Chat</h2>
           <div className={styles.messages}>
             {messages.map((m, idx) => (
               <div key={idx} className={styles.message}>

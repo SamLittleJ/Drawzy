@@ -34,15 +34,17 @@ export default function LobbyPage(){
     // Hook: useEffect pentru încărcarea camerelor
     // • Rol: Preia lista de camere de la backend la montarea componentei.
     // • Alternative: Utilizarea SWR sau React Query pentru caching și revalidare.
+
+    const loadRooms = async () => {
+        try {
+            const resp = await api.fetchRooms();
+            setRooms(resp.data);
+        } catch (err) {
+            console.error("Failed to load rooms", err);
+        }
+    }
+
     useEffect(() => {
-        const loadRooms = async () =>{
-            try {
-                const resp = await api.fetchRooms();
-                setRooms(resp.data);
-            } catch (err) {
-                console.error("Failed to fetch rooms", err);
-            }
-        };
         loadRooms();
     }, []);
 
@@ -85,6 +87,25 @@ export default function LobbyPage(){
     return (
         <div className={styles.container}>
             <h1>Lobby</h1>
+            {/* Join existing room by code */}
+            <div className={styles.section}>
+                <h2>Join Room</h2>
+                <div className={styles.formRow}>
+                    <input
+                        type="text"
+                        placeholder="Enter room code"
+                        value={code}
+                        className={styles.input}
+                        onChange={e => setCode(e.target.value)}
+                    />
+                    <button
+                        className={styles.button}
+                        onClick={joinRoomByCode}
+                    >
+                        Join
+                    </button>
+                </div>
+            </div>
             <div className={styles.section}>
                 {!showCreateForm ? (
                     <button className={styles.button} onClick={() => setShowCreateForm(true)}>
@@ -175,6 +196,9 @@ export default function LobbyPage(){
 
             <div className={styles.section}>
                 <h2>Available Rooms</h2>
+                <button className={styles.button} onClick={loadRooms}>
+                    Refresh
+                </button>
                 <ul className={styles.list}>
                     {rooms.map(room => (
                         <li key={room.code} className={styles.listItem}>
