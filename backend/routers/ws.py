@@ -82,8 +82,7 @@ async def websocket_chat(
                     "type": "PLAYER_JOIN",
                     "payload": {
                         "id": user.id,
-                        "username": user.username,
-                        "avatarUrl": user.avatar_url
+                        "username": user.username
                     }
                 })
             elif msg_type == "CHAT":
