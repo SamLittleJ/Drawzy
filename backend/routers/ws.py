@@ -67,13 +67,13 @@ async def websocket_chat(
     room_obj = db.query(Room).filter(Room.code == code).first()
     if room_obj:
         existing_players = db.query(RoomPlayer).filter(RoomPlayer.room_id == room_obj.id).all()
-        existing = [
-            {"id": rp.user_id, "username": rp.user.username, "avatarUrl": rp.user.avatar_url}
+        payload = [
+            {"id": rp.user_id, "username": rp.user.username}
             for rp in existing_players
         ]
         await websocket.send_json({
             "type": EventType.EXISTING_PLAYERS.value,
-            "payload": existing
+            "payload": payload
         })
 
     try:
