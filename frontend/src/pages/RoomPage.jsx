@@ -44,6 +44,8 @@ export default function RoomPage() {
     // • Rol: Logare la deschiderea conexiunii și trimiterea evenimentului PLAYER_JOIN.
     ws.onopen = () => {
       console.log('Unified WS connected');
+      // First request existing players, then announce self
+      ws.send(JSON.stringify({ type: 'GET_EXISTING_PLAYERS' }));
       ws.send(JSON.stringify({ type: 'PLAYER_JOIN' }));
     };
 
