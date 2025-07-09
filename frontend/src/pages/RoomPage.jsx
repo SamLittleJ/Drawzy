@@ -58,9 +58,13 @@ export default function RoomPage() {
           // Initialize full player list when joining
           setPlayers(msg.payload);
           break;
-        case 'PLAYER_JOIN':
-          setPlayers(prev => [...prev, msg.payload]);
+        case 'PLAYER_JOIN': {
+          setPlayers(prev => {
+            if (prev.some(p => p.id === msg.payload.id)) return prev;
+            return [...prev, msg.payload];
+          });
           break;
+        }
         case 'CHAT':
           setMessages(prev => [...prev, msg.payload]);
           break;
