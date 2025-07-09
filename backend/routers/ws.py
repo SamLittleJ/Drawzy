@@ -65,13 +65,6 @@ async def websocket_chat(
     await manager.connect(code, websocket)
     room_obj = db.query(Room).filter(Room.code == code).first()
     if room_obj:
-        # Add this user to the room players table if not already present
-        existing = db.query(RoomPlayer).filter_by(room_id=room_obj.id, user_id=user.id).first()
-        if not existing:
-            new_player = RoomPlayer(room_id=room_obj.id, user_id=user.id)
-            db.add(new_player)
-            db.commit()
-        # Re-query and send updated player list
         existing_players = db.query(RoomPlayer).filter(RoomPlayer.room_id == room_obj.id).all()
         await websocket.send_json({
             "type": EventType.EXISTING_PLAYERS.value,
@@ -80,6 +73,11 @@ async def websocket_chat(
                 for p in existing_players
             ]
         })
+        existing = db.query(RoomPlayer).filter_by(room_id=room_obj.id, user_id=user.id).first()
+        if not existing:
+            new_player = RoomPlayer(room_id=room_obj.id, user_id=user.id)
+            db.add(new_player)
+            db.commit()
 
     try:
         while True:
