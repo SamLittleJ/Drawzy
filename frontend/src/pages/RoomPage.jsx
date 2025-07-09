@@ -46,7 +46,6 @@ export default function RoomPage() {
       console.log('Unified WS connected');
       // First request existing players, then announce self
       ws.send(JSON.stringify({ type: 'GET_EXISTING_PLAYERS' }));
-      ws.send(JSON.stringify({ type: 'PLAYER_JOIN' }));
     };
 
     // Eveniment WS onmessage
@@ -57,6 +56,7 @@ export default function RoomPage() {
         case 'EXISTING_PLAYERS':
           // Initialize full player list when joining
           setPlayers(msg.payload);
+          wsRef.current.send(JSON.stringify ({ type: 'PLAYER_JOIN'}));
           break;
         case 'PLAYER_JOIN': {
           setPlayers(prev => {
