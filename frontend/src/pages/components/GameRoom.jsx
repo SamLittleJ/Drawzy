@@ -66,12 +66,11 @@ export default function GameRoom({
   function getPointerPos(e) {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width  / rect.width;
+    const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
-    return {
-      x: (e.clientX - rect.left) * scaleX,
-      y: (e.clientY - rect.top)  * scaleY
-    };
+    const x = (e.pageX -(rect.left + window.scrollX)) * scaleX;
+    const y = (e.pageY -(rect.top + window.scrollY)) * scaleY;
+    return { x, y };
   }
 
   // 3. Start drawing: un singur beginPath + moveTo
