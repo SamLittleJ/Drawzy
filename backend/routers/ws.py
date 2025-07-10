@@ -33,6 +33,7 @@ class EventType(str, Enum):
     DRAW             = "DRAW"
     START_GAME       = "START_GAME"
     GET_EXISTING_PLAYERS = "GET_EXISTING_PLAYERS"
+    PLAYER_LEAVE     = "PLAYER_LEAVE"
 
 # Instanțiere router cu autentificare
 # • Rol: Configurează endpoint-urile WS care fac autentificare inițială.
@@ -65,7 +66,9 @@ async def websocket_chat(
     await manager.connect(code, websocket)
     room_obj = db.query(Room).filter(Room.code == code).first()
     if room_obj:
-        existing_players = db.query(RoomPlayer).filter(RoomPlayer.room_id == room_obj.id).all()
+        existing_players = db.query(RoomPlayer) \
+            .filter(RoomPlayer.room_id == room_obj.id, RoomPlayer.user_id != user.id) \
+            .all()
         await websocket.send_json({
             "type": EventType.EXISTING_PLAYERS.value,
             "payload": [
@@ -100,13 +103,14 @@ async def websocket_chat(
             logger.debug(f"Received WS message type={msg_type}, payload={payload}")
 
             if msg_type == EventType.PLAYER_JOIN.value:
-                await manager.broadcast(code, {
-                    "type": EventType.PLAYER_JOIN.value,
-                    "payload": {
-                        "id": user.id,
-                        "username": user.username
-                    }
-                })
+                await manager.broadcast(
+                    code,
+                    {
+                        "type": EventType.PLAYER_JOIN.value,
+                        "payload": {"id": user.id, "username": user.username}
+                    },
+                    exclude=[websocket]
+                )
             elif msg_type == EventType.CHAT.value:
                 await manager.broadcast(code, {"type": EventType.CHAT.value, "payload": {
                     "user": user.username,
@@ -124,6 +128,10 @@ async def websocket_chat(
         # Deconectare controlată
         # • Rol: Elimină conexiunea din manager și loghează deconectarea.
         manager.disconnect(code, websocket)
+        await manager.broadcast(code, {
+            "type": EventType.PLAYER_LEAVE.value,
+            "payload": {"id": user.id}
+        })
         # If the room has no more active WebSocket connections, delete it
         if not manager.active_connections.get(code):
             db.query(Room).filter(Room.code == code).delete()
