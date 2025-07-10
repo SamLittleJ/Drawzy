@@ -66,9 +66,7 @@ async def websocket_chat(
     await manager.connect(code, websocket)
     room_obj = db.query(Room).filter(Room.code == code).first()
     if room_obj:
-        existing_players = db.query(RoomPlayer) \
-            .filter(RoomPlayer.room_id == room_obj.id, RoomPlayer.user_id != user.id) \
-            .all()
+        existing_players = db.query(RoomPlayer).filter(RoomPlayer.room_id== room_obj.id).all()
         await websocket.send_json({
             "type": EventType.EXISTING_PLAYERS.value,
             "payload": [
@@ -108,8 +106,7 @@ async def websocket_chat(
                     {
                         "type": EventType.PLAYER_JOIN.value,
                         "payload": {"id": user.id, "username": user.username}
-                    },
-                    exclude=[websocket]
+                    }
                 )
             elif msg_type == EventType.CHAT.value:
                 await manager.broadcast(code, {"type": EventType.CHAT.value, "payload": {
