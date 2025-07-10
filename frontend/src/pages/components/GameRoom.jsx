@@ -62,14 +62,10 @@ export default function GameRoom({
     ctx.scale(dpr, dpr);
   }, []);
 
-  // 2. Helper pentru poziția pointer-ului cu scalare
+  // 2. Helper pentru poziția pointer-ului folosind offsetX/offsetY pentru simplitate și acuratețe
   function getPointerPos(e) {
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const x = (e.pageX -(rect.left + window.scrollX)) * scaleX;
-    const y = (e.pageY -(rect.top + window.scrollY)) * scaleY;
+    // Use nativeEvent offset coordinates to avoid scaling issues
+    const { offsetX: x, offsetY: y } = e.nativeEvent;
     return { x, y };
   }
 
