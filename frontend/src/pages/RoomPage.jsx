@@ -87,6 +87,7 @@ export default function RoomPage() {
         case 'ROUND_END':
           setDrawingPhase(false);
           setCurrentTheme('');
+          alert(`Round ${msg.payload.round} ended!`);
           break;
         case 'VOTE_RESULT':
           break;
