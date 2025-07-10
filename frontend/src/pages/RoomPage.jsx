@@ -67,6 +67,7 @@ export default function RoomPage() {
         }
         case 'PLAYER_LEAVE':
           setPlayers(prev => prev.filter(p => p.id !== msg.payload.id));
+          break;
         case 'CHAT':
           setMessages(prev => [...prev, msg.payload]);
           break;
