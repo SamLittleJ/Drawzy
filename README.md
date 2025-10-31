@@ -143,3 +143,4 @@ Push la branch-ul tău (git push origin feature/nume-funcționalitate)
 
 Deschide un Pull Request
 
+PS: Abandonat
