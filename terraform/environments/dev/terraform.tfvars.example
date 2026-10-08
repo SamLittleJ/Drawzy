@@ -1,0 +1,9 @@
+# Copy to terraform.tfvars and fill in. Secrets (db_password, secret_key) should come from
+# TF_VAR_db_password / TF_VAR_secret_key environment variables instead of this file.
+
+vpc_id                = "vpc-0123456789abcdef0"
+subnet_ids            = ["subnet-aaaaaaaaaaaaaaaaa", "subnet-bbbbbbbbbbbbbbbbb"]
+admin_cidr            = "203.0.113.10/32"
+key_name              = "drawzy-key"
+db_subnet_group_name  = "default-vpc-0123456789abcdef0"
+db_security_group_ids = ["sg-0123456789abcdef0"]

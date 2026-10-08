@@ -1,17 +1,7 @@
-/* Stil de bază pentru înălțime completă
- * • Rol: Asigură că elementele html și body umplu ecranul complet.
- * • Motiv: Permite animațiilor pe fundal să acopere întreaga zonă vizibilă.
- * • Alternative: Setarea înălțimii doar pe body (puțină consistență în unele browsere).
- */
- html, body {
+html, body {
   height: 100%;
 }
 
-/* Variabile temă Retro Pixel Art
- * • Rol: Definește culorile principale (fundal, text, accente) ale aplicației.
- * • Motiv: Centralizează palette-ul de culori pentru ușurință în întreținere.
- * • Alternative: Hardcodarea culorilor direct în reguli CSS (mai puțin flexibil).
- */
 :root {
   --bg: #336699;
   --fg: #e0e0e0;
@@ -22,22 +12,12 @@
   --border: #00ffff;
 }
 
-/* Reset simplu global
- * • Rol: Elimină marginile și padding-urile implicite și setează box-sizing.
- * • Motiv: Normalizează comportamentul elementelor între browsere.
- * • Alternative: Utilizarea unui reset CSS complet sau Normalize.css.
- */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* Stil global pentru body
- * • Rol: Setează fontul principal și background-ul temei.
- * • Motiv: Aplică tema retro pixel art pe întreaga aplicație.
- * • Alternative: Schimbare dinamică a temei prin clase CSS sau JS.
- */
 body {
   font-family: 'VT323', monospace;
   background-color: var(--bg);
@@ -45,22 +25,12 @@ body {
   line-height: 1.6;
 }
 
-/* Container principal
- * • Rol: Creează un container flex vertical care ocupă toată înălțimea.
- * • Motiv: Permite alinierea conținutului pe întreaga pagină.
- * • Alternative: Utilizarea grid în loc de flexbox.
- */
 #root, .App {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
 }
 
-/* Container intern centrat
- * • Rol: Limitează lățimea conținutului și adaugă padding.
- * • Motiv: Crează margini laterale egale și spațiu intern consistent.
- * • Alternative: Container fluid fără max-width.
- */
 .container {
   flex: 1;
   max-width: 960px;
@@ -68,10 +38,6 @@ body {
   padding: 1rem;
 }
 
-/* Stil link-uri
- * • Rol: Definește culoarea și comportamentul la hover pentru link-uri.
- * • Motiv: Asigură consistența interactivității elementelor <a>.
- */
 a {
   color: #0066cc;
   text-decoration: none;
@@ -80,19 +46,10 @@ a:hover {
   text-decoration: underline;
 }
 
-/* Stil butoane și text pixel
- * • Rol: Aplică fontul monospace și tema pixel art la butoane și elemente text spéciale.
- * • Motiv: Păstrează un stil unificat retro în întreg UI-ul.
- * • Alternative: Utilizarea altor fonturi pixel (ex. Press Start 2P).
- */
 h1, h2, button, .pixel-text {
   font-family: 'Press Start 2P', cursive;
 }
 
-/* Stil implicit butoane retro
- * • Rol: Definește culorile, padding-ul și efectele hover/active pentru butoane.
- * • Motiv: Asigură consistență în toate butoanele aplicației.
- */
 button {
   background: var(--accent1);
   color: var(--bg);
@@ -108,11 +65,6 @@ button:active {
   transform: translate(1px, 1px);
 }
 
-/* Stilizare scrollbar
- * • Rol: Personalizează lățimea și culoarea thumb-ului scroll-ului.
- * • Motiv: Se potrivește cu paleta de accente a aplicației.
- * • Alternative: Stiluri implicite de browser.
- */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -120,11 +72,6 @@ button:active {
   background: var(--accent3);
 }
 
-/* Particule animate pe fundal
- * • Rol: Container și elemente pentru animațiile decorative.
- * • Motiv: Îmbogățește vizual experiența utilizatorului.
- * • Alternative: Canvas sau WebGL pentru animații complexe.
- */
 .particles {
   position: fixed;
   top: 0;
@@ -143,10 +90,6 @@ button:active {
   animation-fill-mode: both;
 }
 
-/* Particulă brush/eraser/palette/pencil/bucket/marker
- * • Rol: Stilizează fiecare iconiță animată (dimensiune, culoare, animație).
- * • Motiv: Diversifică elementele animate și evidențiază diferitele unelte.
- */
 .particle.brush {
   width: 16px;
   height: 16px;
@@ -196,11 +139,6 @@ button:active {
   animation-delay: 6s;
 }
 
-/* Keyframes animații variate
- * • Rol: Definește traiectoria și comportamentul animațiilor particulelor.
- * • Motiv: Creează mișcare diversificată (direcții multiple, rotații).
- * • Alternative: JavaScript pentru animație programatică.
- */
 @keyframes float1 {
   0%   { transform: translate(-10%, 20vh) rotate(0deg); opacity: 0; }
   10%  { opacity: 1; }

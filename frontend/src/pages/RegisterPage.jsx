@@ -1,74 +1,50 @@
-// Import React și hook-uri
-// • Rol: React pentru JSX și useState pentru gestionarea stărilor locale.
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
-// Import React Router
-// • Rol: useNavigate pentru navigare programatică și Link pentru legături declarative.
-import { useNavigate, Link } from 'react-router-dom';
-
-// Import API client
-// • Rol: Funcții pentru apeluri HTTP către backend (înregistrare, login etc.).
-import api from '../api';
-
-// Import stiluri modulare CSS
-// • Rol: Clasă CSS izolată pentru stilizarea componentei de înregistrare.
+import api, { getErrorMessage } from '../api';
 import styles from './RegisterPage.module.css';
 
-
-// Componentă: RegisterPage
-// • Rol: Pagina de înregistrare a unui nou utilizator.
-// • Motiv: Centralizează formularul și logica de trimitere date.
-// • Alternative: Form library (Formik, React Hook Form).
 export default function RegisterPage() {
-  // State-uri formular
-  // • Rol: Păstrează valorile inputurilor și mesajul de eroare.
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-  const nav = useNavigate();
-
-  // Funcție: handleSubmit
-  // • Rol: Trimite datele de înregistrare la server și navighează la login.
-  // • Observații: Prinde erorile și afișează detaliul din răspuns.
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     try {
-      setError(null);
       await api.registerUser({ username, email, password });
-      nav('/login'); // Redirect la pagina de login după înregistrare reușită
+      navigate('/login');
     } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.detail || 'Registration failed');
+      setError(getErrorMessage(err, 'Registration failed'));
     }
   };
 
-  // Render UI
-  // • Rol: Afișează formularul de înregistrare și eventualele erori.
   return (
     <div className={styles.formContainer}>
       <h2 className={styles.title}>Register</h2>
 
-      {/* Afișare eroare
-          • Rol: Arată mesajul de eroare dacă există. */}
-      {error && <div className={styles.error}>{error}</div>}
+      {error && <div className={styles.error} role="alert">{error}</div>}
 
       <form onSubmit={handleSubmit}>
         <div className={styles.formGroup}>
-          <label className={styles.label}>Username</label>
+          <label className={styles.label} htmlFor="register-username">Username</label>
           <input
+            id="register-username"
             type="text"
             className={styles.input}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            maxLength={50}
             required
           />
         </div>
-
         <div className={styles.formGroup}>
-          <label className={styles.label}>Email</label>
+          <label className={styles.label} htmlFor="register-email">Email</label>
           <input
+            id="register-email"
             type="email"
             className={styles.input}
             value={email}
@@ -76,10 +52,10 @@ export default function RegisterPage() {
             required
           />
         </div>
-
         <div className={styles.formGroup}>
-          <label className={styles.label}>Password</label>
+          <label className={styles.label} htmlFor="register-password">Password</label>
           <input
+            id="register-password"
             type="password"
             className={styles.input}
             value={password}
@@ -87,9 +63,6 @@ export default function RegisterPage() {
             required
           />
         </div>
-
-        {/* Buton submit
-            • Rol: Trimite formularul de înregistrare. */}
         <button type="submit" className={styles.submitButton}>
           Submit
         </button>
@@ -97,8 +70,6 @@ export default function RegisterPage() {
 
       <p className={styles.footerText}>
         Already have an account?{' '}
-        {/* Link către login
-            • Rol: Permite navigarea utilizatorului la pagina de autentificare. */}
         <Link className={styles.footerLink} to="/login">
           Login here.
         </Link>

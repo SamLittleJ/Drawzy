@@ -1,8 +1,3 @@
-/* Container Principal GameRoom
- * • Rol: Wrapper ce conține toată interfața camerei de joc.
- * • Motiv: Structurarea secțiunii principale: canvas, chat, liste.
- * • Alternative: Layout bazat pe grid pentru mai mult control.
- */
 .container {
     position:relative;
     display:flex;
@@ -11,11 +6,6 @@
     align-items: center;
 }
 
-/* Overlay Temă
- * • Rol: Afișează tema curentă cu un fundal semi-transparent peste canvas.
- * • Motiv: Blochează interacțiunea și anunță tema înainte de start.
- * • Alternative: Modal separat cu poziționare centrată.
- */
 .themeOverlay {
     position:absolute;
     top:0;
@@ -29,14 +19,8 @@
     z-index:100;
 }
 
-/* Secțiune Canvas
- * • Rol: Conține și centrează elementul canvas și controalele de desen.
- * • Motiv: Fixarea dimensiunii și alinierea pe centru.
- * • Alternative: Canvas responsive care se redimensionează dinamic.
- */
 .canvasSection{
     position: relative;
-    /* Fixed width matching canvas size */
     width: 1000px;
     display:flex;
     flex-direction:column;
@@ -44,13 +28,7 @@
     z-index: 1;
 }
 
-/* Zona de Desen (Canvas)
- * • Rol: Elementul HTML5 canvas pentru desen.
- * • Motiv: Setează dimensiunea, bordură și fundal alb pentru vizibilitate optimă.
- * • Alternative: Utilizarea unui element SVG pentru desen vectorial.
- */
 .canvas {
-    /* Prevent flexbox stretching */
     flex: none;
     border: 2px solid #ccc;
     border-radius:4px;
@@ -60,11 +38,6 @@
     cursor:default;
 }
 
-/* Bara de Controale
- * • Rol: Grup de butoane și slider pentru selectarea uneltelor și dimensiunii.
- * • Motiv: Organizare clară a comenzilor de desen.
- * • Alternative: Toolbox vertical lateral.
- */
 .controls {
     display:flex;
     gap:1rem;
@@ -72,28 +45,16 @@
     align-items:center;
 }
 
-/* Secțiune Chat
- * • Rol: Zona de mesaje și input chat alăturată canvas-ului.
- * • Motiv: Permite comunicarea între jucători în timp real.
- * • Alternative: Fereastră de chat pop-up.
- */
 .chatSection {
     position: relative;
     display: flex;
     flex-direction: column;
-    /* Match canvas height and space out messages/input */
     height: 700px;
     width: 300px;  /* restrict chat width to keep canvas centered */
     justify-content: space-between;
 }
 
-/* Listă Mesaje Chat
- * • Rol: Afișează mesajele anterioare, scrollabil.
- * • Motiv: Păstrarea istoricului vizual și UX consistent.
- * • Alternative: Badge pentru mesaje noi în loc de scroll.
- */
 .messages {
-    /* Fill available space above input */
     flex: 1;
     min-height: 0;
     overflow-y:auto;
@@ -103,10 +64,6 @@
     background-color:#fafafa;
 }
 
-/* Mesaj Individual
- * • Rol: Stilizarea fiecărui mesaj text (font retro, dimensiune mică).
- * • Motiv: Potrivire cu tema pixel art și claritate text.
- */
 .message {
     margin-bottom:0.5rem;
     font-family: 'Press Start 2P', cursive;
@@ -114,10 +71,6 @@
     color: #000;
 }
 
-/* Zona Input Chat
- * • Rol: Îmbrăcăminte pentru câmpul de text și butonul de trimitere.
- * • Motiv: Aliniere și spațiere consistentă cu restul UI.
- */
 .inputArea {
     display:flex;
     gap:0.5rem;
@@ -125,12 +78,7 @@
     width: 100%;  /* ensure input and button fill chat width */
 }
 
-/* Câmp Text Chat
- * • Rol: Input pentru scriere mesaje cu bordură inset pixel-art.
- * • Motiv: Aspect retro și lizibilitate sporită.
- */
 .inputArea input {
-    /* Removed flex: 1; */
     width: calc(100% - 72px);
     padding: 0.5rem;
     background: #ffffff;
@@ -142,11 +90,6 @@
     color: #000;
 }
 
-
-/* Buton Trimite Chat
- * • Rol: Trimite mesajul introdus în chat.
- * • Motiv: Feedback clar pentru acțiunea de trimitere.
- */
 .inputArea button {
     flex-shrink: 0;
     width: 64px;
@@ -165,26 +108,15 @@
     transition: transform 0.1s ease, background 0.1s ease;
 }
 
-/* Hover Buton Chat
- * • Rol: Schimbare de culoare și mișcare la hover.
- * • Motiv: Indică faptul că butonul este interactiv.
- */
 .inputArea button:hover {
     background: var(--accent2);
     transform: translate(1px, 1px);
 }
 
-/* Focus Buton Chat
- * • Rol: Elimină outline-ul implicit la focus pentru consistență vizuală.
- */
 .inputArea button:focus {
     outline: none;
 }
 
-/* Header Temă
- * • Rol: Afișează textul temei curente deasupra canvas-ului.
- * • Motiv: Informează jucătorii despre tema curentă de desen.
- */
 .themeHeader {
     padding: 1rem;
     text-align: center;
@@ -194,10 +126,6 @@
     color: var(--fg);
 }
 
-/* Zona Principală Joc
- * • Rol: Aranjează pe orizontală canvas-ul și lista de jucători.
- * • Motiv: Combină vizual elementele esențiale ale jocului.
- */
 .mainArea {
     display: flex;
     flex: 1;
@@ -206,27 +134,17 @@
     justify-content: center;
 }
 
-/* Listă Jucători
- * • Rol: Afișează avataruri și nume jucători într-un container scrollabil.
- * • Motiv: Permite afișarea tuturor participanților chiar și peste capacitate.
- */
 .playerList {
     width: 200px;
     display: flex;
     flex-direction: column;
-    /* Fixed height to fit approximately 6 avatars */
     height: 700px;
     overflow-y: auto;
 }
 
-/* Buton Părăsire Cameră
- * • Rol: Permite utilizatorului să iasă din camera curentă.
- * • Motiv: Oferă opțiune clară de ieșire.
- */
 .leaveButton {
     margin-top: 1rem;
     padding: 0.25rem 0.5rem;
-    /* Fit button width to its text */
     width: auto;
     align-self: center;
     font-size: 0.85rem;
@@ -237,17 +155,10 @@
     cursor: pointer;
 }
 
-/* Hover Buton Părăsire
- * • Rol: Efect mic de scale la hover pentru feedback.
- */
 .leaveButton:hover {
     transform: scale(1.05);
 }
 
-/* Bara de Unelte
- * • Rol: Conține iconițele de unelte și picker-ul de culoare.
- * • Motiv: Structurare orizontală cu spațiu între grupuri.
- */
 .toolsBar {
   display: flex;
   align-items: center;
@@ -258,18 +169,11 @@
   padding: 0;
 }
 
-/* Listă Unelte
- * • Rol: Afișează iconițele uneltelor disponibile.
- * • Motiv: Reprezentare vizuală clară a opțiunilor de desen.
- */
 .toolsList {
   display: flex;
   gap: 0.75rem;
 }
 
-/* Control Culoare
- * • Rol: Gruparea iconiță picker-ului și elementelor auxiliare.
- */
 .colorControl {
   display: flex;
   align-items: center;
@@ -277,9 +181,6 @@
   margin-left: 0;
 }
 
-/* Picker Culoare Nativ
- * • Rol: Input ascuns care acoperă iconița pentru a capta selectarea culorii.
- */
 .colorControl input[type="color"] {
   width: 24px;
   height: 24px;
@@ -290,9 +191,6 @@
   border-radius: 50%;
 }
 
-/* Buton Unealtă
- * • Rol: Stilizează fiecare iconiță de unealtă (dimensiune, culoare, border).
- */
 .toolsBar button {
     background: var(--accent1);
     border: 2px solid var(--border);
@@ -302,15 +200,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.75rem; /* increase icon size */
+    font-size: 1.75rem;
     cursor: pointer;
     transition: transform 0.2s ease, color 0.2s ease;
     color: #000;
 }
 
-/* Titluri Liste
- * • Rol: Centrează și aplică font pixel-art titlurilor de secțiune.
- */
 .playerList h2,
 .chatSection h2 {
     text-align: center;
@@ -318,13 +213,6 @@
     color: var(--fg);
 }
 
-/* Ascunde Titlu Chat
- * • Rol: Elimină titlul implicit 'Chat' pentru un design curat.
- */
-
-/* Control Mărime Unelte
- * • Rol: Slider pentru ajustarea dimensiunii uneltelor (pensulă, linie etc.).
- */
 .sizeControl {
   margin: 0.5rem 0;
   display: flex;
@@ -332,25 +220,16 @@
   gap: 0.5rem;
 }
 
-/* Etichetă Slider
- * • Rol: Text descriptiv pentru slider.
- */
 .sizeControl label {
   font-size: 0.9rem;
   white-space: nowrap;
   font-family: 'Press Start 2P', cursive;
 }
 
-/* Slider Input
- * • Rol: Input range pentru setarea numerică a valorii slider-ului.
- */
 .sizeControl input[type="range"] {
   flex: 1;
 }
 
-/* Valoare Slider
- * • Rol: Afișează valoarea curentă a slider-ului.
- */
 .sizeControl span {
   min-width: 2.5rem;
   text-align: right;
@@ -358,9 +237,6 @@
   font-family: 'Press Start 2P', cursive;
 }
 
-/* Cursor Radieră
- * • Rol: Cerc de previzualizare a dimensiunii radierii.
- */
 .eraserCursor {
   position: absolute;
   border: 2px dashed #000;
@@ -370,17 +246,11 @@
   z-index: 200;
 }
 
-/* Unealtă Activă
- * • Rol: Evidențiază iconița uneltei selectate.
- */
 .activeTool {
   color: var(--accent3);
   transform: scale(1.2);
 }
 
-/* Wrapper Color Picker
- * • Rol: Container vizual pentru iconița picker-ului de culoare.
- */
 .colorPicker {
     position: relative;
     display: inline-flex;
@@ -394,9 +264,6 @@
     margin: 0 0.5rem;
 }
 
-/* Input Culoare Nativ (Ascuns)
- * • Rol: Acoperă iconița și capturează evenimentul de schimbare culoare.
- */
 .colorPicker input[type="color"] {
   position: absolute;
   top: 0;
@@ -409,22 +276,17 @@
   opacity: 0;
   cursor: pointer;
 }
-/* Player name in game room */
 .username {
     font-size: 1.5rem;
     font-weight: bold;
 }
 
-/* Player score in game room */
 .score {
     font-size: 1.25rem;
     font-weight: bold;
     margin-left: 0.75rem;
 }
 
-
-
-/* Rounds display above chat */
 .roundInfo {
   position: absolute;
   top: 0.5rem;
@@ -440,7 +302,6 @@
   z-index: 102;
 }
 
-/* Timer display positioned top-right of the canvas */
 .timer {
   position: absolute;
   top: 0.5rem;

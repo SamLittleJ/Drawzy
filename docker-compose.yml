@@ -1,62 +1,46 @@
-# Versiune Docker Compose
-# • Rol: Specifică versiunea formatului Compose utilizat.
-# • De ce: Asigură compatibilitate cu funcționalitățile de la versiunea 3.8.
-# • Alternative: Versiuni mai vechi (3.7, 3.6) sau mai noi, în funcție de cerințe.
-version: '3.8'
+# Full local stack: MySQL + FastAPI backend + React frontend.
+#   docker compose up --build
+# Frontend: http://localhost:3000   API docs: http://localhost:8080/docs
 
-# Secțiunea Services
-# • Rol: Definește serviciile containerizate care alcătuiesc aplicația.
-# • De ce: Centralizează configurația pentru backend și frontend.
-# • Alternative: Utilizarea mai multor fișiere Compose cu extensii (override).
 services:
-
-  # Serviciu: backend
-  # • Rol: Rulează API-ul Python cu Uvicorn și gestionează WebSocket-urile.
-  # • De ce: Containerizează backend-ul pentru consistență și portabilitate.
-  # • Implementare: Construiește imaginea din `backend/Dockerfile` și expune portul 8080.
-  # • Alternative: Rulare fără Docker sau cu orchestrator Kubernetes.
-  backend:
-    # Build context și Dockerfile
-    build: 
-      context: .
-      dockerfile: backend/Dockerfile
-
-    # Comanda de pornire a aplicației Uvicorn
-    command:
-      - uvicorn
-      - backend.main:app
-      - --app-dir
-      - /app
-      - --host
-      - 0.0.0.0
-      - --port
-      - "8080"
-      - --ws-per-message-deflate
-      - "false"
-
-    # Mapare port backend (host:container)
-    ports:
-      - "8080:80"
-
-    # Variabile de mediu – încarcă fișierul .env
+  db:
+    image: mysql:8.0
     environment:
-      - /Users/sam_little_j/Drawzy/backend/.env
-
-    # Mount cod sursă pentru dezvoltare live
+      MYSQL_DATABASE: drawzy
+      MYSQL_USER: drawzy
+      MYSQL_PASSWORD: drawzy
+      MYSQL_ROOT_PASSWORD: root
     volumes:
-      - ./backend:/app
+      - db-data:/var/lib/mysql
+    healthcheck:
+      # Ping over TCP: during first-run initialisation MySQL only listens on its socket.
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-udrawzy", "-pdrawzy"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
 
-  # Serviciu: frontend
-  # • Rol: Servește aplicația React statică.
-  # • De ce: Containerizează frontend-ul pentru consistență între medii.
-  # • Implementare: Construiește imaginea din `frontend/Dockerfile` și expune portul 8081.
-  # • Alternative: Servire directă prin CDN sau server static (Nginx).
-  frontend:
-    # Build context și Dockerfile
-    build: 
-      context: ./frontend
-      dockerfile: Dockerfile
-
-    # Mapare port frontend (host:container)
+  backend:
+    build: ./backend
+    restart: on-failure
+    environment:
+      DATABASE_URL: mysql+pymysql://drawzy:drawzy@db:3306/drawzy
+      SECRET_KEY: local-development-secret-key-not-for-production
+      CORS_ORIGINS: http://localhost:3000
     ports:
-      - "8081:80"
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:8080
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  db-data:

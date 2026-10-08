@@ -1,146 +1,141 @@
-Drawzy
+# Drawzy
 
-Drawzy este o platformă de jocuri interactive de tip desen colaborativ, construită cu un backend Python serverless pe AWS și o interfață frontend modernă. Proiectul este orchestrată și provisionată cu Terraform pentru a asigura scalabilitate, fiabilitate și deploy rapid.
+[![CI](https://github.com/SamLittleJ/Drawzy/actions/workflows/ci.yml/badge.svg)](https://github.com/SamLittleJ/Drawzy/actions/workflows/ci.yml)
 
-📝 Cuprins
+A real-time multiplayer drawing game. Players create or join a room, receive a random theme each round and draw on a shared canvas against the clock, chatting while they play.
 
-Caracteristici
+Built end to end as a portfolio project: a **FastAPI** backend with REST and WebSocket APIs, a **React** frontend, **Docker** images, and **Terraform** infrastructure for AWS deployed through **GitHub Actions**.
 
-Arhitectură
+## Features
 
-Tehnologii și tool-uri
+- **Accounts:** registration and login with bcrypt-hashed passwords and JWT bearer tokens.
+- **Rooms:** public or private rooms with a 6-character join code and configurable player limit, round length and number of rounds.
+- **Real-time play over a single WebSocket per player:**
+  - live player list and room chat;
+  - a shared canvas: brush, eraser, line, rectangle, circle, fill and clear, synced to every player;
+  - a server-driven game loop that reveals a theme, runs a timed drawing round and repeats until the game ends.
+- **Room lifecycle:** empty rooms are cleaned up automatically, and joins are refused with clear close codes when a room is full or no longer exists.
 
-Instalare și utilizare
+## Tech stack
 
-Dezvoltare locală
+| Layer | Technology |
+| --- | --- |
+| Backend | Python 3.13, FastAPI, SQLAlchemy 2, Pydantic 2, PyJWT, bcrypt, Uvicorn |
+| Frontend | React 19, React Router, Vite, Axios, CSS Modules, HTML Canvas |
+| Data | MySQL 8 (SQLite for local development and tests) |
+| Testing | pytest + FastAPI TestClient, Vitest + React Testing Library |
+| Infrastructure | Docker, nginx, Terraform, AWS (EC2 Auto Scaling, ALB, RDS, ECR, S3/DynamoDB state) |
+| CI/CD | GitHub Actions (tests on every push, manual deploy via OIDC) |
 
-Deploy în AWS
+## Architecture
 
-Contribuții
+```mermaid
+flowchart LR
+    Browser -->|static files| FALB[Frontend ALB]
+    FALB --> FE["nginx + React build<br/>(EC2 Auto Scaling group)"]
+    Browser -->|REST + WebSocket| BALB[Backend ALB]
+    BALB --> BE["FastAPI / Uvicorn<br/>(EC2 Auto Scaling group)"]
+    BE --> RDS[(MySQL on RDS)]
+    ECR[(ECR)] -. images pulled on boot .-> FE
+    ECR -. images pulled on boot .-> BE
+```
 
-Licență
+The REST API handles accounts, rooms and game records. Everything that happens *inside* a room goes through one WebSocket per player at `/ws/{roomCode}?token=<JWT>`:
 
-🎯 Caracteristici
+| Direction | Event | Payload |
+| --- | --- | --- |
+| client → server | `CHAT` | `{ message }` |
+| client → server | `DRAW` | a drawing action, e.g. `{ tool, from, to, color, size }` |
+| client → server | `START_GAME` | — |
+| client → server | `GET_EXISTING_PLAYERS` | — |
+| server → client | `EXISTING_PLAYERS` | full roster, sent on connect |
+| server → client | `PLAYER_JOIN` / `PLAYER_LEAVE` | `{ id, username }` / `{ id }` |
+| server → client | `CHAT` | `{ user, message }` |
+| server → client | `DRAW` | relayed to everyone except the sender |
+| server → client | `SHOW_THEME` → `ROUND_START` → `ROUND_END` … `GAME_END` | theme, round number and duration |
 
-Joc de desen în timp real, multiplayer
+Rejected connections are closed with `4401` (invalid token), `4403` (room full) or `4404` (room not found).
 
-Canvas partajat pentru toți jucătorii dintr-o cameră
+Drawing actions are plain JSON objects rendered by a single function ([`drawing.js`](frontend/src/pages/components/drawing.js)), so local strokes and strokes received from other players go through the same code path.
 
-Sincronizare rapidă prin WebSocket (API Gateway + Lambda)
+## Getting started
 
-Salvarea și încărcarea sesiunilor din S3/DynamoDB
+### With Docker (recommended)
 
-Scalare automată și serverless (AWS Lambda)
+```bash
+docker compose up --build
+```
 
-Deploy și management infrastructură cu Terraform
+- Web app: http://localhost:3000
+- API docs (Swagger UI): http://localhost:8080/docs
 
-🏗️ Arhitectură
+This starts MySQL, the API and the nginx-served frontend. Tables are created and seeded with drawing themes on first start. Open two browser windows with two accounts to play against yourself.
 
-Frontend: aplicație React (vite, tailwindcss) comunică prin WebSocket cu API Gateway.
+### Without Docker
 
-API Gateway WebSocket: punct de intrare pentru mesaje desen („draw”, „erase”, „clear”).
+Backend (Python 3.11+). Uses a local SQLite file unless `DATABASE_URL` is set (see [`backend/.env.example`](backend/.env.example)):
 
-AWS Lambda (Python): procesează evenimentele WebSocket, actualizează starea camerei în DynamoDB și publică mesaje către clienți.
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -r backend/requirements-dev.txt
+uvicorn backend.main:app --reload --port 8080
+```
 
-DynamoDB: stocare rapidă a stării canvas-ului și managementul sesiunilor.
+Frontend (Node 22). Talks to `http://localhost:8080` unless `VITE_API_URL` is set:
 
-Amazon S3: backup-uri periodice ale sesiunilor și exporturi de imagini.
-
-Terraform: definirea și deploy-ul resurselor AWS (lambdas, apigateway, dynamodb, s3, iam, etc.).
-
-🛠️ Tehnologii și tool‑uri
-
-Componentă
-
-Tehnologie/Tool
-
-Infrastructură
-
-Terraform
-
-Backend
-
-AWS Lambda (Python)
-
-API
-
-API Gateway WS
-
-Bază de date
-
-DynamoDB
-
-Stocare
-
-Amazon S3
-
-Frontend
-
-React, Vite, Tailwind CSS
-
-Control versiuni
-
-Git & GitHub
-
-🚀 Instalare și utilizare
-
-1. Prerechizite
-
-Terraform >= 1.0
-
-AWS CLI configurat cu un profil cu drepturi suficiente
-
-Node.js >= 16
-
-2. Clonare și configurare
-
-git clone https://github.com/SamLittleJ/Drawzy.git
-cd Drawzy
-
-3. Deploy infrastructură
-
-cd infrastructure
-terraform init
-terraform apply
-
-4. Pornire backend
-
-Lambda-urile sunt serverless și nu necesită pornire locală; însă poți testa handler-ele cu AWS SAM CLI sau un mock local.
-
-5. Pornire frontend
-
+```bash
 cd frontend
 npm install
-npm run dev
+npm run dev   # http://localhost:3000
+```
 
-Accesează http://localhost:3000 pentru a începe un joc.
+## Tests
 
-🔧 Dezvoltare locală
+```bash
+# Backend: API, auth, WebSocket protocol and game loop against in-memory SQLite
+pytest
 
-Folosește serverless-websocket-local pentru testare WebSocket local.
+# Frontend: room state reducer, canvas rendering, components and routing
+cd frontend && npm test
+```
 
-Modelează cererile în Postman / Insomnia cu endpoint-urile WebSocket din infrastructure/outputs.tf.
+CI runs both suites, `ruff`, a production build of the frontend, `terraform validate` and both Docker builds on every push and pull request.
 
-☁️ Deploy în AWS
+## Deployment
 
-După testare locală, rulează din nou:
+The AWS environment is described in [`terraform/`](terraform):
 
-cd infrastructure
-terraform plan
-terraform apply
+- **`bootstrap/`:** one-time S3 bucket and DynamoDB table for remote Terraform state.
+- **`modules/ecr`:** container registries for both images.
+- **`modules/rds_mysql`:** private MySQL instance.
+- **`modules/ec2_backend` and `modules/ec2_frontend`:** an Auto Scaling group behind an Application Load Balancer for each service. Instances pull the latest image from ECR on boot.
+- **`environments/dev/`:** wires the modules together (copy `terraform.tfvars.example` to get started).
 
-Acest proces va actualiza infrastructura și va redeploy Lambda-urile.
+The [Deploy workflow](.github/workflows/deploy.yml) is triggered manually. It authenticates to AWS with GitHub OIDC (no stored access keys), creates the registries and database, builds and pushes both images, then plans and applies the rest of the stack. Secrets such as the database password and JWT key are passed as `TF_VAR_*` variables from GitHub secrets. The workflow header lists the required repository settings.
 
-🤝 Contribuții
+> The AWS environment is not kept running. Use Docker Compose to try the project locally.
 
-Fork repository
+## Project structure
 
-Creează un branch nou (git checkout -b feature/nume-funcționalitate)
+```
+backend/
+  main.py                 app setup, CORS, startup (schema + theme seeding)
+  routers/                REST endpoints and the WebSocket room channel (ws.py)
+  game.py                 server-driven round timer
+  connection_manager.py   open sockets per room, broadcasting
+  models.py, schemas.py   SQLAlchemy models and Pydantic schemas
+  security.py             password hashing and JWT helpers
+  tests/                  pytest suite
+frontend/
+  src/pages/              pages, room state reducer, game components and their tests
+alembic/                  migration history from development (the app creates tables on startup)
+terraform/                bootstrap, reusable modules and the dev environment
+.github/workflows/        CI and manual deploy
+docker-compose.yml        local MySQL + API + web stack
+```
 
-Commit modificările (git commit -m 'Add some feature')
+## Design notes and limitations
 
-Push la branch-ul tău (git push origin feature/nume-funcționalitate)
-
-Deschide un Pull Request
-
-PS: Abandonat
+- **One backend instance per game.** Room connections live in process memory, so all players of a room must reach the same backend instance. Running several instances would need a shared pub/sub layer, such as Redis, between them.
+- **Shared canvas.** Every player in a room draws on the same canvas. Voting on drawings exists in the REST API (`/drawings`, `/votes`), but the UI doesn't expose it yet.
+- **No HTTPS in the Terraform setup.** The load balancers only listen on HTTP. A real deployment would add an ACM certificate and an HTTPS listener.

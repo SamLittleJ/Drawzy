@@ -1,9 +1,4 @@
-/* Wrapper Principal
- * • Rol: Învelește întreg conținutul WaitingRoom și aplică centrare verticală.
- * • Motiv: Oferă spațiu între secțiuni și aliniază elementele pe centru.
- * • Alternative: Utilizarea Grid pentru layout mai flexibil.
- */
- .wrapper {
+.wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -13,11 +8,6 @@
   box-sizing: content-box;
 }
 
-/* Container Chat Compact
- * • Rol: Învelește secțiunea de chat și menține textul în linie.
- * • Motiv: Plasează chat-ul alături de WaitingRoom fără a sparge alinierea.
- * • Alternative: Flexbox cu align-items pentru structuri complexe.
- */
 .chatWrapper {
   display: flex;
   flex-direction: column;
@@ -31,11 +21,6 @@
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
-/* Container Principal și Secțiune Chat
- * • Rol: Asigură afișarea inline-block și elimină marginile implicite.
- * • Motiv: Poziționează cardul și chat-ul unul lângă altul.
- * • Alternative: Flexbox pentru adaptare la ecrane diferite.
- */
 .container,
 .chatSection {
   display: inline-block;
@@ -43,11 +28,6 @@
   margin: 0; /* remove flex margins */
 }
 
-/* Card WaitingRoom
- * • Rol: Stilizează cardul central cu fundal alb și colțuri rotunjite.
- * • Motiv: Evidențiază zona de participanți și butoane.
- * • Alternative: Card-uri cu margini pixel-art.
- */
 .container {
   display: flex;
   flex-direction: column;
@@ -56,40 +36,25 @@
   padding: 2rem;
   background-color: #ffffff;
   border-radius: 1rem;
-  /* center card and move it down */
   max-width: 600px;
-  /* pixel art font and visible text color */
   font-family: 'Press Start 2P', cursive;
   color: #000;
   line-height: 1.5;
-  /* add spacing between direct child elements */
   > * + * {
     margin-top: 1.25rem;
   }
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-/* Spațiu Între Elemente
- * • Rol: Adaugă margine sus între elementele copil directe.
- * • Motiv: Menține distanțe consistente între componentele cardului.
- */
 .container > p:nth-of-type(2) {
   margin-bottom: 1.5rem;
 }
 
-/* Secțiunea Principală
- * • Rol: Definește zona de setări și listă așteptare jucători.
- * • Motiv: Permite extinderea la 100% lățime în cadrul cardului.
- */
 .mainSection {
   width: 100%;
   align-items: flex-start;
 }
 
-/* Listă Jucători
- * • Rol: Afișează jucătorii în linie cu wrap automat.
- * • Motiv: Adaptează lista la număr variabil de participanți.
- */
 .playersList {
   display: flex;
   flex-direction: column;
@@ -98,21 +63,12 @@
   gap: 0.5rem;
 }
 
-/* Element Jucător
- * • Rol: Învelește avatarul și numele fiecărui jucător.
- * • Motiv: Aranjează vertical fiecare profil mic.
- */
 .playerItem {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-/* Avatar Jucător
- * • Rol: Definește dimensiunea și stilul imaginii de profil.
- * • Motiv: Afișează avataruri rotunde cu bordură clară.
- * • Alternative: Avataruri cu colțuri drepte pentru tema pixel.
- */
 .avatar {
   width: 60px;
   height: 60px;
@@ -122,20 +78,12 @@
   border: 2px solid #ccc;
 }
 
-/* Nume Jucător
- * • Rol: Afișează username-ul sub avatar.
- * • Motiv: Font bold și mărime mică pentru claritate.
- */
 .username {
   font-weight: bold;
   font-size: 0.9rem;
   color: #000;
 }
 
-/* Buton Start
- * • Rol: Inițiază începutul jocului în camera curentă.
- * • Motiv: Evidențiază acțiunea cu culoare verde și text alb.
- */
 .startButton {
   padding: 0.75rem 1.5rem;
   font-size: 1rem;
@@ -147,21 +95,13 @@
   margin-top: 1rem;
 }
 
-/* Buton Start Inactiv
- * • Rol: Stilizează butonul când nu poate fi apăsat.
- * • Motiv: Afișează starea disabled cu gri și pointer not-allowed.
- */
 .startButton:disabled {
   background-color: #9E9E9E;
   cursor: not-allowed;
 }
 
-/* Buton Părăsire Cameră
- * • Rol: Permite utilizatorului să iasă din cameră.
- * • Motiv: Evidențiază acțiunea critică cu roșu și text alb.
- */
 .leaveButton {
-  background-color: #e53935; /* red */
+  background-color: #e53935;
   color: #fff;
   border: none;
   border-radius: 4px;
@@ -172,10 +112,6 @@
   transition: background 0.1s ease, transform 0.1s ease;
 }
 
-/* Secțiune Chat
- * • Rol: Stilizează zona de chat cu fundal alb și colțuri rotunjite.
- * • Motiv: Evidențiază mesageria lângă WaitingRoom.
- */
 .chatSection {
   display: inline-block;
   vertical-align: top;
@@ -185,13 +121,9 @@
   padding: 0.5rem 1rem;
   width: 600px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  height: 400px; /* or desired fixed height */
+  height: 400px;
 }
 
-/* Titlu Chat
- * • Rol: Stilizează antetul secțiunii de chat.
- * • Motiv: Font pixel-art centrat pentru consistență.
- */
 .chatSection h3 {
   font-family: 'Press Start 2P', cursive;
   text-align: center;
@@ -200,10 +132,6 @@
   color: #000;
 }
 
-/* Listă Mesaje
- * • Rol: Afișează mesajele în ordinea inversă, scrollabil.
- * • Motiv: Mesaje noi apar de sus, scroll privat la consumul istoricului.
- */
 .messages {
   display: flex;
   flex-direction: column;
@@ -221,10 +149,6 @@
   color:black;
 }
 
-/* Zona Input Chat
- * • Rol: Învelește câmpul și butonul de trimitere a mesajelor.
- * • Motiv: Feedback vizual cu fundal alb și bordură rotunjită.
- */
 .inputArea {
   display: flex;
   gap: 0.5rem;
@@ -237,10 +161,6 @@
   margin: 0.5rem 0 0;
 }
 
-/* Câmp Text Chat
- * • Rol: Definire stil pentru input de text din chat.
- * • Motiv: Font pixel-art și padding consistent pentru lizibilitate.
- */
 .inputArea input {
   flex: 1;
   border: 1px solid #ccc;
@@ -250,10 +170,6 @@
   font-size: 0.75rem;
 }
 
-/* Buton Trimite Mesaj
- * • Rol: Trimite textul introdus în chat.
- * • Motiv: Font pixel-art și efect de apăsare 3D.
- */
 .inputArea button {
   padding: 0.5rem 1rem;
   background: var(--accent1);
@@ -266,10 +182,6 @@
   transition: transform 0.1s;
 }
 
-/* Buton Mesaj Active
- * • Rol: Feedback la apăsarea butonului de trimitere.
- * • Motiv: Simulează efect de apăsare privind transformarea.
- */
 .inputArea button:active {
   transform: translate(1px, 1px);
 }

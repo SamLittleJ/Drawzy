@@ -1,9 +1,4 @@
-/* Container Principal HomePage
- * • Rol: Creează layout vertical centrat atât pe orizontală cât și pe verticală.
- * • Motiv: Plasează conținutul în mijlocul ecranului cu spațiu intern generos.
- * • Alternative: Utilizarea grid în loc de flex pentru centrare.
- */
- .container {
+.container {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -12,11 +7,6 @@
     min-height: 100vh;
 }
 
-/* Titlu Principal
- * • Rol: Stilizează titlul paginii cu font mare și poziționare relativă.
- * • Motiv: Atrage atenția asupra mesajului principal.
- * • Alternative: Utilizarea unui pseudo-element decorativ în HTML.
- */
 .title {
     font-size: 2.5rem;
     font-weight: bold;
@@ -24,11 +14,6 @@
     position: relative;
 }
 
-/* Decor Subtitlu
- * • Rol: Adaugă o linie galbenă sub titlu pentru accent vizual.
- * • Motiv: Întărește tema retro și creează separare de restul conținutului.
- * • Alternative: Folosirea unei imagini sau bordură pe element.
- */
 .title::after {
     content: '';
     position: absolute;
@@ -41,11 +26,6 @@
     border-radius: 2px;
 }
 
-/* Subtitlu Descriptiv
- * • Rol: Stilizează textul de introducere cu font mediu și aliniere centrală.
- * • Motiv: Oferă context paginii și menține lizibilitatea.
- * • Alternative: Text scrollat sau parallax.
- */
 .subtitle {
     font-size: 1.25rem;
     margin: 2rem 0 3rem;
@@ -54,21 +34,11 @@
     text-align: center;
 }
 
-/* Container Butoane
- * • Rol: Aranjează butoanele orizontal cu spațiu între ele.
- * • Motiv: Creează o zonă clară de acțiune pentru utilizator.
- * • Alternative: Dispunere pe verticală pentru ecrane înguste.
- */
 .buttons {
     display: flex;
     gap: 1rem;
 }
 
-/* Stil Butoane Secundare
- * • Rol: Definește aspect neutru pentru butoane simple (Login/Register).
- * • Motiv: Oferă interacțiuni de bază cu hover.
- * • Alternative: Stilizare custom pentru fiecare buton.
- */
 .button {
     padding: 0.5rem 1rem;
     border: none;
@@ -78,21 +48,13 @@
     border-radius: 4px;
 }
 
-/* Hover Secundar
- * • Rol: Schimbă nuanța de fundal la hover pentru feedback vizual.
- * • Motiv: Indică claritatea și interactivitatea butonului.
- * • Alternative: Animații mai complexe la hover.
- */
 .button:hover {
     background-color: #555;
 }
 
-/* Buton Principal
- * • Rol: Stilizează butonul major "Let creativity begin" cu culoare accent și bordură pixel art.
- * • Motiv: Evidențiază acțiunea principală și se potrivește temei retro.
- * • Alternative: Buton cu icon și text combinat.
- */
 .mainButton {
+    display: inline-block;
+    text-decoration: none;
     background: var(--accent1);
     color: var(--bg);
     border: 3px solid #ffeb3b;
@@ -104,12 +66,8 @@
     box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
 
-/* Hover Principal
- * • Rol: Intensifică umbrele și schimbă culorile pentru feedback la hover.
- * • Motiv: Atragerea atenției asupra butonului când utilizatorul interacționează.
- * • Alternative: Efect de apăsare 3D prin transform scale.
- */
 .mainButton:hover {
+    text-decoration: none;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     background: #ffeb3b;
     color: #000;

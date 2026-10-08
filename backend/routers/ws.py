@@ -1,137 +1,131 @@
-# Importuri FastAPI și dependințe
-# • Rol: Definirea router-ului WebSocket și obținerea utilizatorului curent și a sesiunii DB.
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
-from backend.dependencies import get_current_user_ws
-from backend.database import get_db
-from sqlalchemy.orm import Session
-from sqlalchemy import func
-from backend.routers.game_ws_manager import manager
-from backend.models import Room, RoomPlayer
+"""Real-time room channel: player presence, chat, canvas strokes and game control."""
 
-# Instanțiere router WebSocket
-# • Rol: Configurare punct de intrare pentru endpoint-urile WS.
-router = APIRouter()
-
-# Importuri suplimentare și logging
-# • Rol: Adaugă suport pentru WebSocketException și logare evenimente WS.
-from fastapi import WebSocketException
+import json
 import logging
-import asyncio
-from backend.routers.game import run_game_loop
+from enum import StrEnum
 
-# Configurare logger
-# • Rol: Obține un logger dedicat pentru mesaje și erori WS.
-logger = logging.getLogger("ws")
+from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, WebSocketException
+from sqlalchemy.orm import Session
 
-# Definire tipuri evenimente
-from enum import Enum
+from backend import game, models
+from backend.connection_manager import manager
+from backend.database import get_db
+from backend.dependencies import WS_FORBIDDEN, WS_NOT_FOUND, get_current_user_ws
 
-class EventType(str, Enum):
-    PLAYER_JOIN      = "PLAYER_JOIN"
-    EXISTING_PLAYERS = "EXISTING_PLAYERS"
-    CHAT             = "CHAT"
-    DRAW             = "DRAW"
-    START_GAME       = "START_GAME"
+logger = logging.getLogger(__name__)
+
+router = APIRouter(tags=["WebSocket"])
+
+
+class EventType(StrEnum):
+    # Sent by clients
     GET_EXISTING_PLAYERS = "GET_EXISTING_PLAYERS"
-    PLAYER_LEAVE     = "PLAYER_LEAVE"
+    CHAT = "CHAT"
+    DRAW = "DRAW"
+    START_GAME = "START_GAME"
+    # Sent by the server
+    EXISTING_PLAYERS = "EXISTING_PLAYERS"
+    PLAYER_JOIN = "PLAYER_JOIN"
+    PLAYER_LEAVE = "PLAYER_LEAVE"
 
-# Instanțiere router cu autentificare
-# • Rol: Configurează endpoint-urile WS care fac autentificare inițială.
-router = APIRouter()
 
-# Endpoint WS cu autentificare
-# • Rol: Acceptă și autorizează conexiuni, apoi redirecționează mesaje prin manager.
+def _roster(room: models.Room, db: Session) -> list[dict]:
+    players = (
+        db.query(models.RoomPlayer)
+        .filter(models.RoomPlayer.room_id == room.id)
+        .order_by(models.RoomPlayer.joined_at)
+        .all()
+    )
+    return [{"id": p.user_id, "username": p.user.username, "score": p.score} for p in players]
+
+
+def _authorize(websocket: WebSocket, code: str, db: Session) -> tuple[models.User, models.Room]:
+    user = get_current_user_ws(websocket, db)
+    room = db.query(models.Room).filter(models.Room.code == code).first()
+    if room is None:
+        raise WebSocketException(code=WS_NOT_FOUND, reason="Room not found")
+    already_in_room = db.get(models.RoomPlayer, {"room_id": room.id, "user_id": user.id}) is not None
+    if not already_in_room and room.player_count >= room.max_players:
+        raise WebSocketException(code=WS_FORBIDDEN, reason="Room is full")
+    return user, room
+
+
+def _join_room(user: models.User, room: models.Room, db: Session) -> None:
+    if db.get(models.RoomPlayer, {"room_id": room.id, "user_id": user.id}) is None:
+        db.add(models.RoomPlayer(room_id=room.id, user_id=user.id))
+        db.commit()
+
+
+def _leave_room(user: models.User, code: str, db: Session) -> bool:
+    """Remove the player from the room; delete the room once nobody is connected. Returns True if deleted."""
+    room = db.query(models.Room).filter(models.Room.code == code).first()
+    if room is None:
+        return True
+    player = db.get(models.RoomPlayer, {"room_id": room.id, "user_id": user.id})
+    if player is not None:
+        db.delete(player)
+
+    room_deleted = manager.connection_count(code) == 0
+    if room_deleted:
+        game.stop_game(code)
+        db.delete(room)
+    db.commit()
+    return room_deleted
+
+
+async def _handle_event(websocket: WebSocket, code: str, user: models.User, room: models.Room, db: Session, data: dict):
+    msg_type = data.get("type")
+    payload = data.get("payload") or {}
+
+    if msg_type == EventType.GET_EXISTING_PLAYERS:
+        await websocket.send_json({"type": EventType.EXISTING_PLAYERS, "payload": _roster(room, db)})
+    elif msg_type == EventType.CHAT:
+        text = str(payload.get("message", "")).strip()
+        if text:
+            await manager.broadcast(code, {"type": EventType.CHAT, "payload": {"user": user.username, "message": text}})
+    elif msg_type == EventType.DRAW:
+        # The sender has already drawn the stroke locally.
+        await manager.broadcast(code, {"type": EventType.DRAW, "payload": payload}, exclude=websocket)
+    elif msg_type == EventType.START_GAME:
+        if not game.start_game(code):
+            logger.info("Ignoring START_GAME for room %s: a game is already running", code)
+    else:
+        logger.warning("Unknown WebSocket event type: %r", msg_type)
+
+
 @router.websocket("/ws/{code}")
-async def websocket_chat(
-    websocket: WebSocket,
-    code: str,
-    db: Session = Depends(get_db)
-):
-    # Autentificare WebSocket
-    # • Rol: Verifică token-ul JWT din query params și închide conexiunea dacă e invalid.
+async def room_socket(websocket: WebSocket, code: str, db: Session = Depends(get_db)):
+    # Accept first so that rejections reach the browser as a close code instead of a failed handshake.
+    await websocket.accept()
     try:
-        user = await get_current_user_ws(websocket, db)
-    except WebSocketException as e:
-        logger.error("WebSocket auth failed: %s", e)
-        await websocket.close(code=e.code, reason=e.reason)
+        user, room = _authorize(websocket, code, db)
+    except WebSocketException as exc:
+        await websocket.close(code=exc.code, reason=exc.reason)
         return
 
-    # Acceptare conexiune
-    # • Rol: Confirmă upgrade-ul la protocolul WebSocket.
-    await websocket.accept()
-    logger.info(f"WebSocket connected: user={user.username}, room={code}")
+    _join_room(user, room, db)
+    manager.connect(code, websocket)
+    logger.info("%s joined room %s", user.username, code)
 
-    # Manager conectare cu autentificare
-    # • Rol: Înregistrează conexiunea autentificată în manager.
-    await manager.connect(code, websocket)
-    room_obj = db.query(Room).filter(Room.code == code).first()
-    if room_obj:
-        existing_players = db.query(RoomPlayer).filter(RoomPlayer.room_id== room_obj.id).all()
-        await websocket.send_json({
-            "type": EventType.EXISTING_PLAYERS.value,
-            "payload": [
-                {"id": p.user_id, "username": p.user.username}
-                for p in existing_players
-            ]
-        })
-        existing = db.query(RoomPlayer).filter_by(room_id=room_obj.id, user_id=user.id).first()
-        if not existing:
-            new_player = RoomPlayer(room_id=room_obj.id, user_id=user.id)
-            db.add(new_player)
-            db.commit()
+    await websocket.send_json({"type": EventType.EXISTING_PLAYERS, "payload": _roster(room, db)})
+    await manager.broadcast(
+        code,
+        {"type": EventType.PLAYER_JOIN, "payload": {"id": user.id, "username": user.username, "score": 0}},
+        exclude=websocket,
+    )
 
     try:
         while True:
-            # Citire mesaj
-            # • Rol: Primește payload JSON trimis de client.
-            data = await websocket.receive_json()
-            msg_type = data.get("type")
-            payload = data.get("payload", {})
-            if msg_type == EventType.GET_EXISTING_PLAYERS.value:
-                # Respond with current roster only to requester
-                existing_players = db.query(RoomPlayer).filter(RoomPlayer.room_id == room_obj.id).all()
-                await websocket.send_json({
-                    "type": EventType.EXISTING_PLAYERS.value,
-                    "payload": [
-                        {"id": p.user_id, "username": p.user.username}
-                        for p in existing_players
-                    ]
-                })
+            try:
+                data = json.loads(await websocket.receive_text())
+            except ValueError:
                 continue
-            logger.debug(f"Received WS message type={msg_type}, payload={payload}")
-
-            if msg_type == EventType.PLAYER_JOIN.value:
-                await manager.broadcast(
-                    code,
-                    {
-                        "type": EventType.PLAYER_JOIN.value,
-                        "payload": {"id": user.id, "username": user.username}
-                    }
-                )
-            elif msg_type == EventType.CHAT.value:
-                await manager.broadcast(code, {"type": EventType.CHAT.value, "payload": {
-                    "user": user.username,
-                    "message": payload.get("message", "")
-                }})
-            elif msg_type == EventType.DRAW.value:
-                await manager.broadcast(code, {"type": EventType.DRAW.value, "payload": payload})
-            elif msg_type == EventType.START_GAME.value:
-                # Start the asynchronous game loop
-                asyncio.create_task(run_game_loop(code, db))
-            else:
-                logger.warning("Unknown WS type: %s", msg_type)
-
+            if isinstance(data, dict):
+                await _handle_event(websocket, code, user, room, db, data)
     except WebSocketDisconnect:
-        # Deconectare controlată
-        # • Rol: Elimină conexiunea din manager și loghează deconectarea.
+        pass
+    finally:
         manager.disconnect(code, websocket)
-        await manager.broadcast(code, {
-            "type": EventType.PLAYER_LEAVE.value,
-            "payload": {"id": user.id}
-        })
-        # If the room has no more active WebSocket connections, delete it
-        if not manager.active_connections.get(code):
-            db.query(Room).filter(Room.code == code).delete()
-            db.commit()
-            logger.info(f"Room {code} deleted as no clients remain")
-        logger.info(f"WebSocket disconnected: user={user.username}, room={code}")
+        if not _leave_room(user, code, db):
+            await manager.broadcast(code, {"type": EventType.PLAYER_LEAVE, "payload": {"id": user.id}})
+        logger.info("%s left room %s", user.username, code)

@@ -1,0 +1,86 @@
+# Deploys the dev environment to AWS. Manual on purpose: the AWS resources are not kept running.
+#
+# Repository configuration:
+#   vars.AWS_ROLE_ARN      IAM role assumed through GitHub OIDC
+#   vars.BACKEND_URL       Public URL of the backend load balancer (`terraform output backend_url`)
+#   vars.TFVARS            Contents of terraform.tfvars (non-secret settings: VPC, subnets, admin CIDR, ...)
+#   secrets.DB_PASSWORD    RDS master password
+#   secrets.SECRET_KEY     JWT signing key for the backend
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+env:
+  AWS_REGION: eu-central-1
+  TF_DIR: terraform/environments/dev
+  TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+  TF_VAR_secret_key: ${{ secrets.SECRET_KEY }}
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency: deploy-dev
+
+jobs:
+  registry:
+    name: Create registry and database
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - uses: hashicorp/setup-terraform@v3
+      - name: Write terraform.tfvars
+        env:
+          TFVARS: ${{ vars.TFVARS }}
+        run: printf '%s\n' "$TFVARS" > "$TF_DIR/terraform.tfvars"
+      - run: terraform -chdir="$TF_DIR" init -input=false
+      - run: terraform -chdir="$TF_DIR" apply -auto-approve -input=false -target=module.ecr -target=module.rds_mysql
+
+  images:
+    name: Build and push images
+    needs: registry
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: Backend image
+        run: |
+          docker build -t ${{ steps.ecr.outputs.registry }}/drawzy-backend:latest ./backend
+          docker push ${{ steps.ecr.outputs.registry }}/drawzy-backend:latest
+      - name: Frontend image
+        env:
+          VITE_API_URL: ${{ vars.BACKEND_URL }}
+        run: |
+          docker build --build-arg VITE_API_URL="$VITE_API_URL" \
+            -t ${{ steps.ecr.outputs.registry }}/drawzy-frontend:latest ./frontend
+          docker push ${{ steps.ecr.outputs.registry }}/drawzy-frontend:latest
+
+  infrastructure:
+    name: Apply infrastructure
+    needs: images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - uses: hashicorp/setup-terraform@v3
+      - name: Write terraform.tfvars
+        env:
+          TFVARS: ${{ vars.TFVARS }}
+        run: printf '%s\n' "$TFVARS" > "$TF_DIR/terraform.tfvars"
+      - run: terraform -chdir="$TF_DIR" init -input=false
+      - run: terraform -chdir="$TF_DIR" validate
+      - run: terraform -chdir="$TF_DIR" plan -input=false -out=tfplan
+      - run: terraform -chdir="$TF_DIR" apply -input=false tfplan

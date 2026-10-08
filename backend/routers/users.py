@@ -1,117 +1,101 @@
-# Importuri FastAPI și gestionare erori
-# • Rol: APIRouter pentru rutare, Depends pentru injectarea de dependențe,
-#   HTTPException și status pentru tratarea erorilor HTTP.
 from fastapi import APIRouter, Depends, HTTPException, status
-
-# Import sesiune DB
-# • Rol: Session oferă o conexiune de lucru la baza de date pentru endpoint-uri.
 from sqlalchemy.orm import Session
-
-# Context criptare parole
-# • Rol: Configurează algoritmul bcrypt pentru hashing-ul parolelor utilizatorilor.
-from passlib.context import CryptContext
-
-# Import dependențe autentificare JWT
-# • Rol: SECRET_KEY și algoritmul (ALOGRITH) pentru semnarea tokenurilor;
-#   oauth2_scheme pentru schema Bearer.
-from backend.dependencies import SECRET_KEY, ALGORITHM, oauth2_scheme
-
-# Import JOSE JWT
-# • Rol: Permite codificarea și decodificarea tokenurilor JWT.
-from jose import jwt
 
 from backend import models, schemas
 from backend.database import get_db
-from typing import List
-from datetime import datetime, timedelta
-from backend.schemas import Token
+from backend.dependencies import get_current_user
+from backend.security import create_access_token, hash_password, verify_password
 
-# Inițializare context hashing
-# • Rol: Instanțiază contextul pentru hash și verificare parole cu bcrypt.
-pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# Router Users
-# • Rol: Grupează endpoint-urile pentru gestionarea utilizatorilor (creare, login, CRUD).
 router = APIRouter(prefix="/users", tags=["Users"])
 
-# Endpoint POST /users/
-# • Rol: Creează un utilizator nou; verifică duplicarea email și criptează parola pentru securitate.
-@router.post("/", response_model=schemas.UserResponse)
-def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    existing_user = db.query(models.User).filter(models.User.email == user.email).first()
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    new_user = models.User(
-        username=user.username,
-        email=user.email,
-        hashed_password=pwd_ctx.hash(user.password),
+
+def _ensure_unique(
+    db: Session, *, email: str | None = None, username: str | None = None, exclude_id: int | None = None
+):
+    query = db.query(models.User)
+    if exclude_id is not None:
+        query = query.filter(models.User.id != exclude_id)
+    if email and query.filter(models.User.email == email).first():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+    if username and query.filter(models.User.username == username).first():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already taken")
+
+
+@router.post("/", response_model=schemas.UserResponse, status_code=status.HTTP_201_CREATED)
+def create_user(user_in: schemas.UserCreate, db: Session = Depends(get_db)):
+    _ensure_unique(db, email=user_in.email, username=user_in.username)
+    user = models.User(
+        username=user_in.username,
+        email=user_in.email,
+        hashed_password=hash_password(user_in.password),
+        avatar=user_in.avatar,
     )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return new_user
-
-# Endpoint POST /users/login
-# • Rol: Autentifică utilizatorul și generează un JWT cu expirare de 4 ore.
-@router.post("/login", response_model=Token)
-def login_user(credentials: schemas.UserLogin, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.email == credentials.email).first()
-    if not user or not pwd_ctx.verify(credentials.password, user.hashed_password):
-        raise HTTPException(status_code=401, detail="Invalid email or password")
-
-    # Durată expirare JWT
-    # • Rol: Specifică timpul de valabilitate al tokenului (4 ore).
-    accees_token_expires = timedelta(hours=4)
-
-    # Payload JWT
-    # • Rol: Setează subiectul (email) și timpul de expirare pentru token.
-    to_encode = {"sub": user.email, "exp": datetime.utcnow() + accees_token_expires}
-
-    # Generare JWT
-    # • Rol: Codifică payload-ul într-un token sigur folosind SECRET_KEY și algoritmul HS256.
-    access_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-    return {"access_token": access_token, "token_type": "bearer"}
-
-# Endpoint GET /users/
-# • Rol: Returnează lista tuturor utilizatorilor din baza de date.
-@router.get("/", response_model=List[schemas.UserResponse])
-def list_users(db: Session = Depends(get_db)):
-    return db.query(models.User).all()
-
-# Endpoint GET /users/{user_id}
-# • Rol: Returnează datele unui utilizator specific sau 404 dacă nu există.
-@router.get("/{user_id}", response_model=schemas.UserResponse)
-def get_user(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
-
-# Endpoint PUT /users/{user_id}
-# • Rol: Actualizează datele unui utilizator; criptează parola dacă este furnizată.
-@router.put("/{user_id}", response_model=schemas.UserResponse)
-def update_user(user_id: int, user_in: schemas.UserCreate, db: Session = Depends(get_db)):
-    user = db.query(models.User).get(user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    user.username = user_in.username
-    user.email = user_in.email
-    if user_in.password:
-        user.hashed_password = pwd_ctx.hash(user_in.password)
-    user.avatar = user_in.avatar
-    user.role = user_in.role
+    db.add(user)
     db.commit()
     db.refresh(user)
     return user
 
-# Endpoint DELETE /users/{user_id}
-# • Rol: Șterge un utilizator din baza de date sau returnează 404 dacă nu este găsit.
-@router.delete("/{user_id}", status_code=204)
-def delete_user(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(models.User).get(user_id)
+
+@router.post("/login", response_model=schemas.Token)
+def login_user(credentials: schemas.UserLogin, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == credentials.email).first()
+    if not user or not verify_password(credentials.password, user.hashed_password):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
+    return {"access_token": create_access_token(user.email), "token_type": "bearer"}
+
+
+@router.get("/me", response_model=schemas.UserResponse)
+def read_current_user(current_user: models.User = Depends(get_current_user)):
+    return current_user
+
+
+@router.get("/", response_model=list[schemas.UserResponse])
+def list_users(db: Session = Depends(get_db), _: models.User = Depends(get_current_user)):
+    return db.query(models.User).all()
+
+
+@router.get("/{user_id}", response_model=schemas.UserResponse)
+def get_user(user_id: int, db: Session = Depends(get_db), _: models.User = Depends(get_current_user)):
+    user = db.get(models.User, user_id)
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return user
+
+
+def _get_own_user(user_id: int, current_user: models.User, db: Session) -> models.User:
+    user = db.get(models.User, user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    if user.id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can only modify your own account")
+    return user
+
+
+@router.put("/{user_id}", response_model=schemas.UserResponse)
+def update_user(
+    user_id: int,
+    user_in: schemas.UserUpdate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    user = _get_own_user(user_id, current_user, db)
+    _ensure_unique(db, email=user_in.email, username=user_in.username, exclude_id=user.id)
+
+    if user_in.username is not None:
+        user.username = user_in.username
+    if user_in.email is not None:
+        user.email = user_in.email
+    if user_in.password is not None:
+        user.hashed_password = hash_password(user_in.password)
+    if user_in.avatar is not None:
+        user.avatar = user_in.avatar
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user(user_id: int, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    user = _get_own_user(user_id, current_user, db)
     db.delete(user)
     db.commit()
-    return {"detail": "User deleted successfully"}
