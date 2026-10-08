@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend import database
-from backend.routers import chat, drawings, rooms, rounds, users, votes, ws
+from backend.routers import chat, rooms, rounds, users, ws
 from backend.seed import seed_themes
 
 
@@ -28,7 +28,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-for module in (users, rooms, rounds, drawings, chat, votes, ws):
+for module in (users, rooms, rounds, chat, ws):
     app.include_router(module.router)
 
 

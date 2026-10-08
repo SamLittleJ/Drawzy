@@ -19,22 +19,36 @@ export default function RoomPage() {
   const navigate = useNavigate();
   const socketRef = useRef(null);
   const gameRoomRef = useRef(null);
+  // Strokes that arrive before the canvas is on screen (e.g. when joining mid-turn).
+  const pendingStrokesRef = useRef([]);
   const [state, dispatch] = useReducer(roomReducer, initialRoomState);
 
   useEffect(() => {
     const ws = new WebSocket(`${WS_URL}/ws/${code}?token=${encodeURIComponent(getToken() ?? '')}`);
     socketRef.current = ws;
 
+    const drawRemote = (action) => {
+      if (gameRoomRef.current) gameRoomRef.current.applyRemoteAction(action);
+      else pendingStrokesRef.current.push(action);
+    };
+
     ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);
-      if (msg.type === 'DRAW') {
-        gameRoomRef.current?.applyRemoteAction(msg.payload);
-        return;
+      switch (msg.type) {
+        case 'DRAW':
+          drawRemote(msg.payload);
+          return;
+        case 'CANVAS_STATE':
+          msg.payload.actions.forEach(drawRemote);
+          return;
+        case 'TURN_START':
+          pendingStrokesRef.current = [];
+          gameRoomRef.current?.clearCanvas();
+          break;
+        default:
+          break;
       }
       dispatch(msg);
-      if (msg.type === 'ROUND_END') {
-        alert(`Round ${msg.payload.round} ended!`);
-      }
     };
 
     ws.onclose = (event) => {
@@ -59,6 +73,12 @@ export default function RoomPage() {
     }
   }, []);
 
+  const flushPendingStrokes = useCallback(() => {
+    const strokes = pendingStrokesRef.current;
+    pendingStrokesRef.current = [];
+    strokes.forEach((action) => gameRoomRef.current?.applyRemoteAction(action));
+  }, []);
+
   const sendChat = (message) => sendEvent('CHAT', { message });
 
   if (!state.gameStarted) {
@@ -76,15 +96,24 @@ export default function RoomPage() {
   return (
     <GameRoom
       ref={gameRoomRef}
+      self={state.self}
       players={state.players}
       messages={state.messages}
-      theme={state.theme}
-      drawingPhase={state.drawingPhase}
-      roundDuration={state.roundDuration}
-      currentRound={state.currentRound}
+      phase={state.phase}
+      round={state.round}
       maxRounds={state.maxRounds}
+      drawer={state.drawer}
+      word={state.word}
+      hint={state.hint}
+      turnId={state.turnId}
+      timeLeft={state.timeLeft}
+      guessedIds={state.guessedIds}
+      leaderboard={state.leaderboard}
+      winnerIds={state.winnerIds}
       onDraw={(action) => sendEvent('DRAW', action)}
       onSendChat={sendChat}
+      onCanvasReady={flushPendingStrokes}
+      onCloseResults={() => dispatch({ type: 'CLOSE_RESULTS' })}
     />
   );
 }

@@ -47,12 +47,12 @@ def client(session_factory, monkeypatch):
             yield session
 
     app.dependency_overrides[get_db] = override_get_db
-    monkeypatch.setattr(game, "THEME_REVEAL_SECONDS", 0)
+    monkeypatch.setattr(game, "TURN_END_PAUSE_SECONDS", 0)
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
     manager.active_connections.clear()
-    game._running_games.clear()
+    game._games.clear()
 
 
 @pytest.fixture

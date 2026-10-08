@@ -18,8 +18,6 @@ class User(Base):
 
     rooms = relationship("Room", back_populates="creator", cascade="all, delete-orphan")
     room_players = relationship("RoomPlayer", back_populates="user", cascade="all, delete-orphan")
-    drawings = relationship("Drawing", back_populates="user", cascade="all, delete-orphan")
-    votes = relationship("DrawingVote", back_populates="voter", cascade="all, delete-orphan")
     chat_messages = relationship("ChatMessage", back_populates="user", cascade="all, delete-orphan")
 
 
@@ -74,34 +72,6 @@ class Round(Base):
     end_time = Column(DateTime(timezone=True), nullable=True)
 
     room = relationship("Room", back_populates="rounds")
-    drawings = relationship("Drawing", back_populates="round", cascade="all, delete-orphan")
-
-
-class Drawing(Base):
-    __tablename__ = "drawings"
-
-    id = Column(Integer, primary_key=True, index=True)
-    round_id = Column(Integer, ForeignKey("rounds.id"), nullable=False)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    url = Column(String(255), nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    score = Column(Integer, default=0)
-
-    round = relationship("Round", back_populates="drawings")
-    user = relationship("User", back_populates="drawings")
-    votes = relationship("DrawingVote", back_populates="drawing", cascade="all, delete-orphan")
-
-
-class DrawingVote(Base):
-    __tablename__ = "drawing_votes"
-
-    voter_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
-    drawing_id = Column(Integer, ForeignKey("drawings.id"), primary_key=True)
-    voted_at = Column(DateTime(timezone=True), server_default=func.now())
-    score = Column(Integer, nullable=False)
-
-    voter = relationship("User", back_populates="votes")
-    drawing = relationship("Drawing", back_populates="votes")
 
 
 class ChatMessage(Base):
@@ -122,7 +92,7 @@ class ChatMessage(Base):
 
 
 class Theme(Base):
-    """Pool of drawing prompts; one is picked at random for every round."""
+    """Pool of drawing prompts; every turn one of them becomes the secret word to draw and guess."""
 
     __tablename__ = "themes"
 

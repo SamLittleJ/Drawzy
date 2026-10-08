@@ -8,8 +8,8 @@ const DEFAULT_SETTINGS = { maxPlayers: 6, roundTime: 60, maxRounds: 5, targetSco
 
 const NUMBER_FIELDS = [
   { key: 'maxPlayers', label: 'Max Players:' },
-  { key: 'roundTime', label: 'Round Time (seconds):' },
-  { key: 'maxRounds', label: 'Max Rounds:' },
+  { key: 'roundTime', label: 'Drawing Time (seconds):' },
+  { key: 'maxRounds', label: 'Rounds:' },
   { key: 'targetScore', label: 'Target Score:' },
 ];
 

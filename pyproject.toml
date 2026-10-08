@@ -1,6 +1,8 @@
 [tool.pytest.ini_options]
 testpaths = ["backend/tests"]
 pythonpath = ["."]
+# A WebSocket test waiting for a message that never comes would otherwise hang forever.
+timeout = 30
 
 [tool.ruff]
 line-length = 120

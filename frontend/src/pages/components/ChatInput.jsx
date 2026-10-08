@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function ChatInput({ onSend, className }) {
+export default function ChatInput({ onSend, className, placeholder = 'Type a message...' }) {
   const [text, setText] = useState('');
 
   const submit = () => {
@@ -15,7 +15,7 @@ export default function ChatInput({ onSend, className }) {
       <input
         type="text"
         aria-label="Chat message"
-        placeholder="Type a message..."
+        placeholder={placeholder}
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && submit()}

@@ -1,32 +1,20 @@
-"""Real-time room channel: player presence, chat, canvas strokes and game control."""
+"""Real-time room channel: presence, chat, canvas strokes and the draw-and-guess game."""
 
 import json
 import logging
-from enum import StrEnum
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, WebSocketException
 from sqlalchemy.orm import Session
 
 from backend import game, models
-from backend.connection_manager import manager
+from backend.connection_manager import Player, manager
 from backend.database import get_db
 from backend.dependencies import WS_FORBIDDEN, WS_NOT_FOUND, get_current_user_ws
+from backend.events import EventType
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["WebSocket"])
-
-
-class EventType(StrEnum):
-    # Sent by clients
-    GET_EXISTING_PLAYERS = "GET_EXISTING_PLAYERS"
-    CHAT = "CHAT"
-    DRAW = "DRAW"
-    START_GAME = "START_GAME"
-    # Sent by the server
-    EXISTING_PLAYERS = "EXISTING_PLAYERS"
-    PLAYER_JOIN = "PLAYER_JOIN"
-    PLAYER_LEAVE = "PLAYER_LEAVE"
 
 
 def _roster(room: models.Room, db: Session) -> list[dict]:
@@ -36,7 +24,12 @@ def _roster(room: models.Room, db: Session) -> list[dict]:
         .order_by(models.RoomPlayer.joined_at)
         .all()
     )
-    return [{"id": p.user_id, "username": p.user.username, "score": p.score} for p in players]
+    # During a game the live scores are newer than the ones saved after each turn.
+    current = game.get_game(room.code)
+    return [
+        {"id": p.user_id, "username": p.user.username, "score": current.score_of(p.user_id) if current else p.score}
+        for p in players
+    ]
 
 
 def _authorize(websocket: WebSocket, code: str, db: Session) -> tuple[models.User, models.Room]:
@@ -57,38 +50,48 @@ def _join_room(user: models.User, room: models.Room, db: Session) -> None:
 
 
 def _leave_room(user: models.User, code: str, db: Session) -> bool:
-    """Remove the player from the room; delete the room once nobody is connected. Returns True if deleted."""
+    """Update the room after a socket closed; delete it once nobody is connected. Returns True if deleted."""
     room = db.query(models.Room).filter(models.Room.code == code).first()
     if room is None:
         return True
-    player = db.get(models.RoomPlayer, {"room_id": room.id, "user_id": user.id})
-    if player is not None:
-        db.delete(player)
-
-    room_deleted = manager.connection_count(code) == 0
-    if room_deleted:
+    if manager.connection_count(code) == 0:
         game.stop_game(code)
         db.delete(room)
-    db.commit()
-    return room_deleted
+        db.commit()
+        return True
+    # A player with another tab still open stays in the room.
+    if not manager.is_connected(code, user.id):
+        room_player = db.get(models.RoomPlayer, {"room_id": room.id, "user_id": user.id})
+        if room_player is not None:
+            db.delete(room_player)
+            db.commit()
+    return False
 
 
-async def _handle_event(websocket: WebSocket, code: str, user: models.User, room: models.Room, db: Session, data: dict):
+async def _handle_event(websocket: WebSocket, code: str, player: Player, room: models.Room, db: Session, data: dict):
     msg_type = data.get("type")
-    payload = data.get("payload") or {}
+    payload = data.get("payload")
+    if not isinstance(payload, dict):
+        payload = {}
+    current = game.get_game(code)
 
     if msg_type == EventType.GET_EXISTING_PLAYERS:
         await websocket.send_json({"type": EventType.EXISTING_PLAYERS, "payload": _roster(room, db)})
     elif msg_type == EventType.CHAT:
         text = str(payload.get("message", "")).strip()
-        if text:
-            await manager.broadcast(code, {"type": EventType.CHAT, "payload": {"user": user.username, "message": text}})
+        if text and not (current and await current.handle_chat(player, text)):
+            await manager.broadcast(
+                code, {"type": EventType.CHAT, "payload": {"user": player.username, "message": text}}
+            )
     elif msg_type == EventType.DRAW:
-        # The sender has already drawn the stroke locally.
-        await manager.broadcast(code, {"type": EventType.DRAW, "payload": payload}, exclude=websocket)
+        # Only the current drawer may draw. Their own client has already rendered the stroke.
+        if current and current.can_draw(player.id):
+            current.record_stroke(payload)
+            await manager.broadcast(code, {"type": EventType.DRAW, "payload": payload}, exclude=websocket)
     elif msg_type == EventType.START_GAME:
-        if not game.start_game(code):
-            logger.info("Ignoring START_GAME for room %s: a game is already running", code)
+        error = game.start_game(code)
+        if error:
+            await websocket.send_json({"type": EventType.ERROR, "payload": {"message": error}})
     else:
         logger.warning("Unknown WebSocket event type: %r", msg_type)
 
@@ -103,16 +106,25 @@ async def room_socket(websocket: WebSocket, code: str, db: Session = Depends(get
         await websocket.close(code=exc.code, reason=exc.reason)
         return
 
+    player = Player(id=user.id, username=user.username)
     _join_room(user, room, db)
-    manager.connect(code, websocket)
-    logger.info("%s joined room %s", user.username, code)
+    manager.connect(code, websocket, player)
+    logger.info("%s joined room %s", player.username, code)
 
+    current = game.get_game(code)
+    await websocket.send_json({"type": EventType.WELCOME, "payload": player.to_dict()})
     await websocket.send_json({"type": EventType.EXISTING_PLAYERS, "payload": _roster(room, db)})
     await manager.broadcast(
         code,
-        {"type": EventType.PLAYER_JOIN, "payload": {"id": user.id, "username": user.username, "score": 0}},
+        {
+            "type": EventType.PLAYER_JOIN,
+            "payload": {**player.to_dict(), "score": current.score_of(player.id) if current else 0},
+        },
         exclude=websocket,
     )
+    if current:
+        for message in current.catch_up_messages(player.id):
+            await websocket.send_json(message)
 
     try:
         while True:
@@ -121,11 +133,15 @@ async def room_socket(websocket: WebSocket, code: str, db: Session = Depends(get
             except ValueError:
                 continue
             if isinstance(data, dict):
-                await _handle_event(websocket, code, user, room, db, data)
+                await _handle_event(websocket, code, player, room, db, data)
     except WebSocketDisconnect:
         pass
     finally:
         manager.disconnect(code, websocket)
-        if not _leave_room(user, code, db):
-            await manager.broadcast(code, {"type": EventType.PLAYER_LEAVE, "payload": {"id": user.id}})
-        logger.info("%s left room %s", user.username, code)
+        room_deleted = _leave_room(user, code, db)
+        if not room_deleted and not manager.is_connected(code, player.id):
+            await manager.broadcast(code, {"type": EventType.PLAYER_LEAVE, "payload": {"id": player.id}})
+            current = game.get_game(code)
+            if current:
+                current.player_left(player.id)
+        logger.info("%s left room %s", player.username, code)

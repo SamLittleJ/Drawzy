@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, HttpUrl, PositiveInt
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, PositiveInt
 
 
 class ORMModel(BaseModel):
@@ -71,14 +71,6 @@ class RoomResponse(ORMModel):
     player_count: int
 
 
-class RoomPlayerResponse(ORMModel):
-    room_id: int
-    user_id: int
-    score: int
-    status: str
-    joined_at: datetime
-
-
 # --- Rounds ---
 
 
@@ -97,34 +89,6 @@ class RoundResponse(ORMModel):
     end_time: datetime | None
 
 
-# --- Drawings & votes ---
-
-
-class DrawingCreate(BaseModel):
-    round_id: int
-    url: HttpUrl
-
-
-class DrawingResponse(ORMModel):
-    id: int
-    round_id: int
-    user_id: int
-    url: HttpUrl
-    created_at: datetime
-    score: int
-
-
-class VoteCreate(BaseModel):
-    drawing_id: int
-    score: int
-
-
-class VoteResponse(ORMModel):
-    voter_id: int
-    drawing_id: int
-    score: int
-
-
 # --- Chat ---
 
 
@@ -140,15 +104,3 @@ class ChatMessageResponse(ORMModel):
     message: str
     created_at: datetime
     room_code: str
-
-
-# --- Themes ---
-
-
-class ThemeCreate(BaseModel):
-    text: str = Field(min_length=1, max_length=100)
-
-
-class ThemeResponse(ORMModel):
-    id: int
-    text: str

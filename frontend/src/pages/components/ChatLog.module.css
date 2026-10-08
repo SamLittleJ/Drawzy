@@ -1,0 +1,15 @@
+.notice {
+  font-weight: bold;
+}
+
+.info {
+  color: #1565c0;
+}
+
+.success {
+  color: #2e7d32;
+}
+
+.error {
+  color: #c62828;
+}

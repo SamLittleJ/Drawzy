@@ -50,6 +50,19 @@ describe('WaitingRoom', () => {
     expect(input).toHaveValue('');
   });
 
+  it('cannot start a game alone', () => {
+    renderWaitingRoom({ players: [{ id: 1, username: 'ana' }] });
+
+    expect(screen.getByRole('button', { name: 'Start Game' })).toBeDisabled();
+    expect(screen.getByText('Waiting for at least 2 players...')).toBeInTheDocument();
+  });
+
+  it('shows game notices in the chat', () => {
+    renderWaitingRoom({ messages: [{ system: true, tone: 'error', text: 'A game is already running in this room.' }] });
+
+    expect(screen.getByRole('log', { name: 'Chat' })).toHaveTextContent('A game is already running in this room.');
+  });
+
   it('does not send blank messages', async () => {
     const { onSendChat } = renderWaitingRoom();
 
