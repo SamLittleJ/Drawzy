@@ -6,6 +6,10 @@ A real-time multiplayer drawing game. Players create or join a room, receive a r
 
 Built end to end as a portfolio project: a **FastAPI** backend with REST and WebSocket APIs, a **React** frontend, **Docker** images, and **Terraform** infrastructure for AWS deployed through **GitHub Actions**.
 
+![Drawzy demo: logging in, creating a room, chatting and drawing a volcano together](docs/demo.gif)
+
+*Ana's screen. Bob plays from a second browser: his chat messages and the sun he draws appear in real time.*
+
 ## Features
 
 - **Accounts:** registration and login with bcrypt-hashed passwords and JWT bearer tokens.
@@ -20,7 +24,7 @@ Built end to end as a portfolio project: a **FastAPI** backend with REST and Web
 
 | Layer | Technology |
 | --- | --- |
-| Backend | Python 3.13, FastAPI, SQLAlchemy 2, Pydantic 2, PyJWT, bcrypt, Uvicorn |
+| Backend | Python 3.13, FastAPI, SQLAlchemy 2, Alembic, Pydantic 2, PyJWT, bcrypt, Uvicorn |
 | Frontend | React 19, React Router, Vite, Axios, CSS Modules, HTML Canvas |
 | Data | MySQL 8 (SQLite for local development and tests) |
 | Testing | pytest + FastAPI TestClient, Vitest + React Testing Library |
@@ -69,7 +73,7 @@ docker compose up --build
 - Web app: http://localhost:3000
 - API docs (Swagger UI): http://localhost:8080/docs
 
-This starts MySQL, the API and the nginx-served frontend. Tables are created and seeded with drawing themes on first start. Open two browser windows with two accounts to play against yourself.
+This starts MySQL, the API and the nginx-served frontend. On startup the API applies the database migrations and seeds the drawing themes. Open two browser windows with two accounts to play against yourself.
 
 ### Without Docker
 
@@ -92,7 +96,7 @@ npm run dev   # http://localhost:3000
 ## Tests
 
 ```bash
-# Backend: API, auth, WebSocket protocol and game loop against in-memory SQLite
+# Backend: API, auth, WebSocket protocol, game loop and migrations against in-memory SQLite
 pytest
 
 # Frontend: room state reducer, canvas rendering, components and routing
@@ -100,6 +104,14 @@ cd frontend && npm test
 ```
 
 CI runs both suites, `ruff`, a production build of the frontend, `terraform validate` and both Docker builds on every push and pull request.
+
+### Database migrations
+
+The schema is managed with Alembic in [`backend/migrations`](backend/migrations) and upgraded automatically when the API starts. The test database is built by the same migrations, and a test fails if the models and migrations drift apart. After changing a model, generate a new migration:
+
+```bash
+alembic -c backend/alembic.ini revision --autogenerate -m "describe the change"
+```
 
 ## Deployment
 
@@ -119,16 +131,16 @@ The [Deploy workflow](.github/workflows/deploy.yml) is triggered manually. It au
 
 ```
 backend/
-  main.py                 app setup, CORS, startup (schema + theme seeding)
+  main.py                 app setup, CORS, startup (migrations + theme seeding)
   routers/                REST endpoints and the WebSocket room channel (ws.py)
   game.py                 server-driven round timer
   connection_manager.py   open sockets per room, broadcasting
   models.py, schemas.py   SQLAlchemy models and Pydantic schemas
+  migrations/             Alembic migrations
   security.py             password hashing and JWT helpers
   tests/                  pytest suite
 frontend/
   src/pages/              pages, room state reducer, game components and their tests
-alembic/                  migration history from development (the app creates tables on startup)
 terraform/                bootstrap, reusable modules and the dev environment
 .github/workflows/        CI and manual deploy
 docker-compose.yml        local MySQL + API + web stack

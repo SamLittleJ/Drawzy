@@ -14,15 +14,19 @@ from sqlalchemy.pool import StaticPool  # noqa: E402
 
 from backend import database, game  # noqa: E402
 from backend.connection_manager import manager  # noqa: E402
-from backend.database import Base, get_db  # noqa: E402
+from backend.database import get_db  # noqa: E402
 from backend.main import app  # noqa: E402
 
 
 @pytest.fixture
 def session_factory(monkeypatch):
-    """A fresh in-memory database per test, shared by the API, the WebSocket handlers and the game loop."""
+    """A fresh in-memory database per test, shared by the API, the WebSocket handlers and the game loop.
+
+    The schema is built by the real Alembic migrations, so every test also exercises them.
+    """
     engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
-    Base.metadata.create_all(engine)
+    monkeypatch.setattr(database, "engine", engine)
+    database.run_migrations()
     factory = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     monkeypatch.setattr(database, "SessionLocal", factory)
     yield factory

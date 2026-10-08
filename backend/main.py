@@ -4,14 +4,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend import database, models
+from backend import database
 from backend.routers import chat, drawings, rooms, rounds, users, votes, ws
 from backend.seed import seed_themes
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    models.Base.metadata.create_all(bind=database.engine)
+    database.run_migrations()
     with database.SessionLocal() as db:
         seed_themes(db)
     yield
